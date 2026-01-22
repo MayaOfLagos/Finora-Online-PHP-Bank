@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Filament\Resources\CheckDeposits\Tables;
+
+use App\Enums\DepositStatus;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class CheckDepositsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('reference_number')
+                    ->label('Reference')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->copyMessage('Reference copied')
+                    ->weight('semibold'),
+                TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable(['first_name', 'last_name', 'email'])
+                    ->sortable()
+                    ->description(fn ($record) => $record->user->email),
+                TextColumn::make('bankAccount.account_number')
+                    ->label('Account')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->description(fn ($record) => $record->bankAccount->accountType->name ?? 'N/A'),
+                TextColumn::make('check_number')
+                    ->label('Check Number')
+                    ->searchable()
+                    ->sortable(),
+                ImageColumn::make('check_front_image')
+                    ->label('Front Image')
+                    ->height(40)
+                    ->width(60)
+                    ->toggleable(),
+                ImageColumn::make('check_back_image')
+                    ->label('Back Image')
+                    ->height(40)
+                    ->width(60)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('amount')
+                    ->label('Amount')
+                    ->money(fn ($record) => strtolower($record->currency ?? 'usd'), divideBy: 100)
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (DepositStatus $state): string => $state->color()),
+                TextColumn::make('hold_until')
+                    ->label('Hold Until')
+                    ->dateTime('M d, Y')
+                    ->sortable()
+                    ->placeholder('No hold')
+                    ->toggleable(),
+                TextColumn::make('approvedBy.name')
+                    ->label('Approved By')
+                    ->placeholder('Not approved')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->label('Date')
+                    ->dateTime('M d, Y H:i')
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                        'completed' => 'Completed',
+                    ]),
+            ])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye')
+                        ->color('info')
+                        ->modalWidth('3xl'),
+                    EditAction::make()
+                        ->icon('heroicon-o-pencil')
+                        ->color('primary')
+                        ->modalWidth('3xl'),
+                    DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation(),
+                ])
+                    ->button()
+                    ->label('Actions')
+                    ->icon('heroicon-o-ellipsis-horizontal')
+                    ->color('gray'),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('created_at', 'desc');
+    }
+}

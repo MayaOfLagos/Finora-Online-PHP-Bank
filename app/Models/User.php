@@ -35,6 +35,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_enabled',
         'two_factor_secret',
         'profile_photo_path',
+        'can_transfer',
+        'can_withdraw',
+        'can_deposit',
+        'can_request_loan',
+        'can_request_card',
+        'can_apply_grant',
+        'can_send_wire_transfer',
+        'can_send_internal_transfer',
+        'can_send_domestic_transfer',
+        'can_create_beneficiary',
     ];
 
     protected $hidden = [
@@ -55,6 +65,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_verified' => 'boolean',
             'kyc_level' => 'integer',
             'two_factor_enabled' => 'boolean',
+            'can_transfer' => 'boolean',
+            'can_withdraw' => 'boolean',
+            'can_deposit' => 'boolean',
+            'can_request_loan' => 'boolean',
+            'can_request_card' => 'boolean',
+            'can_apply_grant' => 'boolean',
+            'can_send_wire_transfer' => 'boolean',
+            'can_send_internal_transfer' => 'boolean',
+            'can_send_domestic_transfer' => 'boolean',
+            'can_create_beneficiary' => 'boolean',
         ];
     }
 
@@ -83,6 +103,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    /**
+     * Get name attribute for Filament compatibility.
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->getFullNameAttribute();
     }
 
     // ==================== RELATIONSHIPS ====================
@@ -195,5 +223,45 @@ class User extends Authenticatable implements MustVerifyEmail
     public function notificationSettings(): HasMany
     {
         return $this->hasMany(NotificationSetting::class);
+    }
+
+    public function taxRefunds(): HasMany
+    {
+        return $this->hasMany(TaxRefund::class);
+    }
+
+    public function transactionHistories(): HasMany
+    {
+        return $this->hasMany(TransactionHistory::class);
+    }
+
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class);
+    }
+
+    public function rewards(): HasMany
+    {
+        return $this->hasMany(Reward::class);
+    }
+
+    public function moneyRequestsSent(): HasMany
+    {
+        return $this->hasMany(MoneyRequest::class, 'requester_id');
+    }
+
+    public function moneyRequestsReceived(): HasMany
+    {
+        return $this->hasMany(MoneyRequest::class, 'responder_id');
+    }
+
+    public function exchangeMoney(): HasMany
+    {
+        return $this->hasMany(ExchangeMoney::class);
     }
 }

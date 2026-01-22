@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Filament\Resources\LoanApplications\Tables;
+
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class LoanApplicationsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('uuid')
+                    ->label('UUID')
+                    ->searchable(),
+                TextColumn::make('user.id')
+                    ->searchable(),
+                TextColumn::make('loanType.name')
+                    ->searchable(),
+                TextColumn::make('reference_number')
+                    ->searchable(),
+                TextColumn::make('amount')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('term_months')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('interest_rate')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('monthly_payment')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('total_payable')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->searchable(),
+                TextColumn::make('approved_at')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('approved_by')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}

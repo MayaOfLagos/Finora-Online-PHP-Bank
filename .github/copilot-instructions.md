@@ -310,6 +310,61 @@ finora-bank/
 
 ---
 
+## Filament v5 Header Actions Best Practices
+
+### Modal Dialogs for CRUD Operations
+
+**Always prefer modal dialogs over page-based forms for header actions.** This applies to Create, Edit, View, and Delete operations.
+
+#### When to Use Modal Dialogs:
+- Creating new records (Use `Action::make('create')` with `.form()` and `.action()`)
+- Editing records (Use `Action::make('edit')` with `.form()` and `.action()`)
+- Viewing records (Use `Action::make('view')` with form fields set to disabled)
+- Deleting records (Use `.requiresConfirmation()`)
+- Bulk actions
+
+#### Modal Dialog Pattern:
+```php
+Action::make('create_account_type')
+    ->label('Create Account Type')
+    ->icon('heroicon-o-plus-circle')
+    ->color('primary')
+    ->modalWidth('lg')
+    ->form([
+        TextInput::make('name')->required(),
+        Textarea::make('description'),
+    ])
+    ->action(function (array $data) {
+        Model::create($data);
+        Notification::make()
+            ->title('Created successfully')
+            ->success()
+            ->send();
+    }),
+```
+
+#### Action Group Pattern for Multiple Actions:
+```php
+ActionGroup::make([
+    Action::make('view')->icon('heroicon-o-eye')->color('info'),
+    Action::make('edit')->icon('heroicon-o-pencil')->color('primary'),
+    Action::make('delete')->icon('heroicon-o-trash')->color('danger'),
+])
+```
+
+#### Avoid:
+- Don't use `CreateAction::make()` that navigates to `/create` page
+- Don't use `EditAction::make()` that navigates to `/{record}/edit` page
+- Don't mix modal dialogs with page-based navigation in same resource
+
+### Benefits:
+- Better UX - no page reloads
+- Cleaner navigation - admin stays on list
+- Faster operations - modal context
+- Consistent with modern patterns
+
+---
+
 ## Coding Standards
 
 - Follow PSR-12 for PHP

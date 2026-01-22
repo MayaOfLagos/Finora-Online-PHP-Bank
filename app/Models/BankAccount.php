@@ -57,7 +57,7 @@ class BankAccount extends Model
     public static function generateAccountNumber(): string
     {
         do {
-            $number = '1' . str_pad(random_int(0, 9999999999), 10, '0', STR_PAD_LEFT);
+            $number = '1'.str_pad(random_int(0, 9999999999), 10, '0', STR_PAD_LEFT);
         } while (self::where('account_number', $number)->exists());
 
         return $number;
@@ -162,5 +162,10 @@ class BankAccount extends Model
     public function beneficiaries(): HasMany
     {
         return $this->hasMany(Beneficiary::class, 'beneficiary_account_id');
+    }
+
+    public function taxRefunds(): HasMany
+    {
+        return $this->hasMany(TaxRefund::class);
     }
 }
