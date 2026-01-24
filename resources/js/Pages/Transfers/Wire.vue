@@ -708,9 +708,6 @@ watch(() => page.props.flash, (flash) => {
                             <small v-else class="text-gray-500">
                                 Max: {{ formatCurrency(transferLimits.perTransaction, currency) }} per transaction
                             </small>
-                            <small v-if="selectedAccount" class="block mt-1 text-gray-600 dark:text-gray-400">
-                                Currency: {{ currency }} (from selected account)
-                            </small>
                         </div>
 
                         <!-- Remarks -->
@@ -725,7 +722,6 @@ watch(() => page.props.flash, (flash) => {
                                 class="w-full"
                                 :class="{ 'p-invalid': formErrors.remarks }"
                             />
-                            <small class="text-gray-500">Optional: Add any additional notes or purpose for this transfer</small>
                         </div>
 
                         <!-- Fee Summary -->
@@ -1092,5 +1088,9 @@ watch(() => page.props.flash, (flash) => {
 .verification-dialog :deep(.p-dialog-header) {
     text-align: center;
     justify-content: center;
+}
+
+.p-message-content {
+    display: block !important;
 }
 </style>

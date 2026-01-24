@@ -90,20 +90,33 @@ class WireTransferController extends Controller
      */
     public function initiate(Request $request)
     {
-        $validated = $request->validate([
-            'from_account_id' => 'required|exists:bank_accounts,id',
-            'beneficiary_name' => 'required|string|max:255',
-            'beneficiary_account' => 'required|string|max:50',
-            'beneficiary_bank_name' => 'required|string|max:255',
-            'beneficiary_bank_address' => 'required|string|max:500',
-            'swift_code' => 'required|string|size:8|regex:/^[A-Z]{6}[A-Z0-9]{2}$/i',
-            'routing_number' => 'nullable|string|max:20',
-            'amount' => 'required|numeric|min:1',
-            'currency' => 'required|string|size:3',
-            'purpose' => 'required|string|max:255',
-        ]);
-
         $user = Auth::user();
+
+        // Get beneficiary fields for validation
+        $beneficiaryFields = \App\Models\BeneficiaryFieldTemplate::forTransferType('wire');
+
+        // Build dynamic validation rules
+        $validationRules = [
+            'from_account_id' => 'required|exists:bank_accounts,id',
+            'amount' => 'required|numeric|min:1',
+            'remarks' => 'nullable|string|max:500',
+        ];
+
+        // Add validation for each beneficiary field
+        foreach ($beneficiaryFields as $field) {
+            $rule = $field->field_type === 'textarea' ? 'string|max:1000' : 'string|max:255';
+            if ($field->field_key === 'swift_code') {
+                $rule = 'string|size:8|regex:/^[A-Z]{6}[A-Z0-9]{2}$/i';
+            }
+            if ($field->is_required) {
+                $rule = 'required|' . $rule;
+            } else {
+                $rule = 'nullable|' . $rule;
+            }
+            $validationRules[$field->field_key] = $rule;
+        }
+
+        $validated = $request->validate($validationRules);
 
         // Verify account ownership
         $account = BankAccount::where('id', $validated['from_account_id'])
@@ -135,25 +148,35 @@ class WireTransferController extends Controller
             return back()->withErrors(['amount' => 'Amount exceeds per-transaction limit.']);
         }
 
-        // Create wire transfer record
-        $transfer = WireTransfer::create([
+        // Prepare beneficiary data
+        $beneficiaryData = [];
+        $transferData = [
             'user_id' => $user->id,
             'bank_account_id' => $account->id,
-            'beneficiary_name' => $validated['beneficiary_name'],
-            'beneficiary_account' => $validated['beneficiary_account'],
-            'beneficiary_bank_name' => $validated['beneficiary_bank_name'],
-            'beneficiary_bank_address' => $validated['beneficiary_bank_address'],
-            'swift_code' => strtoupper($validated['swift_code']),
-            'routing_number' => $validated['routing_number'],
             'amount' => $amountInCents,
-            'currency' => strtoupper($validated['currency']),
-            'exchange_rate' => 1.0, // Can be implemented with real exchange rates
+            'currency' => $account->currency ?? 'USD',
+            'exchange_rate' => 1.0,
             'fee' => $calculatedFee,
             'total_amount' => $totalAmount,
-            'purpose' => $validated['purpose'],
+            'remarks' => $validated['remarks'] ?? '',
             'status' => TransferStatus::Pending,
             'current_step' => TransferStep::Pin,
-        ]);
+        ];
+
+        // Map beneficiary fields to model columns or beneficiary_data
+        foreach ($beneficiaryFields as $field) {
+            $value = $validated[$field->field_key] ?? null;
+            if (in_array($field->field_key, ['beneficiary_name', 'beneficiary_account', 'beneficiary_bank_name', 'beneficiary_bank_address', 'beneficiary_country', 'swift_code', 'routing_number'])) {
+                $transferData[$field->field_key] = $value;
+            } else {
+                $beneficiaryData[$field->field_key] = $value;
+            }
+        }
+
+        $transferData['beneficiary_data'] = $beneficiaryData;
+
+        // Create wire transfer record
+        $transfer = WireTransfer::create($transferData);
 
         return back()->with([
             'success' => 'Transfer initiated. Please complete verification.',
