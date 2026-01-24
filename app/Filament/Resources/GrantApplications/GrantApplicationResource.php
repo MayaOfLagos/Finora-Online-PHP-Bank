@@ -19,6 +19,8 @@ class GrantApplicationResource extends Resource
 {
     protected static ?string $model = GrantApplication::class;
 
+    protected static ?string $slug = 'grant-applications';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGift;
 
     protected static string|UnitEnum|null $navigationGroup = 'Loans & Grants';

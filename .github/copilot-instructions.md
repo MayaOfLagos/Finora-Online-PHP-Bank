@@ -16,11 +16,13 @@
 - **Hosting:** Shared hosting compatible (cPanel/DirectAdmin)
 
 ### Frontend
-- **Framework:** Vue 3 (latest - Composition API)
+- **Framework:** Vue 3 (latest - Composition API with `<script setup>`)
+- **UI Library:** PrimeVue 4.x (banking-grade components)
 - **SSR Bridge:** Inertia.js (latest)
-- **Styling:** Tailwind CSS 3.x
+- **Styling:** Tailwind CSS 4.x
 - **State Management:** Pinia
 - **Build Tool:** Vite
+- **Icons:** PrimeIcons + Heroicons
 
 ### MCP Integration
 - **Laravel Boost MCP:** For Laravel contextual understanding
@@ -312,6 +314,24 @@ finora-bank/
 
 ## Filament v5 Header Actions Best Practices
 
+### Width Enum (IMPORTANT)
+
+In Filament v5, use `Filament\Support\Enums\Width` for modal widths:
+
+```php
+use Filament\Support\Enums\Width;
+
+// Correct usage:
+->modalWidth(Width::Medium)
+->modalWidth(Width::Large)
+->modalWidth(Width::ExtraLarge)
+
+// DEPRECATED - Do NOT use:
+// use Filament\Support\Enums\MaxWidth; // This is deprecated in v5
+```
+
+**Available Width values:** `ExtraSmall`, `Small`, `Medium`, `Large`, `ExtraLarge`, `TwoExtraLarge`, `ThreeExtraLarge`, `FourExtraLarge`, `FiveExtraLarge`, `SixExtraLarge`, `SevenExtraLarge`, `Screen`
+
 ### Modal Dialogs for CRUD Operations
 
 **Always prefer modal dialogs over page-based forms for header actions.** This applies to Create, Edit, View, and Delete operations.
@@ -329,7 +349,7 @@ Action::make('create_account_type')
     ->label('Create Account Type')
     ->icon('heroicon-o-plus-circle')
     ->color('primary')
-    ->modalWidth('lg')
+    ->modalWidth(Width::Large)
     ->form([
         TextInput::make('name')->required(),
         Textarea::make('description'),
@@ -362,6 +382,246 @@ ActionGroup::make([
 - Cleaner navigation - admin stays on list
 - Faster operations - modal context
 - Consistent with modern patterns
+
+---
+
+## 🎯 Frontend Development (CURRENT PRIORITY)
+
+> **Reference Document:** `.github/frontend/FRONTEND_DEVELOPMENT_PLAN.md`
+
+### Technology Stack
+- **Framework:** Vue 3 (Composition API with `<script setup>`)
+- **UI Library:** PrimeVue 4.x (recommended for banking)
+- **SSR Bridge:** Inertia.js
+- **Styling:** Tailwind CSS 4.x
+- **State Management:** Pinia
+- **Build Tool:** Vite
+
+### Development Approach
+- **Mobile-First Design** - All components must be responsive
+- **Component-Based Architecture** - Reusable Vue components
+- **Clean UI/UX** - Professional banking aesthetic
+- **Fast & Elegant** - Optimized performance, smooth animations
+
+### Folder Structure
+```
+resources/js/
+├── Components/
+│   ├── Common/         # AppLogo, LoadingSpinner, StatusBadge
+│   ├── Forms/          # OtpInput, PinInput, AmountInput
+│   ├── Cards/          # AccountCard, TransactionCard, BankCard
+│   ├── Navigation/     # Sidebar, BottomNav, UserMenu
+│   └── Modals/         # TransferConfirm, OtpVerify, SuccessModal
+├── Layouts/
+│   ├── DashboardLayout.vue
+│   ├── AuthLayout.vue
+│   └── GuestLayout.vue
+├── Pages/              # Inertia pages (auto-routed)
+├── Stores/             # Pinia stores
+├── Composables/        # Vue composables (useAuth, useCurrency)
+└── Utils/              # Helpers (formatters, validators)
+```
+
+### Vue Component Standards
+
+#### File Naming
+- Components: `PascalCase.vue` (e.g., `AccountCard.vue`)
+- Pages: `PascalCase.vue` in nested folders (e.g., `Pages/Transfers/Wire.vue`)
+- Composables: `camelCase.js` with `use` prefix (e.g., `useAuth.js`)
+
+#### Component Template
+```vue
+<script setup>
+import { ref, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
+// Props
+const props = defineProps({
+    account: Object,
+    showBalance: { type: Boolean, default: true }
+});
+
+// Emits
+const emit = defineEmits(['select', 'transfer']);
+
+// Composables
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+
+// Reactive state
+const isLoading = ref(false);
+
+// Methods
+const handleTransfer = () => {
+    emit('transfer', props.account);
+};
+</script>
+
+<template>
+    <div class="account-card">
+        <!-- Template content -->
+    </div>
+</template>
+
+<style scoped>
+/* Component-specific styles if needed */
+</style>
+```
+
+### PrimeVue Integration
+
+#### Setup (app.js)
+```javascript
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
+import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
+
+app.use(PrimeVue, {
+    theme: {
+        preset: Aura,
+        options: {
+            darkModeSelector: '.dark',
+        }
+    }
+});
+app.use(ToastService);
+app.use(ConfirmationService);
+```
+
+#### Common Components to Use
+- `DataTable` - Transaction lists, account lists
+- `Card` - Account cards, stat cards
+- `InputNumber` - Currency amounts
+- `InputMask` - Account numbers, phone numbers
+- `Password` - Password fields with strength meter
+- `Toast` - Notifications
+- `ConfirmDialog` - Delete confirmations
+- `Stepper` - Multi-step transfer flows
+- `Chart` - Account balance charts
+
+### Security UX Patterns
+
+#### PIN Input Component
+```vue
+<PinInput 
+    :length="6" 
+    masked 
+    @complete="verifyPin"
+/>
+```
+
+#### OTP Input Component
+```vue
+<OtpInput 
+    :length="6" 
+    auto-focus 
+    auto-submit
+    :countdown="300"
+    @complete="verifyOtp"
+    @resend="resendOtp"
+/>
+```
+
+#### Transfer Verification Steps
+1. Wire Transfer: PIN → IMF → Tax → COT → OTP → Success
+2. Other Transfers: PIN → OTP → Success
+
+### Mobile-First Guidelines
+
+#### Bottom Navigation (Mobile)
+```vue
+<BottomNav v-if="isMobile">
+    <BottomNavItem icon="home" to="/dashboard" />
+    <BottomNavItem icon="credit-card" to="/cards" />
+    <BottomNavItem icon="send" to="/transfers" />
+    <BottomNavItem icon="user" to="/profile" />
+    <BottomNavItem icon="menu" @click="openMore" />
+</BottomNav>
+```
+
+#### Responsive Breakpoints
+```css
+/* Tailwind breakpoints */
+sm: 640px   /* Mobile landscape */
+md: 768px   /* Tablet */
+lg: 1024px  /* Desktop */
+xl: 1280px  /* Large desktop */
+```
+
+#### Touch-Friendly
+- Minimum tap target: 44x44px
+- Use `@click` not `@dblclick`
+- Swipe gestures for lists (optional)
+
+### API Integration with Inertia
+
+#### Page Props
+```javascript
+// In Laravel Controller
+return Inertia::render('Dashboard', [
+    'accounts' => $user->bankAccounts,
+    'recentTransactions' => $user->transactions()->latest()->take(10)->get(),
+    'stats' => [
+        'totalBalance' => $totalBalance,
+        'monthlyIncome' => $monthlyIncome,
+    ],
+]);
+```
+
+#### Form Submission
+```vue
+<script setup>
+import { useForm } from '@inertiajs/vue3';
+
+const form = useForm({
+    amount: null,
+    beneficiary_id: null,
+    pin: '',
+});
+
+const submit = () => {
+    form.post('/transfers/internal', {
+        onSuccess: () => {
+            // Show success toast
+        },
+    });
+};
+</script>
+```
+
+### Pinia Store Pattern
+```javascript
+// stores/accounts.js
+import { defineStore } from 'pinia';
+
+export const useAccountsStore = defineStore('accounts', {
+    state: () => ({
+        accounts: [],
+        selectedAccount: null,
+        isLoading: false,
+    }),
+    
+    getters: {
+        totalBalance: (state) => state.accounts.reduce(
+            (sum, acc) => sum + acc.balance, 0
+        ),
+    },
+    
+    actions: {
+        async fetchAccounts() {
+            this.isLoading = true;
+            // Accounts come from Inertia props, not API calls
+        },
+    },
+});
+```
+
+### Performance Guidelines
+- Lazy load pages with `defineAsyncComponent`
+- Use `v-memo` for expensive list renders
+- Optimize images with proper formats (WebP)
+- Keep bundle size under 200KB (gzipped)
 
 ---
 

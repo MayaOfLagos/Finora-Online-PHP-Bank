@@ -23,9 +23,15 @@ class SettingResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Settings';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?int $navigationGroupSort = 999;
+
+    protected static ?string $navigationLabel = 'Raw Settings';
+
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?string $slug = 'raw-settings';
 
     public static function form(Schema $schema): Schema
     {

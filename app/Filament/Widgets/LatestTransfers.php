@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class LatestTransfers extends TableWidget
 {
-    protected int|string|array $columnSpan = 'full';
+    protected static ?int $sort = 10;
+
+    protected int|string|array $columnSpan = '3xl';
 
     protected static ?string $heading = 'Latest Wire Transfers';
 

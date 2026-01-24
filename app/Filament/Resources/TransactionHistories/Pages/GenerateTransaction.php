@@ -20,6 +20,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -68,16 +69,17 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                         ->label('Bank Account')
                         ->options(function (callable $get) {
                             $userId = $get('user_id');
-                            if (!$userId) {
+                            if (! $userId) {
                                 return [];
                             }
                             $user = \App\Models\User::find($userId);
-                            if (!$user) {
+                            if (! $user) {
                                 return [];
                             }
+
                             return $user->bankAccounts->mapWithKeys(function ($account) {
                                 return [
-                                    $account->id => $account->accountType->name . ' - ' . $account->account_number . ' (' . $account->currency . ')'
+                                    $account->id => $account->accountType->name.' - '.$account->account_number.' ('.$account->currency.')',
                                 ];
                             });
                         })
@@ -107,12 +109,12 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                             $accountId = $get('bank_account_id');
                             $transactionType = $get('transaction_type');
 
-                            if (!$accountId) {
+                            if (! $accountId) {
                                 return 'Please select a bank account first';
                             }
 
                             $account = BankAccount::find($accountId);
-                            if (!$account) {
+                            if (! $account) {
                                 return '';
                             }
 
@@ -122,15 +124,17 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                             if (in_array($transactionType, ['debit', 'withdrawal'])) {
                                 $newBalance = $currentBalance - $amount;
                                 if ($newBalance < 0) {
-                                    return "⚠️ Insufficient funds! Current balance: $" . number_format($currentBalance, 2);
+                                    return '⚠️ Insufficient funds! Current balance: $'.number_format($currentBalance, 2);
                                 }
-                                return "New balance will be: $" . number_format($newBalance, 2);
+
+                                return 'New balance will be: $'.number_format($newBalance, 2);
                             } elseif (in_array($transactionType, ['credit', 'deposit', 'refund'])) {
                                 $newBalance = $currentBalance + $amount;
-                                return "New balance will be: $" . number_format($newBalance, 2);
+
+                                return 'New balance will be: $'.number_format($newBalance, 2);
                             }
 
-                            return "Current balance: $" . number_format($currentBalance, 2);
+                            return 'Current balance: $'.number_format($currentBalance, 2);
                         })
                         ->live(debounce: 500),
                     TextInput::make('currency')
@@ -177,12 +181,13 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                     $user = \App\Models\User::find($data['user_id']);
                     $account = BankAccount::find($data['bank_account_id']);
 
-                    if (!$user || !$account) {
+                    if (! $user || ! $account) {
                         Notification::make()
                             ->title('Error')
                             ->body('User or account not found.')
                             ->danger()
                             ->send();
+
                         return;
                     }
 
@@ -200,10 +205,11 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                             if ($account->balance < $amountInCents) {
                                 Notification::make()
                                     ->title('Insufficient Balance')
-                                    ->body("Cannot debit \${$data['amount']}. Current balance is \$" . number_format($previousBalance / 100, 2))
+                                    ->body("Cannot debit \${$data['amount']}. Current balance is \$".number_format($previousBalance / 100, 2))
                                     ->danger()
                                     ->duration(5000)
                                     ->send();
+
                                 return;
                             }
                             $account->decrement('balance', $amountInCents);
@@ -245,7 +251,7 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                             );
                             $notificationsSent[] = 'Email';
                         } catch (\Exception $e) {
-                            \Log::error('Failed to send transaction email: ' . $e->getMessage());
+                            \Log::error('Failed to send transaction email: '.$e->getMessage());
                         }
                     }
 
@@ -256,12 +262,12 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                                 new PushNotificationMail(
                                     user: $user,
                                     title: "{$transactionType} Transaction - Finora Bank",
-                                    message: "Your {$account->accountType->name} account has been " . ($isCredit ? 'credited' : 'debited') . " with \${$data['amount']} {$account->currency}. New balance: \$" . number_format($account->balance / 100, 2) . " {$account->currency}. Ref: {$data['reference_number']}",
+                                    message: "Your {$account->accountType->name} account has been ".($isCredit ? 'credited' : 'debited')." with \${$data['amount']} {$account->currency}. New balance: \$".number_format($account->balance / 100, 2)." {$account->currency}. Ref: {$data['reference_number']}",
                                 )
                             );
                             $notificationsSent[] = 'Push';
                         } catch (\Exception $e) {
-                            \Log::error('Failed to send transaction push notification: ' . $e->getMessage());
+                            \Log::error('Failed to send transaction push notification: '.$e->getMessage());
                         }
                     }
 
@@ -291,17 +297,17 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                     $notificationMessage = "**Transaction:** {$data['transaction_type']}\n**Amount:** \${$data['amount']} {$data['currency']}\n**Status:** {$data['status']}";
 
                     if ($data['update_account_balance'] ?? true) {
-                        $notificationMessage .= "\n**New Balance:** \$" . number_format($account->balance / 100, 2);
+                        $notificationMessage .= "\n**New Balance:** \$".number_format($account->balance / 100, 2);
                     }
 
-                    if (!empty($notificationsSent)) {
-                        $notificationMessage .= "\n📧 **Notifications Sent:** " . implode(', ', $notificationsSent);
+                    if (! empty($notificationsSent)) {
+                        $notificationMessage .= "\n📧 **Notifications Sent:** ".implode(', ', $notificationsSent);
                     } else {
                         $notificationMessage .= "\n⚠️ **No notifications sent** (disabled by admin)";
                     }
 
                     Notification::make()
-                        ->title($emoji . ' Transaction Generated Successfully')
+                        ->title($emoji.' Transaction Generated Successfully')
                         ->body($notificationMessage)
                         ->success()
                         ->duration(6000)

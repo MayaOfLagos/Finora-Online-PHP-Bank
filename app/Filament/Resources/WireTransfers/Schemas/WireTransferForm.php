@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WireTransfers\Schemas;
 
+use App\Helpers\Countries;
 use App\Enums\TransferStatus;
 use App\Enums\TransferStep;
 use Filament\Forms\Components\DateTimePicker;
@@ -88,6 +89,12 @@ class WireTransferForm
                             ->label('Bank Address')
                             ->rows(3)
                             ->columnSpanFull(),
+                        Select::make('beneficiary_country')
+                            ->label('Beneficiary Country')
+                            ->options(Countries::forSelect())
+                            ->searchable()
+                            ->placeholder('Select country')
+                            ->columnSpanFull(),
                         TextInput::make('swift_code')
                             ->label('SWIFT/BIC Code')
                             ->required()
@@ -114,7 +121,10 @@ class WireTransferForm
                             ->label('Currency')
                             ->required()
                             ->default('USD')
-                            ->maxLength(3),
+                            ->maxLength(3)
+                            ->disabled()
+                            ->dehydrated()
+                            ->helperText('Auto-set from bank account'),
                         TextInput::make('exchange_rate')
                             ->label('Exchange Rate')
                             ->numeric()
@@ -135,9 +145,9 @@ class WireTransferForm
                             ->prefix('$')
                             ->step(0.01)
                             ->helperText('Amount + Fee'),
-                        Textarea::make('purpose')
-                            ->label('Transfer Purpose')
-                            ->placeholder('Reason for this transfer')
+                        Textarea::make('remarks')
+                            ->label('Remarks / Purpose of Transfer')
+                            ->placeholder('Reason for this transfer (optional)')
                             ->rows(3)
                             ->columnSpanFull(),
                     ])

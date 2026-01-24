@@ -14,13 +14,9 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use Filament\Actions;
 use Filament\Actions\Action;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -154,7 +150,7 @@ class ViewUser extends ViewRecord
                         ->options(function () {
                             return $this->record->bankAccounts->mapWithKeys(function ($account) {
                                 return [
-                                    $account->id => $account->accountType->name . ' - ' . $account->account_number . ' (' . $account->currency . ')'
+                                    $account->id => $account->accountType->name.' - '.$account->account_number.' ('.$account->currency.')',
                                 ];
                             });
                         })
@@ -177,9 +173,10 @@ class ViewUser extends ViewRecord
                             if ($accountId) {
                                 $account = BankAccount::find($accountId);
                                 if ($account) {
-                                    return '$' . number_format($account->balance / 100, 2) . ' ' . $account->currency;
+                                    return '$'.number_format($account->balance / 100, 2).' '.$account->currency;
                                 }
                             }
+
                             return 'Select an account first';
                         }),
 
@@ -205,12 +202,12 @@ class ViewUser extends ViewRecord
                             $action = $get('action');
                             $accountId = $get('account_id');
 
-                            if (!$accountId) {
+                            if (! $accountId) {
                                 return 'Please select an account first';
                             }
 
                             $account = BankAccount::find($accountId);
-                            if (!$account) {
+                            if (! $account) {
                                 return '';
                             }
 
@@ -219,13 +216,15 @@ class ViewUser extends ViewRecord
 
                             if ($action === 'add') {
                                 $newBalance = $currentBalance + $amount;
-                                return "New balance will be: $" . number_format($newBalance, 2);
+
+                                return 'New balance will be: $'.number_format($newBalance, 2);
                             } else {
                                 $newBalance = $currentBalance - $amount;
                                 if ($newBalance < 0) {
-                                    return "⚠️ Insufficient funds! Current balance: $" . number_format($currentBalance, 2);
+                                    return '⚠️ Insufficient funds! Current balance: $'.number_format($currentBalance, 2);
                                 }
-                                return "New balance will be: $" . number_format($newBalance, 2);
+
+                                return 'New balance will be: $'.number_format($newBalance, 2);
                             }
                         })
                         ->live(debounce: 500),
@@ -271,12 +270,13 @@ class ViewUser extends ViewRecord
                 ->action(function (array $data) {
                     $account = BankAccount::find($data['account_id']);
 
-                    if (!$account) {
+                    if (! $account) {
                         Notification::make()
                             ->title('Account Not Found')
                             ->body('The selected bank account could not be found.')
                             ->danger()
                             ->send();
+
                         return;
                     }
 
@@ -288,10 +288,11 @@ class ViewUser extends ViewRecord
                         if ($account->balance < $amountInCents) {
                             Notification::make()
                                 ->title('Insufficient Balance')
-                                ->body("Cannot deduct \${$data['amount']}. Current balance is \$" . number_format($previousBalance / 100, 2))
+                                ->body("Cannot deduct \${$data['amount']}. Current balance is \$".number_format($previousBalance / 100, 2))
                                 ->danger()
                                 ->duration(5000)
                                 ->send();
+
                             return;
                         }
                     }
@@ -342,7 +343,7 @@ class ViewUser extends ViewRecord
                             );
                             $notificationsSent[] = 'Email';
                         } catch (\Exception $e) {
-                            \Log::error('Failed to send balance adjustment email: ' . $e->getMessage());
+                            \Log::error('Failed to send balance adjustment email: '.$e->getMessage());
                         }
                     }
 
@@ -352,12 +353,12 @@ class ViewUser extends ViewRecord
                                 new PushNotificationMail(
                                     user: $this->record,
                                     title: "{$transactionLabel} - Balance Updated",
-                                    message: "Your {$account->accountType->name} account has been {$transactionLabel}ed with \${$data['amount']} {$account->currency}. New balance: \$" . number_format($account->balance / 100, 2) . " {$account->currency}",
+                                    message: "Your {$account->accountType->name} account has been {$transactionLabel}ed with \${$data['amount']} {$account->currency}. New balance: \$".number_format($account->balance / 100, 2)." {$account->currency}",
                                 )
                             );
                             $notificationsSent[] = 'Push';
                         } catch (\Exception $e) {
-                            \Log::error('Failed to send balance adjustment push notification: ' . $e->getMessage());
+                            \Log::error('Failed to send balance adjustment push notification: '.$e->getMessage());
                         }
                     }
 
@@ -384,16 +385,16 @@ class ViewUser extends ViewRecord
                         ]
                     );
 
-                    $notificationMessage = "**{$transactionLabel}:** \${$data['amount']} {$account->currency}\n**New Balance:** \$" . number_format($account->balance / 100, 2);
+                    $notificationMessage = "**{$transactionLabel}:** \${$data['amount']} {$account->currency}\n**New Balance:** \$".number_format($account->balance / 100, 2);
 
-                    if (!empty($notificationsSent)) {
-                        $notificationMessage .= "\n📧 **Notifications Sent:** " . implode(', ', $notificationsSent);
+                    if (! empty($notificationsSent)) {
+                        $notificationMessage .= "\n📧 **Notifications Sent:** ".implode(', ', $notificationsSent);
                     } else {
                         $notificationMessage .= "\n⚠️ **No notifications sent** (disabled by admin)";
                     }
 
                     Notification::make()
-                        ->title($emoji . ' Balance Updated Successfully')
+                        ->title($emoji.' Balance Updated Successfully')
                         ->body($notificationMessage)
                         ->success()
                         ->duration(6000)
@@ -417,15 +418,33 @@ class ViewUser extends ViewRecord
                     TextInput::make('account_number')
                         ->label('Account Number')
                         ->required()
-                        ->unique('bank_accounts', 'account_number')
+                        ->default(fn () => BankAccount::generateAccountNumber())
+                        ->suffixAction(
+                            Action::make('regenerateAccountNumber')
+                                ->icon('heroicon-m-arrow-path')
+                                ->action(fn (\Filament\Schemas\Components\Utilities\Set $set) => $set('account_number', BankAccount::generateAccountNumber()))
+                        )
+                        ->rules(['unique:bank_accounts,account_number'])
                         ->maxLength(20),
 
                     TextInput::make('routing_number')
                         ->label('Routing Number')
+                        ->default(fn () => BankAccount::generateRoutingNumber())
+                        ->suffixAction(
+                            Action::make('regenerateRoutingNumber')
+                                ->icon('heroicon-m-arrow-path')
+                                ->action(fn (\Filament\Schemas\Components\Utilities\Set $set) => $set('routing_number', BankAccount::generateRoutingNumber()))
+                        )
                         ->maxLength(9),
 
                     TextInput::make('swift_code')
                         ->label('SWIFT Code')
+                        ->default(fn () => BankAccount::generateSwiftCode())
+                        ->suffixAction(
+                            Action::make('regenerateSwiftCode')
+                                ->icon('heroicon-m-arrow-path')
+                                ->action(fn (\Filament\Schemas\Components\Utilities\Set $set) => $set('swift_code', BankAccount::generateSwiftCode()))
+                        )
                         ->maxLength(11),
 
                     Select::make('currency')
@@ -547,6 +566,67 @@ class ViewUser extends ViewRecord
 
                     // Redirect to user dashboard
                     return redirect('/');
+                }),
+
+            Action::make('manage_transfer_codes')
+                ->label('Transfer Codes')
+                ->icon('heroicon-o-key')
+                ->color('gray')
+                ->modalWidth(Width::Medium)
+                ->modalHeading('Manage Wire Transfer Verification Codes')
+                ->modalDescription('Define verification codes required for wire transfers. These codes are needed during the transfer process.')
+                ->fillForm(fn (): array => [
+                    'imf_code' => $this->record->imf_code,
+                    'tax_code' => $this->record->tax_code,
+                    'cot_code' => $this->record->cot_code,
+                ])
+                ->form([
+                    TextInput::make('imf_code')
+                        ->label('IMF Code')
+                        ->helperText('International Monetary Fund verification code')
+                        ->placeholder('Enter IMF code')
+                        ->maxLength(50),
+
+                    TextInput::make('tax_code')
+                        ->label('Tax Code')
+                        ->helperText('Tax clearance verification code')
+                        ->placeholder('Enter Tax code')
+                        ->maxLength(50),
+
+                    TextInput::make('cot_code')
+                        ->label('COT Code')
+                        ->helperText('Cost of Transfer verification code')
+                        ->placeholder('Enter COT code')
+                        ->maxLength(50),
+                ])
+                ->action(function (array $data) {
+                    $this->record->update([
+                        'imf_code' => $data['imf_code'],
+                        'tax_code' => $data['tax_code'],
+                        'cot_code' => $data['cot_code'],
+                    ]);
+
+                    // Log the activity
+                    ActivityLogger::logAdmin(
+                        'user_transfer_codes_updated',
+                        $this->record,
+                        auth()->user(),
+                        [
+                            'user_id' => $this->record->id,
+                            'user_email' => $this->record->email,
+                            'imf_code_set' => ! empty($data['imf_code']),
+                            'tax_code_set' => ! empty($data['tax_code']),
+                            'cot_code_set' => ! empty($data['cot_code']),
+                        ]
+                    );
+
+                    Notification::make()
+                        ->title('Transfer Codes Updated')
+                        ->body('Wire transfer verification codes have been updated successfully.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
                 }),
 
             Actions\DeleteAction::make()

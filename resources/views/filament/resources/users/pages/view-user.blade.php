@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
 
         {{-- Left Sidebar: User Profile Card --}}
         <div class="lg:col-span-4">
@@ -12,9 +12,9 @@
                             @if($record->profile_photo_path)
                                 <img src="{{ Storage::url($record->profile_photo_path) }}"
                                      alt="{{ $record->name }}"
-                                     class="w-32 h-32 rounded-full object-cover ring-4 ring-primary-500/20">
+                                     class="object-cover w-32 h-32 rounded-full ring-4 ring-primary-500/20">
                             @else
-                                <div class="w-32 h-32 rounded-full bg-primary-500 flex items-center justify-center text-white text-4xl font-bold ring-4 ring-primary-500/20">
+                                <div class="flex items-center justify-center w-32 h-32 text-4xl font-bold text-white rounded-full bg-primary-500 ring-4 ring-primary-500/20">
                                     {{ substr($record->first_name, 0, 1) }}{{ substr($record->last_name, 0, 1) }}
                                 </div>
                             @endif
@@ -29,30 +29,33 @@
                         </p>
 
                         <div class="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                            @php
+                                $lastLogin = $record->loginHistories()->latest()->first();
+                            @endphp
                             <div>
-                                Last Login: {{ $record->loginHistories()->latest()->first()?->created_at->format('Y-m-d H:i') ?? 'Never' }}
+                                Last Login: {{ $lastLogin?->created_at?->format('Y-m-d H:i') ?? 'Never' }}
                             </div>
                             <div>
-                                Browser: Chrome {{-- TODO: Get from login history --}}
+                                Browser: {{ $lastLogin?->browser ?? 'N/A' }} {{ $lastLogin?->platform ? '(' . $lastLogin->platform . ')' : '' }}
                             </div>
                         </div>
                     </div>
 
                     {{-- User Accounts/Wallets --}}
                     <div class="space-y-2">
-                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <h4 class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                             <x-heroicon-o-wallet class="w-4 h-4"/>
                             Bank Accounts
                         </h4>
 
                         @forelse($record->bankAccounts as $account)
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center">
+                                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900">
                                         <x-heroicon-o-banknotes class="w-6 h-6 text-primary-600 dark:text-primary-400"/>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-sm text-gray-900 dark:text-white">
+                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">
                                             {{ $account->accountType->name }}
                                             @if($account->is_primary)
                                                 <span class="ml-1 text-xs px-2 py-0.5 bg-success-100 text-success-700 dark:bg-success-900 dark:text-success-300 rounded-full">
@@ -72,25 +75,25 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="text-center text-sm text-gray-500 dark:text-gray-400 py-4">
+                            <div class="py-4 text-sm text-center text-gray-500 dark:text-gray-400">
                                 <p>No bank accounts yet</p>
-                                <p class="text-xs mt-2">Use the "Create Bank Account" button in the header to add one (max 2)</p>
+                                <p class="mt-2 text-xs">Use the "Create Bank Account" button in the header to add one (max 2)</p>
                             </div>
                         @endforelse
                     </div>
 
                     {{-- User Controls --}}
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-3">
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h4 class="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                             <x-heroicon-o-lock-closed class="w-4 h-4"/>
                             User Controls
                         </h4>
 
-                        <div class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                        <div class="pr-2 space-y-2 overflow-y-auto max-h-96">
                             {{-- Can Transfer --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Transfer Money</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Transfer Money</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to transfer funds</div>
                                 </div>
                                 <div>
@@ -105,9 +108,9 @@
                             </div>
 
                             {{-- Can Withdraw --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Withdraw Funds</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Withdraw Funds</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to withdraw money</div>
                                 </div>
                                 <div>
@@ -122,9 +125,9 @@
                             </div>
 
                             {{-- Can Deposit --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Deposit Funds</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Deposit Funds</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to deposit money</div>
                                 </div>
                                 <div>
@@ -139,9 +142,9 @@
                             </div>
 
                             {{-- Can Request Loan --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Request Loans</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Request Loans</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to apply for loans</div>
                                 </div>
                                 <div>
@@ -156,9 +159,9 @@
                             </div>
 
                             {{-- Can Request Card --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Request Cards</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Request Cards</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to request debit/credit cards</div>
                                 </div>
                                 <div>
@@ -173,9 +176,9 @@
                             </div>
 
                             {{-- Can Apply Grant --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Apply for Grants</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Apply for Grants</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to apply for grant programs</div>
                                 </div>
                                 <div>
@@ -190,9 +193,9 @@
                             </div>
 
                             {{-- Can Send Wire Transfer --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Wire Transfers</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Wire Transfers</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow international wire transfers</div>
                                 </div>
                                 <div>
@@ -207,9 +210,9 @@
                             </div>
 
                             {{-- Can Send Internal Transfer --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Internal Transfers</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Internal Transfers</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow transfers within bank</div>
                                 </div>
                                 <div>
@@ -224,9 +227,9 @@
                             </div>
 
                             {{-- Can Send Domestic Transfer --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Domestic Transfers</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Domestic Transfers</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow local bank transfers</div>
                                 </div>
                                 <div>
@@ -241,9 +244,9 @@
                             </div>
 
                             {{-- Can Create Beneficiary --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <div class="flex-1">
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Manage Beneficiaries</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Manage Beneficiaries</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Allow user to add beneficiaries</div>
                                 </div>
                                 <div>
@@ -257,10 +260,27 @@
                                 </div>
                             </div>
 
-                            {{-- Account Status (readonly display) --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mt-4">
+                            {{-- Skip Transfer OTP --}}
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Skip Transfer OTP</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Bypass OTP verification for transfers</div>
+                                </div>
                                 <div>
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Account Status</div>
+                                    <button
+                                        type="button"
+                                        wire:click="togglePermission('skip_transfer_otp')"
+                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 {{ $record->skip_transfer_otp ? 'bg-warning-600' : 'bg-gray-200 dark:bg-gray-700' }}">
+                                        <span class="sr-only">Toggle skip transfer OTP</span>
+                                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{ $record->skip_transfer_otp ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Account Status (readonly display) --}}
+                            <div class="flex items-center justify-between p-3 mt-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Account Status</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Overall account status</div>
                                 </div>
                                 <div>
@@ -271,9 +291,9 @@
                             </div>
 
                             {{-- Email Verification (readonly display) --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                                 <div>
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Email Verification</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Email Verification</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Email verification status</div>
                                 </div>
                                 <div>
@@ -284,9 +304,9 @@
                             </div>
 
                             {{-- KYC Verification (readonly display) --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                                 <div>
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">KYC Verification</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">KYC Verification</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">Level: {{ $record->kyc_level }}</div>
                                 </div>
                                 <div>
@@ -297,9 +317,9 @@
                             </div>
 
                             {{-- 2FA Status (readonly display) --}}
-                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                                 <div>
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white">Two-Factor Auth</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Two-Factor Auth</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">2FA security status</div>
                                 </div>
                                 <div>

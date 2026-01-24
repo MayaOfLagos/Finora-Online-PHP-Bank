@@ -25,7 +25,7 @@ class RewardResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedStar;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Finance Management';
+    protected static string|UnitEnum|null $navigationGroup = 'Transaction History';
 
     protected static ?int $navigationSort = 2;
 

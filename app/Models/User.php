@@ -2,17 +2,33 @@
 
 namespace App\Models;
 
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasAvatar, HasEmailAuthentication, HasName, MustVerifyEmail
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory;
+    use InteractsWithAppAuthentication;
+    use InteractsWithAppAuthenticationRecovery;
+    use InteractsWithEmailAuthentication;
+    use Notifiable;
+    use SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -45,6 +61,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'can_send_internal_transfer',
         'can_send_domestic_transfer',
         'can_create_beneficiary',
+        // Wire transfer verification codes
+        'imf_code',
+        'tax_code',
+        'cot_code',
+        // User-level OTP override
+        'skip_transfer_otp',
+        // Filament MFA columns
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
+        'has_email_authentication',
     ];
 
     protected $hidden = [
@@ -52,6 +78,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
         'transaction_pin',
         'two_factor_secret',
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
     ];
 
     protected function casts(): array
@@ -75,6 +103,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'can_send_internal_transfer' => 'boolean',
             'can_send_domestic_transfer' => 'boolean',
             'can_create_beneficiary' => 'boolean',
+            'skip_transfer_otp' => 'boolean',
+            'has_email_authentication' => 'boolean',
         ];
     }
 
@@ -88,6 +118,40 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         });
     }
+
+    // ==================== FILAMENT INTERFACE METHODS ====================
+
+    /**
+     * Determine if the user can access the given Filament panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // For now, all active verified users can access the admin panel
+        // You can add role-based access control here
+        return $this->is_active && $this->hasVerifiedEmail();
+    }
+
+    /**
+     * Get the user's avatar URL for Filament.
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if ($this->profile_photo_path && Storage::disk('public')->exists($this->profile_photo_path)) {
+            return Storage::url($this->profile_photo_path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the user's name for Filament.
+     */
+    public function getFilamentName(): string
+    {
+        return $this->full_name;
+    }
+
+    // ==================== ACCESSORS ====================
 
     /**
      * Get the route key for the model.
@@ -263,5 +327,51 @@ class User extends Authenticatable implements MustVerifyEmail
     public function exchangeMoney(): HasMany
     {
         return $this->hasMany(ExchangeMoney::class);
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Check if transfer OTP verification is required for this user.
+     * Returns false if user has skip_transfer_otp enabled OR if global setting is disabled.
+     */
+    public function requiresTransferOtp(): bool
+    {
+        // If user has skip_transfer_otp enabled, they don't need OTP
+        if ($this->skip_transfer_otp) {
+            return false;
+        }
+
+        // Otherwise, check global setting
+        return (bool) Setting::getValue('security', 'transfer_otp_enabled', true);
+    }
+
+    /**
+     * Check if user has wire transfer verification codes set.
+     */
+    public function hasTransferCodes(): bool
+    {
+        return ! empty($this->imf_code) || ! empty($this->tax_code) || ! empty($this->cot_code);
+    }
+
+    /**
+     * Get the required transfer codes for wire transfer verification.
+     * Returns array of code types that are set for this user.
+     */
+    public function getRequiredTransferCodes(): array
+    {
+        $codes = [];
+
+        if (! empty($this->imf_code)) {
+            $codes[] = 'imf';
+        }
+        if (! empty($this->tax_code)) {
+            $codes[] = 'tax';
+        }
+        if (! empty($this->cot_code)) {
+            $codes[] = 'cot';
+        }
+
+        return $codes;
     }
 }

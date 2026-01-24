@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\BankAccounts\Schemas;
 
+use App\Models\BankAccount;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
@@ -33,7 +36,37 @@ class BankAccountForm
                             ->relationship('accountType', 'name')
                             ->required(),
                         TextInput::make('account_number')
-                            ->required(),
+                            ->label('Account Number')
+                            ->required()
+                            ->default(fn () => BankAccount::generateAccountNumber())
+                            ->suffixAction(
+                                Action::make('regenerateAccountNumber')
+                                    ->icon('heroicon-m-arrow-path')
+                                    ->action(fn (Set $set) => $set('account_number', BankAccount::generateAccountNumber()))
+                            )
+                            ->unique(
+                                table: 'bank_accounts',
+                                column: 'account_number',
+                                ignoreRecord: true,
+                            ),
+                        TextInput::make('routing_number')
+                            ->label('Routing Number')
+                            ->default(fn () => BankAccount::generateRoutingNumber())
+                            ->maxLength(9)
+                            ->suffixAction(
+                                Action::make('regenerateRoutingNumber')
+                                    ->icon('heroicon-m-arrow-path')
+                                    ->action(fn (Set $set) => $set('routing_number', BankAccount::generateRoutingNumber()))
+                            ),
+                        TextInput::make('swift_code')
+                            ->label('SWIFT/BIC Code')
+                            ->default(fn () => BankAccount::generateSwiftCode())
+                            ->maxLength(11)
+                            ->suffixAction(
+                                Action::make('regenerateSwiftCode')
+                                    ->icon('heroicon-m-arrow-path')
+                                    ->action(fn (Set $set) => $set('swift_code', BankAccount::generateSwiftCode()))
+                            ),
                         TextInput::make('balance')
                             ->required()
                             ->numeric()

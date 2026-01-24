@@ -18,6 +18,8 @@ class BankAccount extends Model
         'user_id',
         'account_type_id',
         'account_number',
+        'routing_number',
+        'swift_code',
         'balance',
         'currency',
         'is_primary',
@@ -48,6 +50,12 @@ class BankAccount extends Model
             if (empty($account->account_number)) {
                 $account->account_number = self::generateAccountNumber();
             }
+            if (empty($account->routing_number)) {
+                $account->routing_number = self::generateRoutingNumber();
+            }
+            if (empty($account->swift_code)) {
+                $account->swift_code = self::generateSwiftCode();
+            }
         });
     }
 
@@ -61,6 +69,41 @@ class BankAccount extends Model
         } while (self::where('account_number', $number)->exists());
 
         return $number;
+    }
+
+    /**
+     * Generate a routing number (9 digits).
+     */
+    public static function generateRoutingNumber(): string
+    {
+        // Generate a 9-digit routing number
+        // First 4 digits: Federal Reserve routing symbol (0100-1299)
+        $prefix = str_pad(random_int(100, 1299), 4, '0', STR_PAD_LEFT);
+        // Next 4 digits: ABA institution identifier
+        $middle = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        // Last digit: check digit (simplified)
+        $checkDigit = random_int(0, 9);
+
+        return $prefix.$middle.$checkDigit;
+    }
+
+    /**
+     * Generate a SWIFT/BIC code (8 or 11 characters).
+     */
+    public static function generateSwiftCode(): string
+    {
+        // SWIFT code format: AAAABBCCXXX
+        // AAAA = Bank code (4 letters)
+        // BB = Country code (2 letters)
+        // CC = Location code (2 characters)
+        // XXX = Branch code (3 characters, optional)
+
+        $bankCode = 'FNRA'; // Finora Bank
+        $countryCode = 'US';
+        $locationCode = chr(random_int(65, 90)).random_int(0, 9); // Letter + digit
+        $branchCode = str_pad(random_int(0, 999), 3, '0', STR_PAD_LEFT);
+
+        return $bankCode.$countryCode.$locationCode.$branchCode;
     }
 
     /**
@@ -97,6 +140,11 @@ class BankAccount extends Model
     public function accountType(): BelongsTo
     {
         return $this->belongsTo(AccountType::class);
+    }
+
+    public function transactionHistories(): HasMany
+    {
+        return $this->hasMany(TransactionHistory::class);
     }
 
     public function wireTransfers(): HasMany

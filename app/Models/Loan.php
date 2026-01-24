@@ -96,4 +96,14 @@ class Loan extends Model
     {
         return $this->hasMany(LoanRepayment::class);
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(LoanPayment::class);
+    }
+
+    public function loanApplication(): BelongsTo
+    {
+        return $this->belongsTo(LoanApplication::class);
+    }
 }

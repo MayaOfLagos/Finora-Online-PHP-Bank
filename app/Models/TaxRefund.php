@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TaxRefundStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,10 +21,20 @@ class TaxRefund extends Model
         'tax_year',
         'ssn_tin',
         'filing_status',
+        'employer_name',
+        'employer_ein',
+        'gross_income',
+        'federal_withheld',
+        'state_withheld',
+        'state',
         'refund_amount',
         'currency',
         'irs_reference_number',
         'status',
+        'idme_verified',
+        'idme_verification_id',
+        'idme_verified_at',
+        'idme_verification_data',
         'rejection_reason',
         'submitted_at',
         'processed_at',
@@ -35,6 +46,13 @@ class TaxRefund extends Model
     {
         return [
             'refund_amount' => 'decimal:2',
+            'gross_income' => 'decimal:2',
+            'federal_withheld' => 'decimal:2',
+            'state_withheld' => 'decimal:2',
+            'status' => TaxRefundStatus::class,
+            'idme_verified' => 'boolean',
+            'idme_verification_data' => 'array',
+            'idme_verified_at' => 'datetime',
             'submitted_at' => 'datetime',
             'processed_at' => 'datetime',
             'approved_at' => 'datetime',

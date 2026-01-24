@@ -16,11 +16,14 @@ class TransactionHistory extends Model
     protected $fillable = [
         'uuid',
         'user_id',
+        'bank_account_id',
         'transaction_type',
         'reference_number',
         'transactionable_type',
         'transactionable_id',
         'amount',
+        'type',
+        'balance_after',
         'currency',
         'status',
         'description',
@@ -71,6 +74,11 @@ class TransactionHistory extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 
     public function generatedByUser(): BelongsTo

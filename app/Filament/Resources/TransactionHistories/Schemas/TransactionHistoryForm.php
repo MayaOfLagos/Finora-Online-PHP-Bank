@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\TransactionHistories\Schemas;
 
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Schema;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
 class TransactionHistoryForm
@@ -17,7 +17,7 @@ class TransactionHistoryForm
     {
         return $schema
             ->schema([
-                Group::make()
+                Fieldset::make()
                     ->schema([
                         TextInput::make('uuid')
                             ->label('UUID')

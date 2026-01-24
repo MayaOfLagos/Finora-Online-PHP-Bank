@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LoanApplications;
 use App\Filament\Resources\LoanApplications\Pages\CreateLoanApplication;
 use App\Filament\Resources\LoanApplications\Pages\EditLoanApplication;
 use App\Filament\Resources\LoanApplications\Pages\ListLoanApplications;
+use App\Filament\Resources\LoanApplications\Pages\ViewLoanApplication;
 use App\Filament\Resources\LoanApplications\Schemas\LoanApplicationForm;
 use App\Filament\Resources\LoanApplications\Tables\LoanApplicationsTable;
 use App\Models\LoanApplication;
@@ -47,6 +48,7 @@ class LoanApplicationResource extends Resource
         return [
             'index' => ListLoanApplications::route('/'),
             'create' => CreateLoanApplication::route('/create'),
+            'view' => ViewLoanApplication::route('/{record}'),
             'edit' => EditLoanApplication::route('/{record}/edit'),
         ];
     }

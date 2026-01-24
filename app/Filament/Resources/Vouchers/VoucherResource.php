@@ -25,7 +25,7 @@ class VoucherResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTicket;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Finance Management';
+    protected static string|UnitEnum|null $navigationGroup = 'Transaction History';
 
     protected static ?int $navigationSort = 1;
 

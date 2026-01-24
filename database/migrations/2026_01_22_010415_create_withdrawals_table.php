@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('reference_number')->unique();
             $table->bigInteger('amount'); // in cents
             $table->string('currency')->default('USD');
-            $table->enum('status', ['pending', 'approved', 'completed', 'failed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'completed', 'rejected', 'failed', 'cancelled'])->default('pending');
             $table->text('reason')->nullable();
             $table->text('bank_details')->nullable();
             $table->timestamp('approved_at')->nullable();

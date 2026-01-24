@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Enums\TicketCategory;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
+use App\Mail\NewTicketNotificationMail;
 use App\Models\Faq;
 use App\Models\KnowledgeBaseArticle;
-use App\Models\KnowledgeBaseCategory;
+use App\Models\Setting;
+use App\Models\SupportCategory;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 
@@ -23,15 +25,18 @@ class SupportController extends Controller
      */
     public function categories(): JsonResponse
     {
-        $categories = collect(TicketCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->getLabel(),
-            'description' => $cat->getDescription(),
-        ]);
+        $categories = SupportCategory::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn ($cat) => [
+                'value' => $cat->id,
+                'label' => $cat->name,
+                'description' => $cat->description,
+            ]);
 
         $priorities = collect(TicketPriority::cases())->map(fn ($pri) => [
             'value' => $pri->value,
-            'label' => $pri->getLabel(),
+            'label' => $pri->label(),
         ]);
 
         return response()->json([
@@ -91,24 +96,21 @@ class SupportController extends Controller
     public function knowledgeBase(Request $request): JsonResponse
     {
         // Get categories with their articles
-        $categories = KnowledgeBaseCategory::where('is_active', true)
+        $categories = SupportCategory::where('is_active', true)
             ->withCount(['articles' => fn ($q) => $q->where('is_published', true)])
             ->orderBy('sort_order')
             ->get()
             ->map(fn ($cat) => [
                 'id' => $cat->id,
                 'name' => $cat->name,
-                'slug' => $cat->slug,
                 'description' => $cat->description,
-                'icon' => $cat->icon,
                 'articles_count' => $cat->articles_count,
             ]);
 
         // Get featured/popular articles
         $featuredArticles = KnowledgeBaseArticle::where('is_published', true)
-            ->where('is_featured', true)
-            ->with('category:id,name,slug')
-            ->orderBy('views_count', 'desc')
+            ->with('category:id,name')
+            ->orderBy('view_count', 'desc')
             ->limit(5)
             ->get()
             ->map(fn ($article) => $this->formatArticle($article, false));
@@ -127,7 +129,9 @@ class SupportController extends Controller
      */
     public function knowledgeBaseCategory(Request $request, string $slug): JsonResponse
     {
-        $category = KnowledgeBaseCategory::where('slug', $slug)
+        // Try to find by ID first (since SupportCategory doesn't have slug)
+        $category = SupportCategory::where('id', $slug)
+            ->orWhere('name', 'like', str_replace('-', ' ', $slug))
             ->where('is_active', true)
             ->first();
 
@@ -140,7 +144,7 @@ class SupportController extends Controller
 
         $articles = $category->articles()
             ->where('is_published', true)
-            ->orderBy('sort_order')
+            ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 20);
 
         return response()->json([
@@ -149,7 +153,6 @@ class SupportController extends Controller
                 'category' => [
                     'id' => $category->id,
                     'name' => $category->name,
-                    'slug' => $category->slug,
                     'description' => $category->description,
                 ],
                 'articles' => collect($articles->items())->map(fn ($a) => $this->formatArticle($a, false)),
@@ -170,7 +173,7 @@ class SupportController extends Controller
     {
         $article = KnowledgeBaseArticle::where('slug', $slug)
             ->where('is_published', true)
-            ->with('category:id,name,slug')
+            ->with('category:id,name')
             ->first();
 
         if (! $article) {
@@ -212,10 +215,9 @@ class SupportController extends Controller
         $articles = KnowledgeBaseArticle::where('is_published', true)
             ->where(function ($q) use ($request) {
                 $q->where('title', 'like', "%{$request->query('query')}%")
-                    ->orWhere('content', 'like', "%{$request->query('query')}%")
-                    ->orWhere('excerpt', 'like', "%{$request->query('query')}%");
+                    ->orWhere('content', 'like', "%{$request->query('query')}%");
             })
-            ->with('category:id,name,slug')
+            ->with('category:id,name')
             ->limit(20)
             ->get()
             ->map(fn ($a) => $this->formatArticle($a, false));
@@ -265,7 +267,7 @@ class SupportController extends Controller
         $request->validate([
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
-            'category' => ['required', new Enum(TicketCategory::class)],
+            'category' => ['required', 'exists:support_categories,id'],
             'priority' => ['nullable', new Enum(TicketPriority::class)],
             'attachments' => 'nullable|array|max:5',
             'attachments.*' => 'file|max:10240|mimes:jpg,jpeg,png,gif,pdf,doc,docx',
@@ -280,7 +282,7 @@ class SupportController extends Controller
             'user_id' => $user->id,
             'ticket_number' => $ticketNumber,
             'subject' => $request->subject,
-            'category' => TicketCategory::from($request->category),
+            'category_id' => $request->category,
             'priority' => $request->priority ? TicketPriority::from($request->priority) : TicketPriority::Medium,
             'status' => TicketStatus::Open,
         ]);
@@ -307,7 +309,8 @@ class SupportController extends Controller
             'is_staff_reply' => false,
         ]);
 
-        // TODO: Send notification to support team
+        // Send notification to support team
+        $this->notifySupportTeam($ticket, $request->message);
 
         return response()->json([
             'success' => true,
@@ -391,7 +394,7 @@ class SupportController extends Controller
         ]);
 
         // Reopen ticket if it was awaiting user response
-        if ($ticket->status === TicketStatus::AwaitingResponse) {
+        if ($ticket->status === TicketStatus::Waiting) {
             $ticket->update(['status' => TicketStatus::InProgress]);
         }
 
@@ -487,21 +490,17 @@ class SupportController extends Controller
             'id' => $article->id,
             'title' => $article->title,
             'slug' => $article->slug,
-            'excerpt' => $article->excerpt,
             'category' => $article->category ? [
                 'id' => $article->category->id,
                 'name' => $article->category->name,
-                'slug' => $article->category->slug,
             ] : null,
-            'views_count' => $article->views_count,
-            'is_featured' => $article->is_featured,
-            'published_at' => $article->published_at?->toIso8601String(),
+            'view_count' => $article->view_count,
+            'is_published' => $article->is_published,
+            'created_at' => $article->created_at?->toIso8601String(),
         ];
 
         if ($includeContent) {
             $data['content'] = $article->content;
-            $data['meta_title'] = $article->meta_title;
-            $data['meta_description'] = $article->meta_description;
         }
 
         return $data;
@@ -517,17 +516,17 @@ class SupportController extends Controller
             'ticket_number' => $ticket->ticket_number,
             'subject' => $ticket->subject,
             'category' => [
-                'value' => $ticket->category->value,
-                'label' => $ticket->category->getLabel(),
+                'value' => $ticket->category_id,
+                'label' => $ticket->category?->name ?? 'General',
             ],
             'priority' => [
                 'value' => $ticket->priority->value,
-                'label' => $ticket->priority->getLabel(),
+                'label' => $ticket->priority->label(),
             ],
             'status' => [
                 'value' => $ticket->status->value,
-                'label' => $ticket->status->getLabel(),
-                'color' => $ticket->status->getColor(),
+                'label' => $ticket->status->label(),
+                'color' => $ticket->status->color(),
             ],
             'unread_count' => $ticket->messages()
                 ->where('is_staff_reply', true)
@@ -561,5 +560,22 @@ class SupportController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Send notification to support team about new ticket.
+     */
+    private function notifySupportTeam(SupportTicket $ticket, string $message): void
+    {
+        try {
+            $supportEmail = Setting::get('general', 'support_email', config('mail.from.address'));
+
+            if ($supportEmail) {
+                Mail::to($supportEmail)->send(new NewTicketNotificationMail($ticket, $message));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the ticket creation
+            report($e);
+        }
     }
 }

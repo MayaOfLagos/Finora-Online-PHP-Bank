@@ -20,6 +20,7 @@ class DomesticTransfer extends Model
         'reference_number',
         'beneficiary_name',
         'beneficiary_account',
+        'beneficiary_data',
         'amount',
         'currency',
         'fee',
@@ -35,6 +36,7 @@ class DomesticTransfer extends Model
         return [
             'amount' => 'integer',
             'fee' => 'integer',
+            'beneficiary_data' => 'array',
             'status' => TransferStatus::class,
             'pin_verified_at' => 'datetime',
             'otp_verified_at' => 'datetime',

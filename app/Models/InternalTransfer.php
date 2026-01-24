@@ -18,6 +18,7 @@ class InternalTransfer extends Model
         'sender_account_id',
         'receiver_id',
         'receiver_account_id',
+        'beneficiary_data',
         'reference_number',
         'amount',
         'currency',
@@ -32,6 +33,7 @@ class InternalTransfer extends Model
     {
         return [
             'amount' => 'integer',
+            'beneficiary_data' => 'array',
             'status' => TransferStatus::class,
             'pin_verified_at' => 'datetime',
             'otp_verified_at' => 'datetime',
