@@ -221,7 +221,7 @@ const handlePinSubmit = (pin) => {
         preserveScroll: true,
         onSuccess: (response) => {
             const flash = response.props.flash;
-            
+
             // Check if transfer completed directly (no OTP required)
             if (flash?.transfer) {
                 transferResult.value = flash.transfer;
@@ -575,19 +575,26 @@ watch(() => page.props.flash, (flash) => {
 
                         <!-- Fee Summary -->
                         <Message v-if="formData.amount" severity="info" :closable="false">
-                            <div class="space-y-1">
-                                <div class="flex justify-between">
-                                    <span>Transfer Amount:</span>
-                                    <span class="font-semibold">{{ formatCurrency(formData.amount, selectedAccount?.currency || 'USD') }}</span>
+                            <div class="space-y-3">
+                                <!-- Transfer Amount Row -->
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Amount</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(formData.amount, selectedAccount?.currency || 'USD') }}</span>
                                 </div>
-                                <div class="flex justify-between text-sm">
-                                    <span>Transfer Fee:</span>
-                                    <span>{{ formatCurrency(calculatedFee, selectedAccount?.currency || 'USD') }}</span>
+
+                                <!-- Transfer Fee Row -->
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Fee</span>
+                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(calculatedFee, selectedAccount?.currency || 'USD') }}</span>
                                 </div>
+
+                                <!-- Divider -->
                                 <Divider class="my-2" />
-                                <div class="flex justify-between text-lg font-bold">
-                                    <span>Total:</span>
-                                    <span>{{ formatCurrency(totalAmount, selectedAccount?.currency || 'USD') }}</span>
+
+                                <!-- Total Amount Row -->
+                                <div class="flex items-center justify-between w-full pt-1">
+                                    <span class="text-gray-900 dark:text-white font-bold text-base">Total Amount</span>
+                                    <span class="text-primary-600 dark:text-primary-400 font-bold text-base ml-4 text-right">{{ formatCurrency(totalAmount, selectedAccount?.currency || 'USD') }}</span>
                                 </div>
                             </div>
                         </Message>
@@ -625,7 +632,7 @@ watch(() => page.props.flash, (flash) => {
                         <!-- Transfer Summary -->
                         <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
                             <h4 class="mb-4 font-semibold text-gray-800 dark:text-white">Transfer Summary</h4>
-                            
+
                             <div class="space-y-3">
                                 <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
                                     <span class="text-gray-600 dark:text-gray-400">From Account</span>
@@ -654,19 +661,26 @@ watch(() => page.props.flash, (flash) => {
 
                         <!-- Amount Details -->
                         <div class="p-4 border-2 border-purple-200 rounded-lg bg-purple-50 dark:bg-purple-900/20 dark:border-purple-800">
-                            <div class="space-y-2">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-700 dark:text-gray-300">Transfer Amount</span>
-                                    <span class="font-semibold">{{ formatCurrency(formData.amount, selectedAccount?.currency || 'USD') }}</span>
+                            <div class="space-y-3">
+                                <!-- Transfer Amount Row -->
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Amount</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(formData.amount, selectedAccount?.currency || 'USD') }}</span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-700 dark:text-gray-300">Transfer Fee</span>
-                                    <span>{{ formatCurrency(calculatedFee, selectedAccount?.currency || 'USD') }}</span>
+
+                                <!-- Transfer Fee Row -->
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Fee</span>
+                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(calculatedFee, selectedAccount?.currency || 'USD') }}</span>
                                 </div>
+
+                                <!-- Divider -->
                                 <Divider class="my-2" />
-                                <div class="flex justify-between text-xl font-bold text-purple-600 dark:text-purple-400">
-                                    <span>Total Debit</span>
-                                    <span>{{ formatCurrency(totalAmount, selectedAccount?.currency || 'USD') }}</span>
+
+                                <!-- Total Debit Row -->
+                                <div class="flex items-center justify-between w-full pt-1">
+                                    <span class="text-purple-600 dark:text-purple-400 font-bold text-base">Total Debit</span>
+                                    <span class="text-purple-600 dark:text-purple-400 font-bold text-base ml-4 text-right">{{ formatCurrency(totalAmount, selectedAccount?.currency || 'USD') }}</span>
                                 </div>
                             </div>
                         </div>
