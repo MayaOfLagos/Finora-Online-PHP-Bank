@@ -1,0 +1,15 @@
+---
+deployment:
+  tasks:
+    # Copy files to public_html
+    - export DEPLOYPATH=/home/txepiedg/public_html
+    # Copy all files except git directory
+    - /bin/cp -R * $DEPLOYPATH/
+    - /bin/cp .htaccess $DEPLOYPATH/ 2>/dev/null || true
+    - /bin/cp .env $DEPLOYPATH/ 2>/dev/null || true
+    # Set correct permissions
+    - /bin/chmod -R 755 $DEPLOYPATH/
+    - /bin/chmod -R 775 $DEPLOYPATH/storage
+    - /bin/chmod -R 775 $DEPLOYPATH/bootstrap/cache
+    # Run composer install (if composer is available)
+    - cd $DEPLOYPATH && /usr/local/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader 2>/dev/null || echo "Composer not available via CLI, use Artisan Manager"
