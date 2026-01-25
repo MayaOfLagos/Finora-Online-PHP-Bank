@@ -169,7 +169,8 @@ const initiateTransfer = () => {
     formErrors.value = {};
 
     router.post(route('transfers.domestic.initiate'), {
-        ...formData.value
+        ...formData.value,
+        amount: Math.round((formData.value.amount || 0) * 100) // Convert dollars to cents
     }, {
         preserveScroll: true,
         onSuccess: (response) => {
@@ -579,13 +580,13 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Transfer Amount Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Amount</span>
-                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(formData.amount, selectedAccount?.currency || 'USD') }}</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((formData.amount || 0) * 100), selectedAccount?.currency || 'USD') }}</span>
                                 </div>
 
                                 <!-- Transfer Fee Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Fee</span>
-                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(calculatedFee, selectedAccount?.currency || 'USD') }}</span>
+                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((calculatedFee || 0) * 100), selectedAccount?.currency || 'USD') }}</span>
                                 </div>
 
                                 <!-- Divider -->
@@ -594,7 +595,7 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Total Amount Row -->
                                 <div class="flex items-center justify-between w-full pt-1">
                                     <span class="text-gray-900 dark:text-white font-bold text-base">Total Amount</span>
-                                    <span class="text-primary-600 dark:text-primary-400 font-bold text-base ml-4 text-right">{{ formatCurrency(totalAmount, selectedAccount?.currency || 'USD') }}</span>
+                                    <span class="text-primary-600 dark:text-primary-400 font-bold text-base ml-4 text-right">{{ formatCurrency(Math.round((totalAmount || 0) * 100), selectedAccount?.currency || 'USD') }}</span>
                                 </div>
                             </div>
                         </Message>
@@ -665,13 +666,13 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Transfer Amount Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Amount</span>
-                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(formData.amount, selectedAccount?.currency || 'USD') }}</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((formData.amount || 0) * 100), selectedAccount?.currency || 'USD') }}</span>
                                 </div>
 
                                 <!-- Transfer Fee Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Fee</span>
-                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(calculatedFee, selectedAccount?.currency || 'USD') }}</span>
+                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((calculatedFee || 0) * 100), selectedAccount?.currency || 'USD') }}</span>
                                 </div>
 
                                 <!-- Divider -->
@@ -680,7 +681,7 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Total Debit Row -->
                                 <div class="flex items-center justify-between w-full pt-1">
                                     <span class="text-purple-600 dark:text-purple-400 font-bold text-base">Total Debit</span>
-                                    <span class="text-purple-600 dark:text-purple-400 font-bold text-base ml-4 text-right">{{ formatCurrency(totalAmount, selectedAccount?.currency || 'USD') }}</span>
+                                    <span class="text-purple-600 dark:text-purple-400 font-bold text-base ml-4 text-right">{{ formatCurrency(Math.round((totalAmount || 0) * 100), selectedAccount?.currency || 'USD') }}</span>
                                 </div>
                             </div>
                         </div>

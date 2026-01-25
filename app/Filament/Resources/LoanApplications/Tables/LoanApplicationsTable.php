@@ -141,6 +141,57 @@ class LoanApplicationsTable
                                 ->send();
                         }),
 
+                    Action::make('disburse')
+                        ->label('Disburse Loan')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->status === LoanStatus::Approved && ! $record->loan)
+                        ->requiresConfirmation()
+                        ->modalHeading('Disburse Loan')
+                        ->modalDescription('This will create an active loan and credit the borrower\'s account.')
+                        ->action(function ($record) {
+                            $bankAccount = $record->bankAccount
+                                ?? $record->user->bankAccounts()->where('is_primary', true)->first()
+                                ?? $record->user->bankAccounts()->first();
+
+                            if (! $bankAccount) {
+                                Notification::make()
+                                    ->title('No bank account found')
+                                    ->danger()
+                                    ->body('The borrower has no bank account to receive funds.')
+                                    ->send();
+
+                                return;
+                            }
+
+                            // Create the loan record
+                            $loan = \App\Models\Loan::create([
+                                'loan_application_id' => $record->id,
+                                'user_id' => $record->user_id,
+                                'bank_account_id' => $bankAccount->id,
+                                'principal_amount' => $record->amount,
+                                'outstanding_balance' => $record->total_payable,
+                                'interest_rate' => $record->interest_rate,
+                                'monthly_payment' => $record->monthly_payment,
+                                'next_payment_date' => now()->addMonth(),
+                                'final_payment_date' => now()->addMonths($record->term_months),
+                                'status' => LoanStatus::Active,
+                                'disbursed_at' => now(),
+                            ]);
+
+                            // Credit the borrower's account
+                            $bankAccount->increment('balance', $record->amount);
+
+                            // Update application status
+                            $record->update(['status' => LoanStatus::Disbursed]);
+
+                            Notification::make()
+                                ->title('Loan disbursed successfully')
+                                ->body("Loan {$loan->uuid} created and funds credited to account {$bankAccount->account_number}")
+                                ->success()
+                                ->send();
+                        }),
+
                     DeleteAction::make(),
                 ])
                     ->label('Actions')

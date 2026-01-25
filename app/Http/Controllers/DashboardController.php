@@ -229,7 +229,8 @@ class DashboardController extends Controller
                 + $user->cryptoDeposits()->where('status', 'pending')->count(),
             'loans' => $user->loanApplications()->whereIn('status', [LoanStatus::Pending, LoanStatus::UnderReview])->count(),
             'tickets' => $user->supportTickets()->whereIn('status', [TicketStatus::Open, TicketStatus::InProgress])->count(),
-            'cardRequests' => $user->cardRequests()->where('status', 'pending')->count(),
+            'cardRequests' => 0,
+            'grants' => $user->grantApplications()->whereIn('status', [\App\Enums\GrantApplicationStatus::Pending, \App\Enums\GrantApplicationStatus::UnderReview])->count(),
         ];
     }
 }

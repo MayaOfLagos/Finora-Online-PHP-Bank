@@ -154,12 +154,10 @@ watch(searchQuery, handleSearch);
 
 // Notification handlers
 const handleMarkRead = (id) => {
-    console.log('Mark notification read:', id);
     // router.post(`/notifications/${id}/read`);
 };
 
 const handleMarkAllRead = () => {
-    console.log('Mark all notifications read');
     // router.post('/notifications/read-all');
 };
 </script>
@@ -440,7 +438,7 @@ const handleMarkAllRead = () => {
             </header>
 
             <!-- Page Content -->
-            <main class="p-4 pb-24 sm:p-6 lg:pb-6">
+            <main class="min-h-screen p-4 pb-24 sm:p-6 lg:pb-6">
                 <slot />
             </main>
         </div>

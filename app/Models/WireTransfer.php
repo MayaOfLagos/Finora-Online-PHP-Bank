@@ -34,6 +34,8 @@ class WireTransfer extends Model
         'remarks',
         'status',
         'current_step',
+        'otp_code',
+        'otp_expires_at',
         'pin_verified_at',
         'imf_verified_at',
         'tax_verified_at',
@@ -58,6 +60,7 @@ class WireTransfer extends Model
             'tax_verified_at' => 'datetime',
             'cot_verified_at' => 'datetime',
             'otp_verified_at' => 'datetime',
+            'otp_expires_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
@@ -78,7 +81,7 @@ class WireTransfer extends Model
 
     public static function generateReferenceNumber(): string
     {
-        return 'WT' . date('Ymd') . strtoupper(Str::random(8));
+        return 'WT'.date('Ymd').strtoupper(Str::random(8));
     }
 
     public function getRouteKeyName(): string

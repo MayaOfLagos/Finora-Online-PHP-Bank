@@ -22,12 +22,12 @@ class MobileDepositObserver
 
             if ($history) {
                 // Map deposit status to transaction history status
-                $mappedStatus = match($deposit->status->value) {
+                $mappedStatus = match ($deposit->status->value) {
                     'approved' => 'processing',
                     'rejected' => 'failed',
                     default => $deposit->status->value,
                 };
-                
+
                 $history->update([
                     'status' => $mappedStatus,
                     'processed_at' => $deposit->status->value === 'completed' ? now() : null,
@@ -47,9 +47,9 @@ class MobileDepositObserver
             'amount' => $deposit->amount / 100, // Convert cents to dollars
             'currency' => $deposit->currency,
             'status' => $deposit->status->value,
-            'description' => "Mobile deposit via {$deposit->gateway->value}",
+            'description' => "Mobile deposit via {$deposit->gateway}",
             'metadata' => [
-                'gateway' => $deposit->gateway->value,
+                'gateway' => $deposit->gateway,
                 'gateway_transaction_id' => $deposit->gateway_transaction_id,
             ],
         ]);

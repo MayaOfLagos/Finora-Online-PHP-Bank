@@ -9,7 +9,8 @@ class WireTransferObserver
 {
     public function created(WireTransfer $wireTransfer): void
     {
-        $this->logTransaction($wireTransfer);
+        // Transaction histories are created at the time of debit (in controller).
+        // Avoid creating a pending duplicate entry here.
     }
 
     public function updated(WireTransfer $wireTransfer): void

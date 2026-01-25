@@ -83,7 +83,7 @@ onMounted(() => {
 });
 
 // ==================== UI State ====================
-const currentStep = ref(0);
+const showReviewModal = ref(false);
 const showVerificationModal = ref(false);
 const verificationStep = ref('pin'); // pin, imf, tax, cot, otp
 const isProcessing = ref(false);
@@ -99,9 +99,7 @@ const otpValue = ref('');
 
 // ==================== Wizard Steps ====================
 const wizardSteps = [
-    { label: 'Details', icon: 'pi pi-file-edit' },
-    { label: 'Review', icon: 'pi pi-eye' },
-    { label: 'Verify', icon: 'pi pi-shield' },
+    { label: 'Transfer Details', icon: 'pi pi-file-edit' },
     { label: 'Complete', icon: 'pi pi-check-circle' }
 ];
 
@@ -110,9 +108,9 @@ const accountOptions = computed(() => {
     return props.accounts
         .filter(a => a.is_active)
         .map(account => ({
-            label: `${account.account_type?.name || 'Account'} - ****${account.account_number.slice(-4)} (${formatCurrency(account.balance, account.currency)})`,
+            label: `${account.account_type?.name || 'Account'} (****${account.account_number.slice(-4)})`,
             value: account.id,
-            account: account
+            account: account,
         }));
 });
 
@@ -209,44 +207,61 @@ const getVerificationSteps = () => {
 };
 
 const goToNextStep = () => {
-    if (currentStep.value === 0 && isFormValid.value) {
-        currentStep.value = 1; // Go to review
-    } else if (currentStep.value === 1) {
-        initiateTransfer();
+    if (isFormValid.value) {
+        showReviewModal.value = true;
     }
 };
 
-const goToPrevStep = () => {
-    if (currentStep.value > 0 && !showVerificationModal.value) {
-        currentStep.value--;
-    }
+const closeReview = () => {
+    showReviewModal.value = false;
 };
 
 const initiateTransfer = () => {
     isProcessing.value = true;
     formErrors.value = {};
 
-    router.post(route('transfers.wire.initiate'), {
+    const payload = {
         ...formData.value,
+        amount: Math.round((formData.value.amount || 0) * 100), // Convert dollars to cents
         ...beneficiaryData.value // Include all dynamic beneficiary fields
-    }, {
+    };
+    
+    console.log('Wire Transfer Payload:', JSON.stringify(payload, null, 2));
+
+    router.post(route('transfers.wire.initiate'), payload, {
         preserveScroll: true,
         onSuccess: (response) => {
             const flash = response.props.flash;
-            if (flash?.transfer) {
-                activeTransfer.value = flash.transfer;
-                currentStep.value = 2;
+            
+            if (flash?.success) {
+                // Use transfer data from response if available
+                if (flash?.transfer) {
+                    activeTransfer.value = flash.transfer;
+                } else {
+                    // Fallback: create temporary transfer object from form data
+                    activeTransfer.value = {
+                        uuid: 'temp-' + Date.now(),
+                        reference: 'pending',
+                        amount: formData.value.amount,
+                        fee: calculatedFee.value,
+                        total: totalAmount.value
+                    };
+                }
+                
+                showReviewModal.value = false;
                 showVerificationModal.value = true;
                 verificationStep.value = 'pin';
+                
                 toast.add({
-                    severity: 'info',
-                    summary: 'Verification Required',
-                    detail: 'Please complete the verification steps',
+                    severity: 'success',
+                    summary: 'Transfer Initiated',
+                    detail: flash.success,
                     life: 3000
                 });
             }
         },
         onError: (errors) => {
+            console.error('Wire Transfer Errors:', JSON.stringify(errors, null, 2));
             formErrors.value = errors;
             toast.add({
                 severity: 'error',
@@ -272,6 +287,16 @@ const handlePinSubmit = (pin) => {
         return;
     }
 
+    if (!activeTransfer.value?.uuid) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Transfer data not available',
+            life: 3000
+        });
+        return;
+    }
+
     isProcessing.value = true;
 
     router.post(route('transfers.wire.verify-pin', { wireTransfer: activeTransfer.value.uuid }), {
@@ -280,9 +305,15 @@ const handlePinSubmit = (pin) => {
         preserveScroll: true,
         onSuccess: (response) => {
             const flash = response.props.flash;
+            console.log('PIN Verified - Flash response:', flash);
+            console.log('Next step:', flash?.nextStep);
+            
             if (flash?.nextStep) {
                 moveToNextVerificationStep(flash.nextStep);
+            } else {
+                console.warn('No nextStep in response, staying on PIN step');
             }
+            
             toast.add({
                 severity: 'success',
                 summary: 'PIN Verified',
@@ -356,11 +387,12 @@ const requestOtp = () => {
 
     router.post(route('transfers.wire.request-otp', { wireTransfer: activeTransfer.value.uuid }), {}, {
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
+            const message = page.props.flash?.success || 'A verification code has been sent to your email';
             toast.add({
                 severity: 'success',
                 summary: 'OTP Sent',
-                detail: 'A verification code has been sent to your email',
+                detail: message,
                 life: 5000
             });
         },
@@ -400,7 +432,6 @@ const handleOtpSubmit = (otp) => {
             if (flash?.transfer) {
                 transferResult.value = flash.transfer;
                 transferComplete.value = true;
-                currentStep.value = 3;
                 showVerificationModal.value = false;
                 toast.add({
                     severity: 'success',
@@ -426,34 +457,83 @@ const handleOtpSubmit = (otp) => {
 };
 
 const moveToNextVerificationStep = (nextStep) => {
+    console.log('Moving to next step:', nextStep);
+    
+    // If next step is completed, no further verification needed - complete the transfer
+    if (nextStep === 'completed') {
+        console.log('Transfer verification complete - calling completeTransfer');
+        completeTransferWithoutOtp();
+        return;
+    }
+    
     verificationStep.value = nextStep;
 
     // If moving to OTP step, automatically request OTP
     if (nextStep === 'otp') {
         requestOtp();
     }
+};
 
-    // If completed, show success
-    if (nextStep === 'completed') {
-        transferComplete.value = true;
-        currentStep.value = 3;
-        showVerificationModal.value = false;
+const completeTransferWithoutOtp = () => {
+    if (!activeTransfer.value?.uuid) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Transfer data not available',
+            life: 3000
+        });
+        return;
     }
+
+    isProcessing.value = true;
+
+    router.post(route('transfers.wire.complete', { wireTransfer: activeTransfer.value.uuid }), {}, {
+        preserveScroll: true,
+        onSuccess: (response) => {
+            const flash = response.props.flash;
+            console.log('Transfer completed:', flash);
+            
+            if (flash?.transfer) {
+                transferResult.value = flash.transfer;
+            }
+            
+            transferComplete.value = true;
+            showVerificationModal.value = false;
+            
+            toast.add({
+                severity: 'success',
+                summary: 'Transfer Complete',
+                detail: flash?.success || 'Your transfer has been submitted successfully',
+                life: 5000
+            });
+        },
+        onError: (errors) => {
+            toast.add({
+                severity: 'error',
+                summary: 'Transfer Failed',
+                detail: errors.general || 'Failed to complete transfer',
+                life: 5000
+            });
+        },
+        onFinish: () => {
+            isProcessing.value = false;
+        }
+    });
 };
 
 const startNewTransfer = () => {
     formData.value = {
         from_account_id: null,
-        beneficiary_name: '',
-        beneficiary_account: '',
-        beneficiary_bank_name: '',
-        beneficiary_bank_address: '',
-        swift_code: '',
-        routing_number: '',
         amount: null,
-        currency: 'USD',
-        purpose: ''
+        remarks: ''
     };
+    
+    // Reset beneficiary data
+    beneficiaryData.value = {};
+    props.beneficiaryFields.forEach(field => {
+        beneficiaryData.value[field.key] = '';
+    });
+    
     currentStep.value = 0;
     transferComplete.value = false;
     transferResult.value = null;
@@ -511,10 +591,10 @@ watch(() => page.props.flash, (flash) => {
         <!-- Main Content -->
         <div class="max-w-3xl mx-auto">
             <!-- Step 1: Transfer Details -->
-            <Card v-if="currentStep === 0" class="shadow-lg">
+            <Card v-if="!transferComplete" class="shadow-lg">
                 <template #title>
                     <div class="mb-4">
-                        <Steps :model="wizardSteps" :activeStep="currentStep" :readonly="true" class="custom-steps" />
+                        <Steps :model="wizardSteps" :activeStep="0" :readonly="true" class="custom-steps" />
                     </div>
                     <div class="flex items-center gap-2 text-lg">
                         <i class="pi pi-file-edit text-primary-500"></i>
@@ -730,13 +810,13 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Transfer Amount Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Amount</span>
-                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(formData.amount, currency) }}</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((formData.amount || 0) * 100), currency) }}</span>
                                 </div>
 
                                 <!-- Transfer Fee Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Fee</span>
-                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(calculatedFee, currency) }}</span>
+                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((calculatedFee || 0) * 100), currency) }}</span>
                                 </div>
 
                                 <!-- Divider -->
@@ -745,7 +825,7 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Total Amount Row -->
                                 <div class="flex items-center justify-between w-full pt-1">
                                     <span class="text-gray-900 dark:text-white font-bold text-base">Total Amount</span>
-                                    <span class="text-primary-600 dark:text-primary-400 font-bold text-base ml-4 text-right">{{ formatCurrency(totalAmount, currency) }}</span>
+                                    <span class="text-primary-600 dark:text-primary-400 font-bold text-base ml-4 text-right">{{ formatCurrency(Math.round((totalAmount || 0) * 100), currency) }}</span>
                                 </div>
                             </div>
                         </Message>
@@ -756,8 +836,8 @@ watch(() => page.props.flash, (flash) => {
                                 <Button label="Cancel" severity="secondary" outlined />
                             </Link>
                             <Button
-                                label="Continue to Review"
-                                icon="pi pi-arrow-right"
+                                label="Review Transfer"
+                                icon="pi pi-check"
                                 iconPos="right"
                                 :disabled="!isFormValid"
                                 @click="goToNextStep"
@@ -767,18 +847,8 @@ watch(() => page.props.flash, (flash) => {
                 </template>
             </Card>
 
-            <!-- Step 2: Review -->
-            <Card v-if="currentStep === 1" class="shadow-lg">
-                <template #title>
-                    <div class="mb-4">
-                        <Steps :model="wizardSteps" :activeStep="currentStep" :readonly="true" class="custom-steps" />
-                    </div>
-                    <div class="flex items-center gap-2 text-lg">
-                        <i class="pi pi-eye text-primary-500"></i>
-                        Review Transfer
-                    </div>
-                </template>
-                <template #content>
+            <!-- Review Modal -->
+            <Dialog v-model:visible="showReviewModal" modal header="Review Transfer" :style="{ width: '90%', maxWidth: '600px' }">
                     <div class="space-y-6">
                         <!-- Transfer Summary -->
                         <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -812,7 +882,7 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Amount -->
                                 <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
                                     <span class="text-gray-600 dark:text-gray-400">Amount</span>
-                                    <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(formData.amount, currency) }}</span>
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(Math.round((formData.amount || 0) * 100), currency) }}</span>
                                 </div>
 
                                 <!-- Remarks -->
@@ -829,13 +899,13 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Transfer Amount Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Transfer Amount</span>
-                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(formData.amount, currency) }}</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((formData.amount || 0) * 100), currency) }}</span>
                                 </div>
 
                                 <!-- Wire Transfer Fee Row -->
                                 <div class="flex items-center justify-between w-full">
                                     <span class="text-gray-700 dark:text-gray-300 font-medium">Wire Transfer Fee</span>
-                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(calculatedFee, currency) }}</span>
+                                    <span class="text-gray-900 dark:text-white ml-4 text-right">{{ formatCurrency(Math.round((calculatedFee || 0) * 100), currency) }}</span>
                                 </div>
 
                                 <!-- Divider -->
@@ -844,7 +914,7 @@ watch(() => page.props.flash, (flash) => {
                                 <!-- Total Debit Row -->
                                 <div class="flex items-center justify-between w-full pt-1">
                                     <span class="text-orange-600 dark:text-orange-400 font-bold text-base">Total Debit</span>
-                                    <span class="text-orange-600 dark:text-orange-400 font-bold text-base ml-4 text-right">{{ formatCurrency(totalAmount, currency) }}</span>
+                                    <span class="text-orange-600 dark:text-orange-400 font-bold text-base ml-4 text-right">{{ formatCurrency(Math.round((totalAmount || 0) * 100), currency) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -874,53 +944,30 @@ watch(() => page.props.flash, (flash) => {
                                 <li v-if="verificationConfig.requiresOtp">Email OTP</li>
                             </ul>
                         </div>
-
-                        <!-- Actions -->
-                        <div class="flex justify-between gap-3 pt-4">
-                            <Button
-                                label="Back to Details"
-                                icon="pi pi-arrow-left"
-                                severity="secondary"
-                                outlined
-                                @click="goToPrevStep"
-                            />
-                            <Button
-                                label="Proceed to Verify"
-                                icon="pi pi-shield"
-                                iconPos="right"
-                                :loading="isProcessing"
-                                @click="goToNextStep"
-                            />
-                        </div>
                     </div>
-                </template>
-            </Card>
 
-            <!-- Step 3: Verification (handled by modal) -->
-            <Card v-if="currentStep === 2 && !showVerificationModal" class="shadow-lg">
+                    <template #footer>
+                        <Button label="Cancel" icon="pi pi-times" text @click="closeReview" />
+                        <Button label="Proceed to Verify" icon="pi pi-shield" :loading="isProcessing" @click="initiateTransfer" />
+                    </template>
+            </Dialog>
+
+            <!-- Complete Step Card -->
+            <Card v-if="transferComplete" class="relative overflow-hidden shadow-lg">
+                <div class="confetti-container" aria-hidden="true">
+                    <span v-for="n in 30" :key="n" class="confetti-piece" :style="{ '--i': n }" />
+                </div>
                 <template #title>
                     <div class="mb-4">
-                        <Steps :model="wizardSteps" :activeStep="currentStep" :readonly="true" class="custom-steps" />
+                        <Steps :model="wizardSteps" :activeStep="1" :readonly="true" class="custom-steps" />
                     </div>
                 </template>
                 <template #content>
                     <div class="py-8 text-center">
-                        <i class="mb-4 text-6xl pi pi-spin pi-spinner text-primary-500"></i>
-                        <p class="text-gray-600 dark:text-gray-400">Processing verification...</p>
-                    </div>
-                </template>
-            </Card>
-
-            <!-- Step 4: Complete -->
-            <Card v-if="currentStep === 3 && transferComplete" class="shadow-lg">
-                <template #title>
-                    <div class="mb-4">
-                        <Steps :model="wizardSteps" :activeStep="currentStep" :readonly="true" class="custom-steps" />
-                    </div>
-                </template>
-                <template #content>
-                    <div class="py-8 text-center">
-                        <div class="flex items-center justify-center w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900">
+                        <Message severity="success" :closable="false" class="mb-4">
+                            Transfer Submitted. Your wire transfer has been submitted for processing.
+                        </Message>
+                        <div class="flex items-center justify-center w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900 animate-bounce">
                             <i class="text-4xl text-green-600 pi pi-check dark:text-green-400"></i>
                         </div>
                         <h2 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -930,7 +977,7 @@ watch(() => page.props.flash, (flash) => {
                             Your wire transfer has been submitted for processing
                         </p>
 
-                        <div v-if="transferResult" class="max-w-md p-4 mx-auto mb-6 text-left rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div v-if="transferResult" class="relative max-w-md p-4 mx-auto mb-6 text-left rounded-lg bg-gray-50 dark:bg-gray-800">
                             <div class="space-y-2">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">Reference</span>
@@ -1092,5 +1139,40 @@ watch(() => page.props.flash, (flash) => {
 
 .p-message-content {
     display: block !important;
+}
+
+.confetti-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.confetti-piece {
+    position: absolute;
+    top: -10%;
+    left: calc((var(--i) * 3%) % 100%);
+    width: 8px;
+    height: 16px;
+    background: hsl(calc(var(--i) * 12deg), 75%, 60%);
+    border-radius: 2px;
+    opacity: 0.9;
+    animation: confetti-fall 2.8s linear infinite;
+    animation-delay: calc((var(--i) * 0.05s) * -1);
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 120vh, 0) rotate(360deg);
+        opacity: 0;
+    }
 }
 </style>

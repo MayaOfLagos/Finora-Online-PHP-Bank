@@ -26,6 +26,9 @@ class DomesticTransfer extends Model
         'fee',
         'description',
         'status',
+        'current_step',
+        'otp_code',
+        'otp_expires_at',
         'pin_verified_at',
         'otp_verified_at',
         'completed_at',
@@ -40,6 +43,7 @@ class DomesticTransfer extends Model
             'status' => TransferStatus::class,
             'pin_verified_at' => 'datetime',
             'otp_verified_at' => 'datetime',
+            'otp_expires_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
@@ -60,7 +64,7 @@ class DomesticTransfer extends Model
 
     public static function generateReferenceNumber(): string
     {
-        return 'DT' . date('Ymd') . strtoupper(Str::random(8));
+        return 'DT'.date('Ymd').strtoupper(Str::random(8));
     }
 
     public function getRouteKeyName(): string

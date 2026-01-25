@@ -34,6 +34,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'uuid',
         'first_name',
         'last_name',
+        'middle_name',
+        'username',
         'email',
         'password',
         'phone_number',

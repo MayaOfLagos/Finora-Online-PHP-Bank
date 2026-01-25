@@ -10,11 +10,6 @@ use Inertia\Inertia;
 
 class WithdrawalController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Display withdrawals page
      */
@@ -22,14 +17,22 @@ class WithdrawalController extends Controller
     {
         $user = $request->user();
 
+        // Check if user has permission to withdraw
+        if (! $user->can_withdraw) {
+            return redirect()->route('dashboard')->with('error', 'You do not have permission to withdraw.');
+        }
+
         $withdrawals = $user->withdrawals()
-            ->with('bankAccount')
+            ->with('bankAccount.accountType')
             ->latest()
             ->paginate(20);
 
-        $bankAccounts = $user->bankAccounts()->active()->get();
+        $bankAccounts = $user->bankAccounts()
+            ->where('is_active', true)
+            ->with('accountType')
+            ->get();
 
-        return Inertia::render('Withdrawal/Index', [
+        return Inertia::render('Withdrawals/Index', [
             'withdrawals' => $withdrawals,
             'bankAccounts' => $bankAccounts,
         ]);
@@ -49,15 +52,17 @@ class WithdrawalController extends Controller
 
         $validated = $request->validate([
             'bank_account_id' => 'required|exists:bank_accounts,id',
-            'amount' => 'required|integer|min:1',
-            'currency' => 'required|string|max:3',
+            'amount' => 'required|numeric|min:1',
             'reason' => 'nullable|string|max:500',
         ]);
 
         $bankAccount = $user->bankAccounts()->findOrFail($validated['bank_account_id']);
 
+        // Convert amount to cents
+        $amountInCents = (int) ($validated['amount'] * 100);
+
         // Check balance
-        if ($bankAccount->balance < $validated['amount']) {
+        if ($bankAccount->balance < $amountInCents) {
             return back()->withErrors(['amount' => 'Insufficient balance.']);
         }
 
@@ -65,19 +70,19 @@ class WithdrawalController extends Controller
             'id' => Str::uuid(),
             'user_id' => $user->id,
             'bank_account_id' => $bankAccount->id,
-            'amount' => $validated['amount'],
-            'currency' => $validated['currency'],
+            'amount' => $amountInCents,
+            'currency' => $bankAccount->currency,
             'reason' => $validated['reason'],
             'status' => 'pending',
             'ip_address' => $request->ip(),
         ]);
 
         // Deduct from balance
-        $bankAccount->decrement('balance', $validated['amount']);
+        $bankAccount->decrement('balance', $amountInCents);
 
         // Log activity
-        ActivityLogger::logTransaction('withdrawal_created', $user, $withdrawal, [
-            'amount' => $validated['amount'],
+        ActivityLogger::logTransaction('withdrawal_created', $withdrawal, $user, [
+            'amount' => $amountInCents,
             'bank_account_id' => $bankAccount->id,
         ]);
 
@@ -146,5 +151,27 @@ class WithdrawalController extends Controller
         ActivityLogger::logTransaction('withdrawal_completed', $withdrawal->user, $withdrawal);
 
         return back()->with('success', 'Withdrawal completed.');
+    }
+
+    /**
+     * Cancel withdrawal (user only if pending)
+     */
+    public function cancel(Request $request, string $id)
+    {
+        $user = $request->user();
+        $withdrawal = $user->withdrawals()->findOrFail($id);
+
+        if ($withdrawal->status !== 'pending') {
+            return back()->withErrors(['error' => 'Only pending withdrawals can be cancelled.']);
+        }
+
+        // Refund the amount
+        $withdrawal->bankAccount->increment('balance', $withdrawal->amount);
+
+        $withdrawal->update(['status' => 'cancelled']);
+
+        ActivityLogger::logTransaction('withdrawal_cancelled', $user, $withdrawal);
+
+        return back()->with('success', 'Withdrawal cancelled and amount refunded.');
     }
 }

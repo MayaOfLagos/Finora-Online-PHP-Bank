@@ -14,12 +14,22 @@ class LoanPayment extends Model
     protected $fillable = [
         'uuid',
         'loan_id',
+        'user_id',
+        'bank_account_id',
         'amount',
         'payment_date',
+        'currency',
         'payment_method',
+        'payment_type',
+        'asset',
+        'tx_hash',
+        'exchange_rate',
         'reference_number',
         'notes',
+        'metadata',
         'status',
+        'approved_by',
+        'approved_at',
     ];
 
     protected function casts(): array
@@ -27,6 +37,9 @@ class LoanPayment extends Model
         return [
             'amount' => 'integer',
             'payment_date' => 'date',
+            'exchange_rate' => 'decimal:8',
+            'metadata' => 'array',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -57,5 +70,20 @@ class LoanPayment extends Model
     public function loan(): BelongsTo
     {
         return $this->belongsTo(Loan::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

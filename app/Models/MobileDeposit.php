@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\DepositStatus;
-use App\Enums\PaymentGateway;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,7 +32,6 @@ class MobileDeposit extends Model
         return [
             'amount' => 'integer',
             'fee' => 'integer',
-            'gateway' => PaymentGateway::class,
             'status' => DepositStatus::class,
             'gateway_response' => 'array',
             'completed_at' => 'datetime',
@@ -56,7 +54,7 @@ class MobileDeposit extends Model
 
     public static function generateReferenceNumber(): string
     {
-        return 'MD' . date('Ymd') . strtoupper(Str::random(8));
+        return 'MD'.date('Ymd').strtoupper(Str::random(8));
     }
 
     public function getRouteKeyName(): string

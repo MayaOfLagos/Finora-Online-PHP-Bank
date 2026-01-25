@@ -34,6 +34,13 @@ const pendingItems = computed(() => [
         href: '/loans/applications',
     },
     {
+        label: 'Grant Applications',
+        count: props.items.grants || 0,
+        icon: 'pi-gift',
+        color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/40',
+        href: '/grants/applications',
+    },
+    {
         label: 'Support Tickets',
         count: props.items.tickets,
         icon: 'pi-ticket',
@@ -45,7 +52,7 @@ const pendingItems = computed(() => [
         count: props.items.cardRequests,
         icon: 'pi-credit-card',
         color: 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40',
-        href: '/cards/requests',
+        href: '/cards',
     },
 ]);
 

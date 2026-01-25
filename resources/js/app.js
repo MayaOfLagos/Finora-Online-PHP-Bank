@@ -18,11 +18,13 @@ import Ripple from 'primevue/ripple';
 // PrimeVue CSS
 import 'primeicons/primeicons.css';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Finora Bank';
+const appName =
+    import.meta.env.VITE_APP_NAME || 'Finora Bank';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`,
+        import.meta.glob('./Pages/**/*.vue', { eager: true })),
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
 

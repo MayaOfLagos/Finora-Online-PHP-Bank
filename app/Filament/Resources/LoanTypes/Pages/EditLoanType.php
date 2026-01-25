@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Filament\Resources\LoanTypes\Pages;
+
+use App\Filament\Resources\LoanTypes\LoanTypeResource;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+
+class EditLoanType extends EditRecord
+{
+    protected static string $resource = LoanTypeResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            DeleteAction::make(),
+        ];
+    }
+}

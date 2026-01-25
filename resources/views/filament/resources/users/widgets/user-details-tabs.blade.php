@@ -586,12 +586,34 @@
                     <x-filament::section>
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <p class="text-sm font-semibold text-gray-800">Two-factor authentication</p>
-                                <p class="text-sm text-gray-600">View or reset 2FA status.</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Two-factor authentication</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">View or reset 2FA status.</p>
                             </div>
                             <x-filament::button color="primary" icon="heroicon-o-shield-check" x-on:click="$dispatch('open-modal', { id: 'two-factor' })">
                                 Manage
                             </x-filament::button>
+                        </div>
+                    </x-filament::section>
+
+                    <x-filament::section>
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Transaction PIN</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    @if($record->transaction_pin)
+                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success-50 dark:bg-success-900/30">
+                                            <x-heroicon-o-check-circle class="w-4 h-4 text-success-600 dark:text-success-400" />
+                                            <span class="text-success-700 dark:text-success-300 text-sm font-medium">PIN is set</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-warning-50 dark:bg-warning-900/30">
+                                            <x-heroicon-o-exclamation-circle class="w-4 h-4 text-warning-600 dark:text-warning-400" />
+                                            <span class="text-warning-700 dark:text-warning-300 text-sm font-medium">No PIN set</span>
+                                        </span>
+                                    @endif
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Use the "Manage PIN" button in the header to create or change the PIN</p>
+                            </div>
                         </div>
                     </x-filament::section>
                 </div>
@@ -888,13 +910,22 @@
                             @forelse($allTransactions as $transaction)
                                 @php
                                     $isTransactionHistory = $transaction instanceof \App\Models\TransactionHistory;
-                                    $transactionType = $isTransactionHistory 
-                                        ? ucfirst($transaction->transaction_type) 
-                                        : ucfirst(str_replace('_', ' ', class_basename($transaction)));
+
+                                    $transactionTypeValue = null;
+                                    if ($isTransactionHistory) {
+                                        $rawType = $transaction->transaction_type;
+                                        $transactionTypeValue = $rawType instanceof \BackedEnum ? $rawType->value : (string) $rawType;
+                                        $transactionType = $rawType instanceof \App\Enums\TransactionType
+                                            ? $rawType->label()
+                                            : ucfirst(str_replace('_', ' ', $transactionTypeValue));
+                                    } else {
+                                        $transactionType = ucfirst(str_replace('_', ' ', class_basename($transaction)));
+                                        $transactionTypeValue = $transactionType;
+                                    }
                                     
                                     // Determine if it's a debit or credit
-                                    $isCredit = $isTransactionHistory && in_array($transaction->transaction_type, ['credit', 'deposit', 'refund']);
-                                    $isDebit = $isTransactionHistory && in_array($transaction->transaction_type, ['debit', 'withdrawal']);
+                                    $isCredit = $isTransactionHistory && in_array($transactionTypeValue, ['credit', 'deposit', 'refund'], true);
+                                    $isDebit = $isTransactionHistory && in_array($transactionTypeValue, ['debit', 'withdrawal'], true);
                                     
                                     // Format amount
                                     if ($isTransactionHistory) {

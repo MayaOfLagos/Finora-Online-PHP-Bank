@@ -1,0 +1,97 @@
+<script setup>
+import { computed } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import Button from 'primevue/button';
+
+const props = defineProps({
+    status: {
+        type: String,
+    },
+});
+
+const form = useForm({});
+
+const submit = () => {
+    form.post(route('verification.send'));
+};
+
+const verificationLinkSent = computed(
+    () => props.status === 'verification-link-sent',
+);
+</script>
+
+<template>
+    <Head title="Email Verification" />
+    
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
+        <div class="w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <div class="flex items-center justify-center w-14 h-14 bg-primary-600 rounded-xl shadow-lg">
+                        <span class="text-2xl font-bold text-white">F</span>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Finora Bank</h1>
+            </div>
+            
+            <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+                <div class="text-center mb-6">
+                    <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                        <i class="pi pi-envelope text-3xl text-amber-600 dark:text-amber-400"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                        Verify Your Email
+                    </h2>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        Thanks for signing up! Please verify your email address by clicking the link we sent you.
+                    </p>
+                </div>
+
+                <div
+                    v-if="verificationLinkSent"
+                    class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl"
+                >
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-check-circle text-green-600 dark:text-green-400"></i>
+                        <p class="text-sm text-green-700 dark:text-green-300">
+                            A new verification link has been sent to your email address.
+                        </p>
+                    </div>
+                </div>
+
+                <form @submit.prevent="submit">
+                    <Button
+                        type="submit"
+                        label="Resend Verification Email"
+                        icon="pi pi-send"
+                        class="w-full"
+                        :loading="form.processing"
+                    />
+                </form>
+
+                <div class="mt-6 flex items-center justify-between text-sm">
+                    <Link
+                        :href="route('dashboard')"
+                        class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    >
+                        Skip for now
+                    </Link>
+                    <Link
+                        :href="route('logout')"
+                        method="post"
+                        as="button"
+                        class="text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                        Log Out
+                    </Link>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-500">
+                    Copyright {{ new Date().getFullYear() }} Finora Bank. All Rights Reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</template>

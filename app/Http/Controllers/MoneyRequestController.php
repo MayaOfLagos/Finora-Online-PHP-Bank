@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionType;
 use App\Models\MoneyRequest;
+use App\Models\TransactionHistory;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -74,7 +77,7 @@ class MoneyRequestController extends Controller
         ]);
 
         // Log activity
-        ActivityLogger::logTransaction('money_request_created', $user, $moneyRequest, [
+        ActivityLogger::logTransaction('money_request_created', $moneyRequest, $user, [
             'responder_id' => $responder->id,
             'responder_email' => $responder->email,
             'amount' => $validated['amount'],
@@ -93,15 +96,58 @@ class MoneyRequestController extends Controller
             ->where('status', 'pending')
             ->firstOrFail();
 
-        $moneyRequest->update([
-            'status' => 'accepted',
-            'accepted_at' => now(),
-        ]);
+        $moneyRequest->loadMissing('requester.bankAccounts');
 
-        // Log activity
-        ActivityLogger::logTransaction('money_request_accepted', $request->user(), $moneyRequest);
+        $targetAccount = $moneyRequest->requester->bankAccounts()
+            ->where('is_active', true)
+            ->where('currency', $moneyRequest->currency)
+            ->orderByDesc('is_primary')
+            ->orderByDesc('id')
+            ->first()
+            ?? $moneyRequest->requester->bankAccounts()
+                ->where('is_active', true)
+                ->orderByDesc('is_primary')
+                ->orderByDesc('id')
+                ->first();
 
-        return back()->with('success', 'Money request accepted! Payment pending.');
+        if (! $targetAccount) {
+            return back()->withErrors([
+                'account' => 'Requester has no active account to credit.',
+            ]);
+        }
+
+        DB::transaction(function () use ($moneyRequest, $targetAccount, $request) {
+            $targetAccount->balance += $moneyRequest->amount;
+            $targetAccount->save();
+
+            $moneyRequest->update([
+                'status' => 'completed',
+                'accepted_at' => now(),
+                'completed_at' => now(),
+            ]);
+
+            TransactionHistory::create([
+                'user_id' => $moneyRequest->requester_id,
+                'bank_account_id' => $targetAccount->id,
+                'transaction_type' => TransactionType::Credit,
+                'transactionable_type' => MoneyRequest::class,
+                'transactionable_id' => $moneyRequest->id,
+                'amount' => $moneyRequest->amount / 100,
+                'type' => 'credit',
+                'balance_after' => $targetAccount->balance / 100,
+                'currency' => $targetAccount->currency,
+                'status' => 'completed',
+                'description' => 'Money request approved and credited',
+                'processed_at' => now(),
+            ]);
+
+            ActivityLogger::logTransaction('money_request_accepted', $moneyRequest, $request->user(), [
+                'credited_account_id' => $targetAccount->id,
+                'credited_user_id' => $moneyRequest->requester_id,
+            ]);
+        });
+
+        return back()->with('success', 'Money request approved and credited.');
     }
 
     /**
@@ -125,7 +171,7 @@ class MoneyRequestController extends Controller
         ]);
 
         // Log activity
-        ActivityLogger::logTransaction('money_request_rejected', $request->user(), $moneyRequest, [
+        ActivityLogger::logTransaction('money_request_rejected', $moneyRequest, $request->user(), [
             'reason' => $validated['rejection_reason'],
         ]);
 
@@ -147,7 +193,7 @@ class MoneyRequestController extends Controller
         ]);
 
         // Log activity
-        ActivityLogger::logTransaction('money_request_cancelled', $request->user(), $moneyRequest);
+        ActivityLogger::logTransaction('money_request_cancelled', $moneyRequest, $request->user());
 
         return back()->with('success', 'Money request cancelled.');
     }

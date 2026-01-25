@@ -41,7 +41,7 @@ const transferTypes = [
         description: 'Transfer between your own accounts',
         icon: 'pi-sync',
         color: 'from-green-500 to-green-600',
-        route: '/transfers/account-to-account',
+        route: '/transfers/account',
         features: ['Instant transfer', 'No fees', 'Between your accounts']
     },
     {
@@ -95,9 +95,9 @@ const primaryCurrency = computed(() => {
         </div>
 
         <!-- Quick Balance Overview -->
-        <Card class="mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600">
+        <Card class="mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-700 dark:to-indigo-800 border-0">
             <template #content>
-                <div class="flex items-center justify-between text-white">
+                <div class="flex items-center justify-between text-gray-800 dark:text-gray-200">
                     <div>
                         <p class="text-sm opacity-80">Available Balance (Primary)</p>
                         <p class="mt-1 text-3xl font-bold">

@@ -29,6 +29,10 @@ class VoucherController extends Controller
             ->latest()
             ->paginate(20);
 
+        $bankAccounts = $user->bankAccounts()
+            ->select('id', 'account_number', 'account_name', 'currency')
+            ->get();
+
         $stats = [
             'active' => $user->vouchers()->where('is_used', false)->where('status', 'active')->count(),
             'used' => $user->vouchers()->where('is_used', true)->count(),
@@ -39,6 +43,7 @@ class VoucherController extends Controller
         return Inertia::render('Voucher/Index', [
             'vouchers' => $vouchers,
             'stats' => $stats,
+            'bankAccounts' => $bankAccounts,
         ]);
     }
 

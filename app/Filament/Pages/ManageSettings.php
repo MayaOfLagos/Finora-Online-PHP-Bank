@@ -164,7 +164,12 @@ class ManageSettings extends Page
             'mobile_deposit_enabled' => (bool) Setting::getValue('deposits', 'mobile_deposit_enabled', true),
             'crypto_deposit_enabled' => (bool) Setting::getValue('deposits', 'crypto_deposit_enabled', true),
             'check_hold_period' => Setting::getValue('deposits', 'check_hold_period', '3'),
-            'mobile_deposit_limit' => Setting::getValue('deposits', 'mobile_deposit_limit', '5000'),
+            'check_daily_limit' => Setting::getValue('deposits', 'check_daily_limit', '5000'),
+            'check_per_transaction_limit' => Setting::getValue('deposits', 'check_per_transaction_limit', '2500'),
+            'mobile_daily_limit' => Setting::getValue('deposits', 'mobile_daily_limit', '10000'),
+            'mobile_per_transaction_limit' => Setting::getValue('deposits', 'mobile_per_transaction_limit', '5000'),
+            'crypto_daily_limit' => Setting::getValue('deposits', 'crypto_daily_limit', '10000'),
+            'crypto_per_transaction_limit' => Setting::getValue('deposits', 'crypto_per_transaction_limit', '5000'),
 
             // Loan Settings
             'loans_enabled' => (bool) Setting::getValue('loans', 'loans_enabled', true),
@@ -1030,12 +1035,48 @@ class ManageSettings extends Page
                             ->suffix('days')
                             ->placeholder('3')
                             ->helperText('Days before check funds are available'),
-                        TextInput::make('mobile_deposit_limit')
-                            ->label('Mobile Deposit Limit')
+                    ]),
+                    Grid::make(2)->schema([
+                        TextInput::make('check_daily_limit')
+                            ->label('Check Deposit Daily Limit')
                             ->numeric()
                             ->prefix('$')
                             ->placeholder('5000')
-                            ->helperText('Maximum per mobile deposit'),
+                            ->helperText('Maximum total check deposits per day per user'),
+                        TextInput::make('check_per_transaction_limit')
+                            ->label('Check Deposit Per Transaction Limit')
+                            ->numeric()
+                            ->prefix('$')
+                            ->placeholder('2500')
+                            ->helperText('Maximum amount per single check deposit'),
+                    ]),
+                    Grid::make(2)->schema([
+                        TextInput::make('mobile_daily_limit')
+                            ->label('Mobile Deposit Daily Limit')
+                            ->numeric()
+                            ->prefix('$')
+                            ->placeholder('10000')
+                            ->helperText('Maximum total deposits per day per user'),
+                        TextInput::make('mobile_per_transaction_limit')
+                            ->label('Mobile Deposit Per Transaction Limit')
+                            ->numeric()
+                            ->prefix('$')
+                            ->placeholder('5000')
+                            ->helperText('Maximum amount per single deposit transaction'),
+                    ]),
+                    Grid::make(2)->schema([
+                        TextInput::make('crypto_daily_limit')
+                            ->label('Crypto Deposit Daily Limit')
+                            ->numeric()
+                            ->prefix('$')
+                            ->placeholder('10000')
+                            ->helperText('Maximum total crypto deposits per day per user'),
+                        TextInput::make('crypto_per_transaction_limit')
+                            ->label('Crypto Deposit Per Transaction Limit')
+                            ->numeric()
+                            ->prefix('$')
+                            ->placeholder('5000')
+                            ->helperText('Maximum amount per single crypto deposit'),
                     ]),
                 ]),
         ];
@@ -2125,7 +2166,12 @@ class ManageSettings extends Page
         Setting::setValue('deposits', 'mobile_deposit_enabled', $data['mobile_deposit_enabled'] ?? true, 'boolean');
         Setting::setValue('deposits', 'crypto_deposit_enabled', $data['crypto_deposit_enabled'] ?? true, 'boolean');
         Setting::setValue('deposits', 'check_hold_period', $data['check_hold_period'] ?? '3', 'string');
-        Setting::setValue('deposits', 'mobile_deposit_limit', $data['mobile_deposit_limit'] ?? '5000', 'string');
+        Setting::setValue('deposits', 'check_daily_limit', $data['check_daily_limit'] ?? '5000', 'string');
+        Setting::setValue('deposits', 'check_per_transaction_limit', $data['check_per_transaction_limit'] ?? '2500', 'string');
+        Setting::setValue('deposits', 'mobile_daily_limit', $data['mobile_daily_limit'] ?? '10000', 'string');
+        Setting::setValue('deposits', 'mobile_per_transaction_limit', $data['mobile_per_transaction_limit'] ?? '5000', 'string');
+        Setting::setValue('deposits', 'crypto_daily_limit', $data['crypto_daily_limit'] ?? '10000', 'string');
+        Setting::setValue('deposits', 'crypto_per_transaction_limit', $data['crypto_per_transaction_limit'] ?? '5000', 'string');
 
         // Loan Settings
         Setting::setValue('loans', 'loans_enabled', $data['loans_enabled'] ?? true, 'boolean');

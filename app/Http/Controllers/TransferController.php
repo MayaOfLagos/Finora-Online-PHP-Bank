@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransferOtpMail;
 use App\Models\BankAccount;
 use App\Models\InternalTransfer;
 use App\Models\Setting;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -89,10 +91,19 @@ class TransferController extends Controller
 
         $user = Auth::user();
 
+        // Verify account ownership
+        $account = BankAccount::where('id', $validated['from_account_id'])
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
         // Verify PIN
         if (! Hash::check($validated['pin'], $user->transaction_pin)) {
             return back()->withErrors(['pin' => 'Invalid transaction PIN']);
         }
+
+        // Preserve a reference so the emailed reference matches the final transaction
+        $reference = session('internal_transfer_reference') ?? 'INT-'.strtoupper(Str::random(12));
 
         // Generate OTP
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -101,15 +112,31 @@ class TransferController extends Controller
         session([
             'transfer_otp' => Hash::make($otp),
             'transfer_otp_expires' => now()->addMinutes(10),
+            'internal_transfer_reference' => $reference,
         ]);
 
-        // Send OTP via email
-        // Mail::to($user->email)->send(new TransferOtpMail($otp, $validated['amount']));
+        // Build a lightweight preview transfer for the email template
+        $previewTransfer = new InternalTransfer;
+        $previewTransfer->amount = (int) ($validated['amount'] * 100);
+        $previewTransfer->currency = $account->currency;
+        $previewTransfer->recipient_account_number = $request->input('to_account_number');
+        $previewTransfer->reference_number = $reference;
 
-        // For now, flash the OTP for development (remove in production)
-        session()->flash('dev_otp', $otp);
+        // Send OTP via email (log and continue on failure)
+        try {
+            Mail::to($user->email)->send(new TransferOtpMail($otp, $previewTransfer, $user, 'internal'));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send internal transfer OTP email: '.$e->getMessage());
+        }
 
-        return back()->with('success', 'OTP sent to your email');
+        $successMessage = 'OTP sent to your email';
+
+        if (config('app.debug')) {
+            $successMessage .= ' (Dev: '.$otp.')';
+            session()->flash('dev_otp', $otp);
+        }
+
+        return back()->with('success', $successMessage);
     }
 
     /**
@@ -181,7 +208,7 @@ class TransferController extends Controller
         DB::beginTransaction();
 
         try {
-            $reference = 'INT-'.strtoupper(Str::random(12));
+            $reference = session('internal_transfer_reference') ?? 'INT-'.strtoupper(Str::random(12));
 
             // Debit sender
             $fromAccount->balance -= $amountInCents;
@@ -210,7 +237,6 @@ class TransferController extends Controller
                 'user_id' => $user->id,
                 'bank_account_id' => $fromAccount->id,
                 'transaction_type' => 'internal_transfer',
-                'reference_number' => $reference,
                 'transactionable_type' => InternalTransfer::class,
                 'transactionable_id' => $transfer->id,
                 'amount' => $validated['amount'],
@@ -218,7 +244,7 @@ class TransferController extends Controller
                 'balance_after' => $fromAccount->balance / 100,
                 'currency' => $fromAccount->currency,
                 'status' => 'completed',
-                'description' => 'Internal transfer to '.$toAccount->user->name,
+                'description' => 'Internal transfer to '.$toAccount->user->name.' (Ref: '.$reference.')',
                 'processed_at' => now(),
             ]);
 
@@ -227,7 +253,6 @@ class TransferController extends Controller
                 'user_id' => $toAccount->user_id,
                 'bank_account_id' => $toAccount->id,
                 'transaction_type' => 'internal_transfer',
-                'reference_number' => $reference.'-R',
                 'transactionable_type' => InternalTransfer::class,
                 'transactionable_id' => $transfer->id,
                 'amount' => $validated['amount'],
@@ -235,12 +260,16 @@ class TransferController extends Controller
                 'balance_after' => $toAccount->balance / 100,
                 'currency' => $toAccount->currency,
                 'status' => 'completed',
-                'description' => 'Internal transfer from '.$user->name,
+                'description' => 'Internal transfer from '.$user->name.' (Ref: '.$reference.')',
                 'processed_at' => now(),
             ]);
 
             // Clear OTP session
-            session()->forget(['transfer_otp', 'transfer_otp_expires']);
+            session()->forget([
+                'transfer_otp',
+                'transfer_otp_expires',
+                'internal_transfer_reference',
+            ]);
 
             DB::commit();
 
@@ -254,6 +283,14 @@ class TransferController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Internal transfer processing failed', [
+                'error' => $e->getMessage(),
+                'sender_id' => $user->id,
+                'from_account_id' => $validated['from_account_id'] ?? null,
+                'to_account_number' => $validated['to_account_number'] ?? null,
+                'reference' => $reference ?? null,
+            ]);
 
             return back()->withErrors(['general' => 'Transfer failed. Please try again.']);
         }

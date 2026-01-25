@@ -60,6 +60,13 @@ class Loan extends Model
         return 'uuid';
     }
 
+    // ==================== RELATIONSHIPS ====================
+
+    public function loanPayments(): HasMany
+    {
+        return $this->hasMany(LoanPayment::class);
+    }
+
     public function getPrincipalAmountInDollarsAttribute(): float
     {
         return $this->principal_amount / 100;

@@ -131,6 +131,18 @@ const verifyRecipient = async () => {
         const data = await response.json();
 
         if (data.success) {
+            // Check if recipient account matches the sender's selected account
+            const selectedAccount = props.accounts.find(a => a.id === form.from_account_id);
+            if (selectedAccount && selectedAccount.account_number === form.to_account_number) {
+                toast.add({
+                    severity: 'error',
+                    summary: 'Invalid Recipient',
+                    detail: 'You cannot transfer to your own account',
+                    life: 3000
+                });
+                return;
+            }
+
             recipientVerified.value = true;
             recipientInfo.value = data.recipient;
         } else {
@@ -201,16 +213,17 @@ const handlePinSubmit = () => {
         router.post('/transfers/internal/request-otp', {
             pin: form.pin,
             from_account_id: form.from_account_id,
-            amount: form.amount
+            amount: Math.round((form.amount || 0) * 100) // Convert dollars to cents
         }, {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page) => {
                 currentStep.value = 2;
                 showOtpModal.value = true;
+                const successMessage = page?.props?.flash?.success || 'A verification code has been sent to your email';
                 toast.add({
                     severity: 'success',
                     summary: 'OTP Sent',
-                    detail: 'A verification code has been sent to your email',
+                    detail: successMessage,
                     life: 5000
                 });
             },
@@ -231,7 +244,7 @@ const handlePinSubmit = () => {
         router.post(route('transfers.internal.process'), {
             from_account_id: form.from_account_id,
             to_account_number: form.to_account_number,
-            amount: form.amount,
+            amount: Math.round((form.amount || 0) * 100), // Convert dollars to cents
             description: form.description,
             pin: form.pin,
             otp: 'skip_otp' // Special flag for skipped OTP
@@ -280,7 +293,7 @@ const handleOtpSubmit = () => {
     router.post(route('transfers.internal.process'), {
         from_account_id: form.from_account_id,
         to_account_number: form.to_account_number,
-        amount: form.amount,
+        amount: Math.round((form.amount || 0) * 100), // Convert dollars to cents
         description: form.description,
         pin: form.pin,
         otp: form.otp
@@ -320,11 +333,12 @@ const resendOtp = () => {
         amount: form.amount
     }, {
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
+            const successMessage = page?.props?.flash?.success || 'A new verification code has been sent';
             toast.add({
                 severity: 'success',
                 summary: 'OTP Resent',
-                detail: 'A new verification code has been sent',
+                detail: successMessage,
                 life: 3000
             });
         }
@@ -710,7 +724,7 @@ const startNewTransfer = () => {
             v-model:visible="showPinModal"
             modal
             header="Enter Transaction PIN"
-            :style="{ width: '400px' }"
+            :style="{ width: '480px' }"
             :closable="!isProcessing"
         >
             <div class="space-y-4">

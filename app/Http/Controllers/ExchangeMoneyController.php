@@ -27,7 +27,11 @@ class ExchangeMoneyController extends Controller
             'NGN' => ['USD' => 0.0006, 'EUR' => 0.0006, 'GBP' => 0.0005],
         ];
 
-        $bankAccounts = $user->bankAccounts()->active()->get();
+        $bankAccounts = $user->bankAccounts()
+            ->where('is_active', true)
+            ->orderByDesc('is_primary')
+            ->latest()
+            ->get();
 
         return Inertia::render('ExchangeMoney/Index', [
             'bankAccounts' => $bankAccounts,
@@ -82,28 +86,58 @@ class ExchangeMoneyController extends Controller
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'from_currency' => 'required|string|max:3',
             'to_currency' => 'required|string|max:3',
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|integer|min:1',
         ]);
 
         $bankAccount = $user->bankAccounts()->findOrFail($validated['bank_account_id']);
 
-        // Mock conversion
-        $rate = 0.92; // EUR/USD
-        $convertedAmount = intval($validated['amount'] * $rate * 100);
-        $fee = intval($convertedAmount * 0.01);
+        // Get exchange rates
+        $rates = [
+            'USD' => ['EUR' => 0.92, 'GBP' => 0.79, 'NGN' => 1650.00],
+            'EUR' => ['USD' => 1.09, 'GBP' => 0.86, 'NGN' => 1800.00],
+            'GBP' => ['USD' => 1.27, 'EUR' => 1.16, 'NGN' => 2100.00],
+            'NGN' => ['USD' => 0.0006, 'EUR' => 0.0006, 'GBP' => 0.0005],
+        ];
 
-        // Update balance
-        $bankAccount->balance -= intval($validated['amount'] * 100);
-        $bankAccount->balance += $convertedAmount - $fee;
+        $from = $validated['from_currency'];
+        $to = $validated['to_currency'];
+        $rate = $rates[$from][$to] ?? 1;
+
+        // Calculate amounts (already in cents from frontend)
+        $fromAmountInCents = $validated['amount'];
+        $convertedAmount = intval($fromAmountInCents * $rate);
+        $fee = intval($convertedAmount * 0.01); // 1% fee
+        $toAmountInCents = $convertedAmount - $fee;
+
+        // Create exchange record
+        $exchange = ExchangeMoney::create([
+            'user_id' => $user->id,
+            'bank_account_id' => $bankAccount->id,
+            'reference_number' => ExchangeMoney::generateReferenceNumber(),
+            'from_currency' => $from,
+            'to_currency' => $to,
+            'from_amount' => $fromAmountInCents,
+            'to_amount' => $toAmountInCents,
+            'exchange_rate' => $rate,
+            'fee' => $fee,
+            'status' => 'completed',
+            'completed_at' => now(),
+            'ip_address' => $request->ip(),
+        ]);
+
+        // Update balance (deduct from_amount, add to_amount)
+        $bankAccount->balance -= $fromAmountInCents;
+        $bankAccount->balance += $toAmountInCents;
         $bankAccount->save();
 
         // Log activity
-        ActivityLogger::logTransaction('exchange_money', $user, $bankAccount, [
-            'from_currency' => $validated['from_currency'],
-            'to_currency' => $validated['to_currency'],
-            'amount' => $validated['amount'],
-            'converted_amount' => $convertedAmount / 100,
+        ActivityLogger::logTransaction('exchange_money', $exchange, $user, [
+            'from_currency' => $from,
+            'to_currency' => $to,
+            'amount' => $fromAmountInCents / 100,
+            'converted_amount' => $toAmountInCents / 100,
             'fee' => $fee / 100,
+            'rate' => $rate,
         ]);
 
         return back()->with('success', 'Currency exchanged successfully!');

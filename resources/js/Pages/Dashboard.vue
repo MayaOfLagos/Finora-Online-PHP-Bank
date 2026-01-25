@@ -4,7 +4,7 @@
  * Main overview of user's banking information
  */
 import { computed, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import Button from 'primevue/button';
 import Carousel from 'primevue/carousel';
@@ -115,6 +115,17 @@ const quickActions = [
         description: '24/7 help',
     },
 ];
+
+const handleFreeze = (card) => {
+    router.post(route('cards.freeze', card.uuid), {}, {
+        preserveScroll: true,
+        onSuccess: () => router.reload({ only: ['cards', 'cardStats', 'pendingItems'] }),
+    });
+};
+
+const viewCardDetails = (card) => {
+    router.visit(`/cards/${card.uuid}`);
+};
 </script>
 
 <template>
@@ -315,12 +326,14 @@ const quickActions = [
                         v-for="card in cards.slice(0, 3)"
                         :key="card.id"
                         :card="card"
+                        @freeze="handleFreeze"
+                        @view-details="viewCardDetails"
                     />
 
                     <!-- Add Card CTA if less than 3 cards -->
                     <Link
                         v-if="cards.length < 3"
-                        href="/cards/request"
+                        href="/cards"
                         class="aspect-[1.586/1] rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all flex flex-col items-center justify-center gap-3 group"
                     >
                         <div class="flex items-center justify-center transition-colors bg-gray-100 rounded-full dark:bg-gray-700 w-14 h-14 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50">
@@ -345,7 +358,11 @@ const quickActions = [
                     >
                         <template #item="{ data }">
                             <div class="px-1">
-                                <DigitalCard :card="data" />
+                                <DigitalCard
+                                    :card="data"
+                                    @freeze="handleFreeze"
+                                    @view-details="viewCardDetails"
+                                />
                             </div>
                         </template>
                     </Carousel>
@@ -359,7 +376,7 @@ const quickActions = [
                     title="No cards yet"
                     description="Request a virtual or physical card to make payments"
                     action-label="Request Card"
-                    action-href="/cards/request"
+                    action-href="/cards"
                 />
             </div>
         </div>

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
@@ -25,7 +26,7 @@ class WireTransferController extends Controller
     {
         $user = Auth::user();
 
-        $accounts = $user->bankAccounts()
+        $accounts = BankAccount::where('user_id', $user->id)
             ->where('is_active', true)
             ->with('accountType')
             ->get();
@@ -98,7 +99,7 @@ class WireTransferController extends Controller
         // Build dynamic validation rules
         $validationRules = [
             'from_account_id' => 'required|exists:bank_accounts,id',
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|integer|min:1', // Already in cents from frontend
             'remarks' => 'nullable|string|max:500',
         ];
 
@@ -109,14 +110,18 @@ class WireTransferController extends Controller
                 $rule = 'string|size:8|regex:/^[A-Z]{6}[A-Z0-9]{2}$/i';
             }
             if ($field->is_required) {
-                $rule = 'required|' . $rule;
+                $rule = 'required|'.$rule;
             } else {
-                $rule = 'nullable|' . $rule;
+                $rule = 'nullable|'.$rule;
             }
             $validationRules[$field->field_key] = $rule;
         }
 
-        $validated = $request->validate($validationRules);
+        try {
+            $validated = $request->validate($validationRules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
 
         // Verify account ownership
         $account = BankAccount::where('id', $validated['from_account_id'])
@@ -129,7 +134,7 @@ class WireTransferController extends Controller
             return back()->withErrors(['general' => 'You do not have permission to send wire transfers.']);
         }
 
-        $amountInCents = (int) ($validated['amount'] * 100);
+        $amountInCents = (int) $validated['amount']; // Already in cents
 
         // Calculate fees
         $flatFee = (float) Setting::getValue('transfers', 'wire_flat_fee', 25) * 100;
@@ -178,17 +183,21 @@ class WireTransferController extends Controller
         // Create wire transfer record
         $transfer = WireTransfer::create($transferData);
 
-        return back()->with([
+        $responseData = [
             'success' => 'Transfer initiated. Please complete verification.',
             'transfer' => [
                 'uuid' => $transfer->uuid,
                 'reference' => $transfer->reference_number,
-                'amount' => $validated['amount'],
+                'amount' => $amountInCents / 100, // Convert back to dollars for display
                 'fee' => $calculatedFee / 100,
                 'total' => $totalAmount / 100,
                 'currentStep' => 'pin',
             ],
-        ]);
+        ];
+
+        Log::info('Wire transfer initiated response:', $responseData);
+
+        return back()->with($responseData);
     }
 
     /**
@@ -321,17 +330,38 @@ class WireTransferController extends Controller
         // Generate OTP
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Store OTP in session
-        session([
-            'wire_transfer_otp_'.$wireTransfer->uuid => Hash::make($otp),
-            'wire_transfer_otp_expires_'.$wireTransfer->uuid => now()->addMinutes(10),
+        // Store OTP in database (more reliable than session)
+        $wireTransfer->update([
+            'otp_code' => Hash::make($otp),
+            'otp_expires_at' => now()->addMinutes(10),
         ]);
 
-        // Send OTP via email (implement actual email sending)
-        // Mail::to($user->email)->send(new WireTransferOtpMail($otp, $wireTransfer));
+        // Debug logging
+        Log::info('OTP Generated and Stored', [
+            'wire_transfer_uuid' => $wireTransfer->uuid,
+            'otp_plain' => $otp,
+            'otp_expires_at' => now()->addMinutes(10),
+        ]);
+
+        // Send OTP via email
+        try {
+            Mail::to($user->email)->send(
+                new \App\Mail\TransferOtpMail($otp, $wireTransfer, $user, 'wire')
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to send wire transfer OTP email: '.$e->getMessage());
+            // Continue anyway - OTP is still valid in database
+        }
 
         // For development, flash the OTP
-        session()->flash('dev_otp', $otp);
+        if (config('app.debug')) {
+            session()->flash('dev_otp', $otp);
+
+            return back()->with([
+                'success' => 'OTP sent to your email. (Dev: '.$otp.')',
+                'dev_otp' => $otp,
+            ]);
+        }
 
         return back()->with([
             'success' => 'OTP sent to your email.',
@@ -364,17 +394,60 @@ class WireTransferController extends Controller
             return back()->withErrors(['general' => 'Invalid verification step.']);
         }
 
-        // Verify OTP
-        $storedOtp = session('wire_transfer_otp_'.$wireTransfer->uuid);
-        $otpExpires = session('wire_transfer_otp_expires_'.$wireTransfer->uuid);
+        // Verify OTP from database
+        $storedOtp = $wireTransfer->otp_code;
+        $otpExpires = $wireTransfer->otp_expires_at;
 
-        if (! $storedOtp || ! $otpExpires || now()->isAfter($otpExpires)) {
+        // Debug logging
+        Log::info('OTP Verification Attempt', [
+            'wire_transfer_uuid' => $wireTransfer->uuid,
+            'stored_otp_exists' => ! is_null($storedOtp),
+            'expires_exists' => ! is_null($otpExpires),
+            'expires_time' => $otpExpires,
+            'current_time' => now(),
+            'submitted_otp' => $validated['otp'],
+        ]);
+
+        if (! $storedOtp) {
+            Log::warning('OTP Not Found in Database', [
+                'wire_transfer_uuid' => $wireTransfer->uuid,
+            ]);
+
+            return back()->withErrors(['otp' => 'OTP not found. Please request a new one.']);
+        }
+
+        if (! $otpExpires) {
+            Log::warning('OTP Expiry Not Found in Database');
+
+            return back()->withErrors(['otp' => 'OTP expiry not set. Please request a new one.']);
+        }
+
+        if (now()->isAfter($otpExpires)) {
+            Log::warning('OTP Expired', [
+                'expires_time' => $otpExpires,
+                'current_time' => now(),
+            ]);
+
             return back()->withErrors(['otp' => 'OTP has expired. Please request a new one.']);
         }
 
         if (! Hash::check($validated['otp'], $storedOtp)) {
+            Log::warning('OTP Hash Check Failed', [
+                'submitted' => $validated['otp'],
+                'submitted_length' => strlen($validated['otp']),
+                'hash_exists' => (bool) $storedOtp,
+                'hash_length' => strlen((string) $storedOtp),
+                'hash_starts_with' => substr((string) $storedOtp, 0, 10),
+                'check_result' => false,
+            ]);
+
             return back()->withErrors(['otp' => 'Invalid OTP.']);
         }
+
+        Log::info('OTP Hash Check Passed', [
+            'wire_transfer_uuid' => $wireTransfer->uuid,
+            'otp_verified' => true,
+        ]);
 
         // Complete the transfer
         return $this->completeTransfer($wireTransfer);
@@ -385,6 +458,10 @@ class WireTransferController extends Controller
      */
     public function completeTransfer(WireTransfer $wireTransfer)
     {
+        Log::info('Starting completeTransfer', [
+            'wire_transfer_uuid' => $wireTransfer->uuid,
+        ]);
+
         $user = Auth::user();
 
         // Get the source account
@@ -393,8 +470,19 @@ class WireTransferController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
+        Log::info('Account Retrieved', [
+            'account_id' => $account->id,
+            'balance' => $account->balance,
+            'total_amount' => $wireTransfer->total_amount,
+        ]);
+
         // Verify sufficient balance
         if ($account->balance < $wireTransfer->total_amount) {
+            Log::warning('Insufficient Balance', [
+                'account_balance' => $account->balance,
+                'required_amount' => $wireTransfer->total_amount,
+            ]);
+
             $wireTransfer->update([
                 'status' => TransferStatus::Failed,
                 'failed_reason' => 'Insufficient balance',
@@ -413,6 +501,8 @@ class WireTransferController extends Controller
             // Update transfer status
             $wireTransfer->update([
                 'otp_verified_at' => now(),
+                'otp_code' => null,
+                'otp_expires_at' => null,
                 'current_step' => TransferStep::Completed,
                 'status' => TransferStatus::Processing, // Wire transfers need processing time
                 'completed_at' => now(),
@@ -423,7 +513,6 @@ class WireTransferController extends Controller
                 'user_id' => $user->id,
                 'bank_account_id' => $account->id,
                 'transaction_type' => 'wire_transfer',
-                'reference_number' => $wireTransfer->reference_number,
                 'transactionable_type' => WireTransfer::class,
                 'transactionable_id' => $wireTransfer->id,
                 'amount' => $wireTransfer->amount / 100,
@@ -431,7 +520,7 @@ class WireTransferController extends Controller
                 'balance_after' => $account->balance / 100,
                 'currency' => $wireTransfer->currency,
                 'status' => 'processing',
-                'description' => 'Wire transfer to '.$wireTransfer->beneficiary_name,
+                'description' => 'Wire transfer to '.$wireTransfer->beneficiary_name.' (Ref: '.$wireTransfer->reference_number.')',
                 'processed_at' => now(),
             ]);
 
@@ -442,6 +531,11 @@ class WireTransferController extends Controller
             ]);
 
             DB::commit();
+
+            Log::info('Wire Transfer Completed Successfully', [
+                'wire_transfer_uuid' => $wireTransfer->uuid,
+                'reference' => $wireTransfer->reference_number,
+            ]);
 
             return back()->with([
                 'success' => 'Wire transfer submitted successfully. It will be processed within 3-5 business days.',
@@ -457,6 +551,12 @@ class WireTransferController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Wire Transfer Processing Error', [
+                'wire_transfer_uuid' => $wireTransfer->uuid,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             $wireTransfer->update([
                 'status' => TransferStatus::Failed,

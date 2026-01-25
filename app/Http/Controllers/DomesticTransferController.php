@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class DomesticTransferController extends Controller
@@ -77,7 +79,7 @@ class DomesticTransferController extends Controller
             'bank_id' => 'required|exists:banks,id',
             'beneficiary_name' => 'required|string|max:255',
             'beneficiary_account' => 'required|string|max:50',
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|integer|min:1', // Already in cents from frontend
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -94,7 +96,7 @@ class DomesticTransferController extends Controller
             return back()->withErrors(['general' => 'You do not have permission to send domestic transfers.']);
         }
 
-        $amountInCents = (int) ($validated['amount'] * 100);
+        $amountInCents = (int) $validated['amount']; // Already in cents
 
         // Calculate fees
         $flatFee = (float) Setting::getValue('transfers', 'domestic_flat_fee', 5) * 100;
@@ -132,7 +134,7 @@ class DomesticTransferController extends Controller
             'transfer' => [
                 'uuid' => $transfer->uuid,
                 'reference' => $transfer->reference_number,
-                'amount' => $validated['amount'],
+                'amount' => $amountInCents / 100, // Convert back to dollars for display
                 'fee' => $calculatedFee / 100,
                 'total' => $totalAmount / 100,
                 'currentStep' => 'pin',
@@ -210,14 +212,26 @@ class DomesticTransferController extends Controller
         // Generate OTP
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Store OTP in session
-        session([
-            'domestic_transfer_otp_'.$domesticTransfer->uuid => Hash::make($otp),
-            'domestic_transfer_otp_expires_'.$domesticTransfer->uuid => now()->addMinutes(10),
+        // Store OTP in database (more reliable than session)
+        $domesticTransfer->update([
+            'otp_code' => Hash::make($otp),
+            'otp_expires_at' => now()->addMinutes(10),
         ]);
 
+        // Send OTP via email
+        try {
+            Mail::to($user->email)->send(
+                new \App\Mail\TransferOtpMail($otp, $domesticTransfer, $user, 'domestic')
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to send domestic transfer OTP email: '.$e->getMessage());
+            // Continue anyway - OTP is still valid in database
+        }
+
         // For development, flash the OTP
-        session()->flash('dev_otp', $otp);
+        if (config('app.debug')) {
+            session()->flash('dev_otp', $otp);
+        }
 
         return back()->with([
             'success' => 'OTP sent to your email.',
@@ -250,11 +264,19 @@ class DomesticTransferController extends Controller
             return back()->withErrors(['general' => 'Please verify PIN first.']);
         }
 
-        // Verify OTP
-        $storedOtp = session('domestic_transfer_otp_'.$domesticTransfer->uuid);
-        $otpExpires = session('domestic_transfer_otp_expires_'.$domesticTransfer->uuid);
+        // Verify OTP from database
+        $storedOtp = $domesticTransfer->otp_code;
+        $otpExpires = $domesticTransfer->otp_expires_at;
 
-        if (! $storedOtp || ! $otpExpires || now()->isAfter($otpExpires)) {
+        if (! $storedOtp) {
+            return back()->withErrors(['otp' => 'OTP not found. Please request a new one.']);
+        }
+
+        if (! $otpExpires) {
+            return back()->withErrors(['otp' => 'OTP expiry not set. Please request a new one.']);
+        }
+
+        if (now()->isAfter($otpExpires)) {
             return back()->withErrors(['otp' => 'OTP has expired. Please request a new one.']);
         }
 
@@ -262,9 +284,11 @@ class DomesticTransferController extends Controller
             return back()->withErrors(['otp' => 'Invalid OTP.']);
         }
 
-        // Update OTP verified timestamp
+        // Update OTP verified timestamp and clear OTP
         $domesticTransfer->update([
             'otp_verified_at' => now(),
+            'otp_code' => null,
+            'otp_expires_at' => null,
         ]);
 
         // Complete the transfer
@@ -313,7 +337,6 @@ class DomesticTransferController extends Controller
                 'user_id' => $user->id,
                 'bank_account_id' => $account->id,
                 'transaction_type' => 'domestic_transfer',
-                'reference_number' => $domesticTransfer->reference_number,
                 'transactionable_type' => DomesticTransfer::class,
                 'transactionable_id' => $domesticTransfer->id,
                 'amount' => $domesticTransfer->amount / 100,
@@ -321,7 +344,7 @@ class DomesticTransferController extends Controller
                 'balance_after' => $account->balance / 100,
                 'currency' => $domesticTransfer->currency,
                 'status' => 'processing',
-                'description' => 'Domestic transfer to '.$domesticTransfer->beneficiary_name,
+                'description' => 'Domestic transfer to '.$domesticTransfer->beneficiary_name.' (Ref: '.$domesticTransfer->reference_number.')',
                 'processed_at' => now(),
             ]);
 

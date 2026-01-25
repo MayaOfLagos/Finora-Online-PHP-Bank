@@ -17,14 +17,11 @@ class GrantProgramSeeder extends Seeder
                 'amount' => 500000, // $5,000
                 'currency' => 'USD',
                 'eligibility_criteria' => [
-                    'min_account_age_months' => 6,
-                    'min_balance' => 50000,
-                    'kyc_level' => 2,
-                    'requirements' => [
-                        'Must have an active business account',
-                        'Business must be registered for at least 1 year',
-                        'Must demonstrate business revenue',
-                    ],
+                    'Active business account with Finora (min 6 months)',
+                    'Maintain minimum balance of $500',
+                    'KYC Level 2 verified',
+                    'Business registered for at least 1 year',
+                    'Demonstrate existing business revenue',
                 ],
                 'required_documents' => [
                     'Business Registration Certificate',
@@ -43,13 +40,10 @@ class GrantProgramSeeder extends Seeder
                 'amount' => 250000, // $2,500
                 'currency' => 'USD',
                 'eligibility_criteria' => [
-                    'min_account_age_months' => 3,
-                    'min_balance' => 10000,
-                    'kyc_level' => 1,
-                    'requirements' => [
-                        'Must be enrolled in an educational institution',
-                        'Must maintain good academic standing',
-                    ],
+                    'Active Finora account (min 3 months)',
+                    'KYC Level 1 verified',
+                    'Currently enrolled in an educational institution',
+                    'Maintain satisfactory academic standing',
                 ],
                 'required_documents' => [
                     'Student ID',
@@ -68,13 +62,9 @@ class GrantProgramSeeder extends Seeder
                 'amount' => 100000, // $1,000
                 'currency' => 'USD',
                 'eligibility_criteria' => [
-                    'min_account_age_months' => 1,
-                    'min_balance' => 0,
-                    'kyc_level' => 1,
-                    'requirements' => [
-                        'Must demonstrate emergency situation',
-                        'Must provide supporting documentation',
-                    ],
+                    'Active Finora account (min 1 month)',
+                    'KYC Level 1 verified',
+                    'Provide documentation of the emergency need',
                 ],
                 'required_documents' => [
                     'Emergency Documentation',

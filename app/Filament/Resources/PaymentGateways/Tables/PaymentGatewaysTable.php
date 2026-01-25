@@ -9,13 +9,13 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\FileUpload;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\KeyValue;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -33,7 +33,7 @@ class PaymentGatewaysTable
                     ->label('Logo')
                     ->disk('public')
                     ->circular()
-                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name))
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->name))
                     ->size(40),
 
                 TextColumn::make('name')
@@ -113,7 +113,7 @@ class PaymentGatewaysTable
                         ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
                         ->requiresConfirmation()
                         ->action(function ($record) {
-                            $record->update(['is_active' => !$record->is_active]);
+                            $record->update(['is_active' => ! $record->is_active]);
                             Notification::make()
                                 ->title($record->is_active ? 'Gateway Activated' : 'Gateway Deactivated')
                                 ->success()
@@ -160,7 +160,7 @@ class PaymentGatewaysTable
                         TextEntry::make('type')
                             ->label('Gateway Type')
                             ->badge()
-                            ->color(fn ($state) => match($state) {
+                            ->color(fn ($state) => match ($state) {
                                 PaymentGatewayType::AUTOMATIC => 'success',
                                 PaymentGatewayType::MANUAL => 'warning',
                                 PaymentGatewayType::CRYPTO => 'info',
@@ -184,7 +184,7 @@ class PaymentGatewaysTable
                         ->label('')
                         ->html()
                         ->formatStateUsing(fn () => new \Illuminate\Support\HtmlString(
-                            '<div class="flex justify-center"><img src="' . asset('storage/' . $record->logo) . '" alt="Gateway Logo" class="max-w-xs rounded-lg shadow-md"></div>'
+                            '<div class="flex justify-center"><img src="'.asset('storage/'.$record->logo).'" alt="Gateway Logo" class="max-w-xs rounded-lg shadow-md"></div>'
                         )),
                 ])
                 ->collapsible();
@@ -217,7 +217,7 @@ class PaymentGatewaysTable
                 ->formatStateUsing(fn ($state) => $state ? 'Enabled' : 'Disabled');
         }
 
-        if (!empty($additionalFields)) {
+        if (! empty($additionalFields)) {
             $sections[] = \Filament\Schemas\Components\Section::make('Settings')
                 ->schema($additionalFields)
                 ->columns(2)
@@ -271,7 +271,8 @@ class PaymentGatewaysTable
                 TextInput::make('code')
                     ->label('Code')
                     ->required()
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    ->disabled(),
             ]),
 
             FileUpload::make('logo')
@@ -305,13 +306,69 @@ class PaymentGatewaysTable
         ]);
 
         if ($record->type === PaymentGatewayType::AUTOMATIC) {
-            $commonFields[] = KeyValue::make('credentials')
-                ->label('API Credentials')
-                ->keyLabel('Credential Name')
-                ->valueLabel('Value')
-                ->addButtonLabel('Add Credential')
-                ->reorderable()
-                ->nullable();
+            $credentialsFields = match ($record->code) {
+                'stripe' => [
+                    TextInput::make('credentials.publishable_key')
+                        ->label('Publishable Key')
+                        ->required()
+                        ->helperText('e.g. pk_live_xxx')
+                        ->default($record->credentials['publishable_key'] ?? null),
+                    TextInput::make('credentials.secret_key')
+                        ->label('Secret Key')
+                        ->required()
+                        ->helperText('e.g. sk_live_xxx')
+                        ->default($record->credentials['secret_key'] ?? null),
+                ],
+                'paypal' => [
+                    TextInput::make('credentials.client_id')
+                        ->label('Client ID')
+                        ->required()
+                        ->default($record->credentials['client_id'] ?? null),
+                    TextInput::make('credentials.client_secret')
+                        ->label('Client Secret')
+                        ->required()
+                        ->default($record->credentials['client_secret'] ?? null),
+                ],
+                'paystack' => [
+                    TextInput::make('credentials.public_key')
+                        ->label('Public Key')
+                        ->required()
+                        ->helperText('e.g. pk_live_xxx')
+                        ->default($record->credentials['public_key'] ?? null),
+                    TextInput::make('credentials.secret_key')
+                        ->label('Secret Key')
+                        ->required()
+                        ->helperText('e.g. sk_live_xxx')
+                        ->default($record->credentials['secret_key'] ?? null),
+                ],
+                'flutterwave' => [
+                    TextInput::make('credentials.public_key')
+                        ->label('Public Key')
+                        ->required()
+                        ->default($record->credentials['public_key'] ?? null),
+                    TextInput::make('credentials.secret_key')
+                        ->label('Secret Key')
+                        ->required()
+                        ->default($record->credentials['secret_key'] ?? null),
+                    TextInput::make('credentials.encryption_key')
+                        ->label('Encryption Key')
+                        ->required()
+                        ->default($record->credentials['encryption_key'] ?? null),
+                ],
+                default => [],
+            };
+
+            if (! empty($credentialsFields)) {
+                $commonFields[] = Grid::make(2)->schema($credentialsFields);
+            } else {
+                $commonFields[] = KeyValue::make('credentials')
+                    ->label('API Credentials')
+                    ->keyLabel('Credential Name')
+                    ->valueLabel('Value')
+                    ->addButtonLabel('Add Credential')
+                    ->reorderable()
+                    ->nullable();
+            }
         }
 
         $commonFields[] = KeyValue::make('settings')

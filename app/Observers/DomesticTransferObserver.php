@@ -9,7 +9,8 @@ class DomesticTransferObserver
 {
     public function created(DomesticTransfer $transfer): void
     {
-        $this->logTransaction($transfer);
+        // Transaction histories are created at the time of debit (in controller).
+        // Avoid creating a pending duplicate entry here.
     }
 
     public function updated(DomesticTransfer $transfer): void

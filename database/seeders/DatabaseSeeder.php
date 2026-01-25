@@ -23,6 +23,10 @@ class DatabaseSeeder extends Seeder
             GrantProgramSeeder::class,
             SettingSeeder::class,
 
+            // Beneficiary Field Templates and Settings
+            BeneficiaryFieldTemplateSeeder::class,
+            // BeneficiaryFieldSettingSeeder::class, // TODO: Model BeneficiaryFieldSetting needs to be created
+
             // Users and Accounts (depends on account types)
             AdminUserSeeder::class,
 

@@ -251,7 +251,7 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                             );
                             $notificationsSent[] = 'Email';
                         } catch (\Exception $e) {
-                            \Log::error('Failed to send transaction email: '.$e->getMessage());
+                            Log::error('Failed to send transaction email: '.$e->getMessage());
                         }
                     }
 
@@ -267,7 +267,7 @@ class GenerateTransaction extends Page implements HasForms, HasTable
                             );
                             $notificationsSent[] = 'Push';
                         } catch (\Exception $e) {
-                            \Log::error('Failed to send transaction push notification: '.$e->getMessage());
+                            Log::error('Failed to send transaction push notification: '.$e->getMessage());
                         }
                     }
 

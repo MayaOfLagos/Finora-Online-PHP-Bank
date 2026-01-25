@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,6 +46,8 @@ class TransactionHistory extends Model
             'metadata' => 'array',
             'processed_at' => 'datetime',
             'email_sent_at' => 'datetime',
+            'status' => TransactionStatus::class,
+            'transaction_type' => TransactionType::class,
         ];
     }
 

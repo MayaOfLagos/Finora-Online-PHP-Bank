@@ -18,6 +18,7 @@ class LoanApplication extends Model
         'uuid',
         'user_id',
         'loan_type_id',
+        'bank_account_id',
         'reference_number',
         'amount',
         'term_months',
@@ -60,7 +61,7 @@ class LoanApplication extends Model
 
     public static function generateReferenceNumber(): string
     {
-        return 'LA' . date('Ymd') . strtoupper(Str::random(8));
+        return 'LA'.date('Ymd').strtoupper(Str::random(8));
     }
 
     public function getRouteKeyName(): string
@@ -93,6 +94,11 @@ class LoanApplication extends Model
     public function loanType(): BelongsTo
     {
         return $this->belongsTo(LoanType::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 
     public function approver(): BelongsTo

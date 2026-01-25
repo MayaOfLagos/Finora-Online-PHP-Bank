@@ -1,15 +1,32 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountTransferController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BeneficiaryController;
+use App\Http\Controllers\CardPageController;
+use App\Http\Controllers\CheckDepositController;
+use App\Http\Controllers\CryptoDepositController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepositController;
 use App\Http\Controllers\DomesticTransferController;
+use App\Http\Controllers\ExchangeMoneyController;
+use App\Http\Controllers\GrantController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\LoanController;
+use App\Http\Controllers\LoanRepaymentController;
+use App\Http\Controllers\MobileDepositController;
+use App\Http\Controllers\MoneyRequestController;
+use App\Http\Controllers\RewardController;
 use App\Http\Controllers\TransactionHistoryController;
 use App\Http\Controllers\TransferController;
+use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WireTransferController;
+use App\Http\Controllers\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -27,6 +44,25 @@ Route::middleware('guest')->group(function () {
 
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store']);
+
+    // Password reset routes (placeholder - redirect to login)
+    Route::get('forgot-password', function () {
+        return redirect()->route('login')->with('status', 'Password reset feature coming soon');
+    })->name('password.request');
+});
+
+// Email Verification Routes
+Route::middleware('auth')->group(function () {
+    Route::get('email/verify', EmailVerificationPromptController::class)
+        ->name('verification.notice');
+
+    Route::get('email/verify/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 });
 
 // Logout (requires auth)
@@ -36,6 +72,12 @@ Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Cards routes
+    Route::get('/cards', [CardPageController::class, 'index'])->name('cards.index');
+    Route::post('/cards', [CardPageController::class, 'store'])->name('cards.store');
+    Route::get('/cards/{card}', [CardPageController::class, 'show'])->name('cards.show');
+    Route::post('/cards/{card}/freeze', [CardPageController::class, 'toggleFreeze'])->name('cards.freeze');
 
     // Accounts routes
     Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
@@ -63,6 +105,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/transfers/internal/request-otp', [TransferController::class, 'requestInternalOtp'])->name('transfers.internal.request-otp');
     Route::post('/transfers/internal', [TransferController::class, 'processInternal'])->name('transfers.internal.process');
 
+    // Account Transfer routes
+    Route::get('/transfers/account', [AccountTransferController::class, 'index'])->name('transfers.account');
+    Route::post('/transfers/account', [AccountTransferController::class, 'process'])->name('transfers.account.process');
+
     // Wire Transfer routes
     Route::get('/transfers/wire', [WireTransferController::class, 'index'])->name('transfers.wire');
     Route::post('/transfers/wire/initiate', [WireTransferController::class, 'initiate'])->name('transfers.wire.initiate');
@@ -70,6 +116,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/transfers/wire/{wireTransfer}/verify-code', [WireTransferController::class, 'verifyCode'])->name('transfers.wire.verify-code');
     Route::post('/transfers/wire/{wireTransfer}/request-otp', [WireTransferController::class, 'requestOtp'])->name('transfers.wire.request-otp');
     Route::post('/transfers/wire/{wireTransfer}/verify-otp', [WireTransferController::class, 'verifyOtp'])->name('transfers.wire.verify-otp');
+    Route::post('/transfers/wire/{wireTransfer}/complete', [WireTransferController::class, 'completeTransfer'])->name('transfers.wire.complete');
 
     // Domestic Transfer routes
     Route::get('/transfers/domestic', [DomesticTransferController::class, 'index'])->name('transfers.domestic');
@@ -77,6 +124,73 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/transfers/domestic/{domesticTransfer}/verify-pin', [DomesticTransferController::class, 'verifyPin'])->name('transfers.domestic.verify-pin');
     Route::post('/transfers/domestic/{domesticTransfer}/request-otp', [DomesticTransferController::class, 'requestOtp'])->name('transfers.domestic.request-otp');
     Route::post('/transfers/domestic/{domesticTransfer}/verify-otp', [DomesticTransferController::class, 'verifyOtp'])->name('transfers.domestic.verify-otp');
+
+    // Deposit routes
+    Route::get('/deposits', [DepositController::class, 'index'])->name('deposits.index');
+
+    // Mobile Deposit routes
+    Route::get('/deposits/mobile', [MobileDepositController::class, 'index'])->name('deposits.mobile');
+    Route::post('/deposits/mobile/initiate', [MobileDepositController::class, 'initiate'])->name('deposits.mobile.initiate');
+    Route::post('/deposits/mobile/stripe/intent', [MobileDepositController::class, 'createStripeIntent'])->name('deposits.mobile.stripe.intent');
+    Route::post('/deposits/mobile/flutterwave/link', [MobileDepositController::class, 'createFlutterwaveLink'])->name('deposits.mobile.flutterwave.link');
+    Route::post('/deposits/mobile/razorpay/order', [MobileDepositController::class, 'createRazorpayOrder'])->name('deposits.mobile.razorpay.order');
+    Route::post('/deposits/mobile/{mobileDeposit}/callback', [MobileDepositController::class, 'callback'])->name('deposits.mobile.callback');
+
+    // Check Deposit routes
+    Route::get('/deposits/check', [CheckDepositController::class, 'index'])->name('deposits.check');
+    Route::post('/deposits/check/submit', [CheckDepositController::class, 'submit'])->name('deposits.check.submit');
+
+    // Crypto Deposit routes
+    Route::get('/deposits/crypto', [CryptoDepositController::class, 'index'])->name('deposits.crypto');
+    Route::get('/deposits/crypto/{cryptocurrency}/wallet', [CryptoDepositController::class, 'getWallet'])->name('deposits.crypto.wallet');
+    Route::get('/deposits/crypto/{cryptocurrency}/rate', [CryptoDepositController::class, 'getExchangeRate'])->name('deposits.crypto.rate');
+    Route::post('/deposits/crypto/register', [CryptoDepositController::class, 'register'])->name('deposits.crypto.register');
+
+    // Withdrawal routes
+    Route::get('/withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals');
+    Route::post('/withdrawals', [WithdrawalController::class, 'store'])->name('withdrawals.store');
+    Route::post('/withdrawals/{withdrawal}/cancel', [WithdrawalController::class, 'cancel'])->name('withdrawals.cancel');
+
+    // Loan routes
+    Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
+    Route::get('/loans/programs', [LoanController::class, 'programs'])->name('loans.programs');
+    Route::get('/loans/applications', [LoanController::class, 'applications'])->name('loans.applications');
+    Route::get('/loans/apply/{program}', [LoanController::class, 'create'])->name('loans.create');
+    Route::post('/loans/apply', [LoanController::class, 'store'])->name('loans.store');
+    Route::post('/loans/{loan}/repay', [LoanRepaymentController::class, 'store'])->name('loans.repay');
+
+    // Grant routes
+    Route::get('/grants', [GrantController::class, 'programs'])->name('grants.programs');
+    Route::get('/grants/applications', [GrantController::class, 'applications'])->name('grants.applications');
+    Route::get('/grants/applications/{application}', [GrantController::class, 'show'])->name('grants.show');
+    Route::get('/grants/{program}/apply', [GrantController::class, 'create'])->name('grants.create');
+    Route::post('/grants/apply', [GrantController::class, 'store'])->name('grants.store');
+
+    // Money Requests
+    Route::get('/money-requests', [MoneyRequestController::class, 'index'])->name('money-requests.index');
+    Route::post('/money-requests', [MoneyRequestController::class, 'store'])->name('money-requests.store');
+    Route::post('/money-requests/{id}/accept', [MoneyRequestController::class, 'accept'])->name('money-requests.accept');
+    Route::post('/money-requests/{id}/reject', [MoneyRequestController::class, 'reject'])->name('money-requests.reject');
+    Route::delete('/money-requests/{id}', [MoneyRequestController::class, 'cancel'])->name('money-requests.cancel');
+
+    // Exchange Money
+    Route::get('/exchange', [ExchangeMoneyController::class, 'index'])->name('exchange.index');
+    Route::post('/exchange/rate', [ExchangeMoneyController::class, 'getRate'])->name('exchange.rate');
+    Route::post('/exchange', [ExchangeMoneyController::class, 'store'])->name('exchange.store');
+
+    // Vouchers
+    Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
+    Route::post('/vouchers/redeem', [VoucherController::class, 'redeem'])->name('vouchers.redeem');
+
+    // Rewards
+    Route::get('/rewards', [RewardController::class, 'index'])->name('rewards.index');
+    Route::post('/rewards/redeem', [RewardController::class, 'redeem'])->name('rewards.redeem');
+
+    // Tax Refunds
+    Route::get('/tax-refunds', fn () => Inertia::render('TaxRefunds/Index'))->name('tax-refunds.index');
+
+    // Support
+    Route::get('/support', fn () => Inertia::render('Support/Index'))->name('support.index');
 
     // API-like routes for AJAX calls
     Route::get('/api/accounts/verify/{accountNumber}', [TransferController::class, 'verifyAccount'])->name('api.accounts.verify');
