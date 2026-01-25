@@ -2,7 +2,7 @@ import './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, Link } from '@inertiajs/vue3';
 import { createPinia } from 'pinia';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
@@ -23,8 +23,9 @@ const appName =
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
+    // Lazy load pages for code splitting (faster initial load)
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`,
-        import.meta.glob('./Pages/**/*.vue', { eager: true })),
+        import.meta.glob('./Pages/**/*.vue')), // Removed eager: true for lazy loading
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
 
@@ -46,11 +47,16 @@ createInertiaApp({
             .use(ToastService)
             .use(ConfirmationService)
             .directive('tooltip', Tooltip)
-            .directive('ripple', Ripple);
+            .directive('ripple', Ripple)
+            .component('Link', Link); // Register Inertia Link globally
 
         return app.mount(el);
     },
     progress: {
-        color: '#4F46E5',
+        // Sleek progress bar for SPA navigation
+        delay: 100, // Show after 100ms delay (feels instant for fast loads)
+        color: '#10B981', // Emerald green to match brand
+        includeCSS: true,
+        showSpinner: false, // Cleaner without spinner
     },
 });

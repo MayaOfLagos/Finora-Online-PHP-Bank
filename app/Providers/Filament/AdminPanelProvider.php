@@ -74,7 +74,11 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->spa() // Enable SPA mode for instant page loads
             ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications() // Enable real-time notifications
+            ->databaseNotificationsPolling('30s') // Poll every 30 seconds
+            ->globalSearch(false) // Can enable later if needed
             ->navigationGroups([
                 'User Management',
                 'Transfers',

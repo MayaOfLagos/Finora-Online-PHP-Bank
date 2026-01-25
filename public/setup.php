@@ -2,10 +2,10 @@
 
 /**
  * Finora Bank - Server Setup & Deployment Script
- * 
+ *
  * This script allows running essential server commands via web browser
  * for shared hosting environments without SSH access.
- * 
+ *
  * SECURITY: Change the SECRET_KEY before deploying to production!
  * Access: yoursite.com/setup.php?key=YOUR_SECRET_KEY
  */
@@ -36,84 +36,89 @@ $providedKey = $_GET['key'] ?? $_POST['key'] ?? '';
 
 if ($providedKey !== SECRET_KEY) {
     http_response_code(403);
-    die('<!DOCTYPE html><html><head><title>Access Denied</title></head><body style="font-family: system-ui; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #1a1a2e;"><div style="text-align: center; color: #fff;"><h1 style="font-size: 72px; margin: 0;">403</h1><p style="color: #888;">Access Denied</p></div></body></html>');
+    exit('<!DOCTYPE html><html><head><title>Access Denied</title></head><body style="font-family: system-ui; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #1a1a2e;"><div style="text-align: center; color: #fff;"><h1 style="font-size: 72px; margin: 0;">403</h1><p style="color: #888;">Access Denied</p></div></body></html>');
 }
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
-function runCommand($command, $cwd = null) {
+function runCommand($command, $cwd = null)
+{
     $cwd = $cwd ?? BASE_PATH;
     $output = [];
     $returnCode = 0;
-    
-    $fullCommand = "cd " . escapeshellarg($cwd) . " && " . $command . " 2>&1";
+
+    $fullCommand = 'cd '.escapeshellarg($cwd).' && '.$command.' 2>&1';
     exec($fullCommand, $output, $returnCode);
-    
+
     return [
         'success' => $returnCode === 0,
         'output' => implode("\n", $output),
         'code' => $returnCode,
-        'command' => $command
+        'command' => $command,
     ];
 }
 
-function runArtisan($command) {
-    return runCommand(PHP_BINARY . ' artisan ' . $command . ' --no-interaction');
+function runArtisan($command)
+{
+    return runCommand(PHP_BINARY.' artisan '.$command.' --no-interaction');
 }
 
-function formatOutput($result) {
+function formatOutput($result)
+{
     $status = $result['success'] ? '✅' : '❌';
     $statusClass = $result['success'] ? 'success' : 'error';
+
     return "<div class='result {$statusClass}'>
         <div class='result-header'>{$status} <code>{$result['command']}</code> (exit: {$result['code']})</div>
-        <pre class='result-output'>" . htmlspecialchars($result['output'] ?: 'No output') . "</pre>
-    </div>";
+        <pre class='result-output'>".htmlspecialchars($result['output'] ?: 'No output').'</pre>
+    </div>';
 }
 
-function checkEnvironment() {
+function checkEnvironment()
+{
     $checks = [];
-    
+
     // PHP Version
     $checks['PHP Version'] = [
         'value' => PHP_VERSION,
-        'ok' => version_compare(PHP_VERSION, '8.2.0', '>=')
+        'ok' => version_compare(PHP_VERSION, '8.2.0', '>='),
     ];
-    
+
     // Required Extensions
     $requiredExtensions = ['pdo', 'pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo', 'curl'];
     foreach ($requiredExtensions as $ext) {
         $checks["ext-{$ext}"] = [
             'value' => extension_loaded($ext) ? 'Loaded' : 'Missing',
-            'ok' => extension_loaded($ext)
+            'ok' => extension_loaded($ext),
         ];
     }
-    
+
     // Writable directories
     $writableDirs = ['storage', 'storage/logs', 'storage/framework', 'storage/framework/cache', 'storage/framework/sessions', 'storage/framework/views', 'bootstrap/cache'];
     foreach ($writableDirs as $dir) {
-        $path = BASE_PATH . '/' . $dir;
+        $path = BASE_PATH.'/'.$dir;
         $writable = is_dir($path) && is_writable($path);
         $checks["writable:{$dir}"] = [
             'value' => $writable ? 'Writable' : (is_dir($path) ? 'Not Writable' : 'Missing'),
-            'ok' => $writable
+            'ok' => $writable,
         ];
     }
-    
+
     // .env file
     $checks['.env file'] = [
-        'value' => file_exists(BASE_PATH . '/.env') ? 'Exists' : 'Missing',
-        'ok' => file_exists(BASE_PATH . '/.env')
+        'value' => file_exists(BASE_PATH.'/.env') ? 'Exists' : 'Missing',
+        'ok' => file_exists(BASE_PATH.'/.env'),
     ];
-    
+
     // Composer
     $composerCheck = runCommand('which composer || echo "not found"');
     $checks['Composer'] = [
         'value' => strpos($composerCheck['output'], 'not found') === false ? 'Available' : 'Not Found',
-        'ok' => strpos($composerCheck['output'], 'not found') === false
+        'ok' => strpos($composerCheck['output'], 'not found') === false,
     ];
-    
+
     return $checks;
 }
 
@@ -127,81 +132,81 @@ if ($action) {
     switch ($action) {
         // === COMPOSER ===
         case 'composer_install':
-            $results[] = runCommand(COMPOSER_PATH . ' install --no-dev --optimize-autoloader');
+            $results[] = runCommand(COMPOSER_PATH.' install --no-dev --optimize-autoloader');
             break;
-            
+
         case 'composer_install_dev':
-            $results[] = runCommand(COMPOSER_PATH . ' install');
+            $results[] = runCommand(COMPOSER_PATH.' install');
             break;
-            
+
         case 'composer_update':
-            $results[] = runCommand(COMPOSER_PATH . ' update --no-dev');
+            $results[] = runCommand(COMPOSER_PATH.' update --no-dev');
             break;
-            
+
         case 'composer_dump':
-            $results[] = runCommand(COMPOSER_PATH . ' dump-autoload -o');
+            $results[] = runCommand(COMPOSER_PATH.' dump-autoload -o');
             break;
-            
-        // === NPM ===
+
+            // === NPM ===
         case 'npm_install':
-            $results[] = runCommand(NPM_PATH . ' install');
+            $results[] = runCommand(NPM_PATH.' install');
             break;
-            
+
         case 'npm_build':
-            $results[] = runCommand(NPM_PATH . ' run build');
+            $results[] = runCommand(NPM_PATH.' run build');
             break;
-            
+
         case 'npm_install_build':
-            $results[] = runCommand(NPM_PATH . ' install');
-            $results[] = runCommand(NPM_PATH . ' run build');
+            $results[] = runCommand(NPM_PATH.' install');
+            $results[] = runCommand(NPM_PATH.' run build');
             break;
-            
-        // === ARTISAN - CACHE ===
+
+            // === ARTISAN - CACHE ===
         case 'cache_clear':
             $results[] = runArtisan('cache:clear');
             break;
-            
+
         case 'config_clear':
             $results[] = runArtisan('config:clear');
             break;
-            
+
         case 'config_cache':
             $results[] = runArtisan('config:cache');
             break;
-            
+
         case 'route_clear':
             $results[] = runArtisan('route:clear');
             break;
-            
+
         case 'route_cache':
             $results[] = runArtisan('route:cache');
             break;
-            
+
         case 'view_clear':
             $results[] = runArtisan('view:clear');
             break;
-            
+
         case 'view_cache':
             $results[] = runArtisan('view:cache');
             break;
-            
+
         case 'event_clear':
             $results[] = runArtisan('event:clear');
             break;
-            
+
         case 'event_cache':
             $results[] = runArtisan('event:cache');
             break;
-            
-        // === ARTISAN - OPTIMIZATION ===
+
+            // === ARTISAN - OPTIMIZATION ===
         case 'optimize':
             $results[] = runArtisan('optimize');
             break;
-            
+
         case 'optimize_clear':
             $results[] = runArtisan('optimize:clear');
             break;
-            
+
         case 'clear_all':
             $results[] = runArtisan('cache:clear');
             $results[] = runArtisan('config:clear');
@@ -209,33 +214,33 @@ if ($action) {
             $results[] = runArtisan('view:clear');
             $results[] = runArtisan('event:clear');
             break;
-            
+
         case 'cache_all':
             $results[] = runArtisan('config:cache');
             $results[] = runArtisan('route:cache');
             $results[] = runArtisan('view:cache');
             $results[] = runArtisan('event:cache');
             break;
-            
-        // === ARTISAN - DATABASE ===
+
+            // === ARTISAN - DATABASE ===
         case 'migrate':
             $results[] = runArtisan('migrate --force');
             break;
-            
+
         case 'migrate_status':
             $results[] = runArtisan('migrate:status');
             break;
-            
+
         case 'db_seed':
             $results[] = runArtisan('db:seed --force');
             break;
-            
-        // === ARTISAN - STORAGE ===
+
+            // === ARTISAN - STORAGE ===
         case 'storage_link':
             $results[] = runArtisan('storage:link');
             break;
-            
-        // === ARTISAN - KEY ===
+
+            // === ARTISAN - KEY ===
         case 'key_generate':
             if (ALLOW_DANGEROUS_COMMANDS) {
                 $results[] = runArtisan('key:generate --force');
@@ -243,66 +248,67 @@ if ($action) {
                 $results[] = ['success' => false, 'output' => 'Dangerous command blocked. Set ALLOW_DANGEROUS_COMMANDS to true.', 'code' => 1, 'command' => 'key:generate'];
             }
             break;
-            
-        // === ARTISAN - INFO ===
+
+            // === ARTISAN - INFO ===
         case 'about':
             $results[] = runArtisan('about');
             break;
-            
+
         case 'route_list':
             $results[] = runArtisan('route:list');
             break;
-            
+
         case 'env':
             $results[] = runArtisan('env');
             break;
-            
-        // === ARTISAN - MAINTENANCE ===
+
+            // === ARTISAN - MAINTENANCE ===
         case 'down':
             $results[] = runArtisan('down --secret="finora-maintenance"');
             break;
-            
+
         case 'up':
             $results[] = runArtisan('up');
             break;
-            
-        // === ARTISAN - QUEUE ===
+
+            // === ARTISAN - QUEUE ===
         case 'queue_work':
             $results[] = runArtisan('queue:work --stop-when-empty');
             break;
-            
+
         case 'queue_failed':
             $results[] = runArtisan('queue:failed');
             break;
-            
+
         case 'queue_retry':
             $results[] = runArtisan('queue:retry all');
             break;
-            
-        // === ARTISAN - FILAMENT ===
+
+            // === ARTISAN - FILAMENT ===
+        case 'filament_optimize':
+            $results[] = runArtisan('filament:optimize'); // Caches components + icons
+            break;
+
         case 'filament_cache':
             $results[] = runArtisan('filament:cache-components');
             $results[] = runArtisan('icons:cache');
             break;
-            
+
         case 'filament_clear':
             $results[] = runArtisan('filament:clear-cached-components');
             $results[] = runArtisan('icons:clear');
             break;
-            
-        // === FULL SETUP ===
+
+            // === FULL SETUP ===
         case 'full_setup':
-            $results[] = runCommand(COMPOSER_PATH . ' install --no-dev --optimize-autoloader');
+            $results[] = runCommand(COMPOSER_PATH.' install --no-dev --optimize-autoloader');
             $results[] = runArtisan('storage:link');
             $results[] = runArtisan('migrate --force');
             $results[] = runArtisan('db:seed --force');
-            $results[] = runArtisan('config:cache');
-            $results[] = runArtisan('route:cache');
-            $results[] = runArtisan('view:cache');
-            $results[] = runArtisan('event:cache');
-            $results[] = runArtisan('icons:cache');
+            $results[] = runArtisan('optimize'); // Laravel caching
+            $results[] = runArtisan('filament:optimize'); // Filament caching
             break;
-            
+
         case 'quick_deploy':
             $results[] = runArtisan('optimize:clear');
             $results[] = runArtisan('migrate --force');
@@ -310,15 +316,32 @@ if ($action) {
             $results[] = runArtisan('filament:cache-components');
             $results[] = runArtisan('icons:cache');
             break;
-            
-        // === PERMISSIONS ===
-        case 'fix_permissions':
-            $results[] = runCommand('chmod -R 755 ' . BASE_PATH);
-            $results[] = runCommand('chmod -R 775 ' . BASE_PATH . '/storage');
-            $results[] = runCommand('chmod -R 775 ' . BASE_PATH . '/bootstrap/cache');
+
+            // === FULL PERFORMANCE OPTIMIZATION ===
+        case 'full_optimize':
+            // Clear all caches first
+            $results[] = runArtisan('optimize:clear');
+            $results[] = runArtisan('filament:clear-cached-components');
+            $results[] = runArtisan('icons:clear');
+            // Rebuild all caches for maximum performance
+            $results[] = runArtisan('config:cache');
+            $results[] = runArtisan('route:cache');
+            $results[] = runArtisan('view:cache');
+            $results[] = runArtisan('event:cache');
+            // Filament-specific optimizations
+            $results[] = runArtisan('filament:optimize'); // Combines component + icon caching
+            // Composer autoload optimization
+            $results[] = runCommand(COMPOSER_PATH.' dump-autoload -o');
             break;
-            
-        // === CREATE STORAGE DIRS ===
+
+            // === PERMISSIONS ===
+        case 'fix_permissions':
+            $results[] = runCommand('chmod -R 755 '.BASE_PATH);
+            $results[] = runCommand('chmod -R 775 '.BASE_PATH.'/storage');
+            $results[] = runCommand('chmod -R 775 '.BASE_PATH.'/bootstrap/cache');
+            break;
+
+            // === CREATE STORAGE DIRS ===
         case 'create_storage':
             $dirs = [
                 'storage/app/public',
@@ -326,11 +349,11 @@ if ($action) {
                 'storage/framework/sessions',
                 'storage/framework/views',
                 'storage/logs',
-                'bootstrap/cache'
+                'bootstrap/cache',
             ];
             foreach ($dirs as $dir) {
-                $path = BASE_PATH . '/' . $dir;
-                if (!is_dir($path)) {
+                $path = BASE_PATH.'/'.$dir;
+                if (! is_dir($path)) {
                     mkdir($path, 0775, true);
                     $results[] = ['success' => true, 'output' => "Created: {$dir}", 'code' => 0, 'command' => "mkdir {$dir}"];
                 } else {
@@ -338,8 +361,8 @@ if ($action) {
                 }
             }
             break;
-            
-        // === CUSTOM COMMAND ===
+
+            // === CUSTOM COMMAND ===
         case 'custom':
             $customCmd = $_POST['custom_command'] ?? '';
             if ($customCmd) {
@@ -529,12 +552,12 @@ $envChecks = checkEnvironment();
         <h1>🏦 Finora Bank - Server Setup</h1>
         <p class="subtitle">Run deployment commands without terminal access</p>
         
-        <?php if (SECRET_KEY === 'finora_setup_2026_change_me'): ?>
+        <?php if (SECRET_KEY === 'finora_setup_2026_change_me') { ?>
         <div class="warning-box">
             <h4>⚠️ Security Warning</h4>
             <p>You're using the default SECRET_KEY. Please edit setup.php and change it before using in production!</p>
         </div>
-        <?php endif; ?>
+        <?php } ?>
         
         <!-- Quick Actions -->
         <div class="quick-actions">
@@ -544,22 +567,25 @@ $envChecks = checkEnvironment();
             <a href="?key=<?= SECRET_KEY ?>&action=quick_deploy" class="btn btn-primary" onclick="return confirm('Run quick deploy? This will clear caches, migrate, and optimize.')">
                 ⚡ Quick Deploy (Updates)
             </a>
+            <a href="?key=<?= SECRET_KEY ?>&action=full_optimize" class="btn btn-info" onclick="return confirm('Run full optimization? This maximizes performance for production.')">
+                🔥 Full Optimize (Speed Boost)
+            </a>
             <a href="?key=<?= SECRET_KEY ?>&action=clear_all" class="btn btn-warning">
                 🧹 Clear All Caches
             </a>
         </div>
         
         <!-- Results -->
-        <?php if (!empty($results)): ?>
+        <?php if (! empty($results)) { ?>
         <div class="card" style="margin-bottom: 20px;">
             <div class="card-header">📋 Command Results</div>
             <div class="card-body">
-                <?php foreach ($results as $result): ?>
+                <?php foreach ($results as $result) { ?>
                     <?= formatOutput($result) ?>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
         </div>
-        <?php endif; ?>
+        <?php } ?>
         
         <div class="grid">
             <!-- Environment Check -->
@@ -567,12 +593,12 @@ $envChecks = checkEnvironment();
                 <div class="card-header">🔍 Environment Check</div>
                 <div class="card-body">
                     <div class="env-grid">
-                        <?php foreach ($envChecks as $name => $check): ?>
+                        <?php foreach ($envChecks as $name => $check) { ?>
                         <div class="env-item">
                             <span class="label"><?= $name ?></span>
                             <span class="value <?= $check['ok'] ? 'ok' : 'error' ?>"><?= $check['value'] ?></span>
                         </div>
-                        <?php endforeach; ?>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
@@ -626,8 +652,9 @@ $envChecks = checkEnvironment();
                 <div class="card-header">⚡ Optimization</div>
                 <div class="card-body">
                     <div class="btn-grid">
-                        <a href="?key=<?= SECRET_KEY ?>&action=optimize" class="btn btn-success">Optimize</a>
+                        <a href="?key=<?= SECRET_KEY ?>&action=optimize" class="btn btn-success">Laravel Optimize</a>
                         <a href="?key=<?= SECRET_KEY ?>&action=optimize_clear" class="btn btn-warning">Optimize Clear</a>
+                        <a href="?key=<?= SECRET_KEY ?>&action=filament_optimize" class="btn btn-primary">Filament Optimize</a>
                         <a href="?key=<?= SECRET_KEY ?>&action=filament_cache" class="btn btn-purple">Filament Cache</a>
                         <a href="?key=<?= SECRET_KEY ?>&action=filament_clear" class="btn btn-info">Filament Clear</a>
                     </div>
