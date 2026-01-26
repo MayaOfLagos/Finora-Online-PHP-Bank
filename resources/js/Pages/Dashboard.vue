@@ -36,6 +36,33 @@ const isDragging = ref(false);
 const startX = ref(0);
 const currentX = ref(0);
 
+// Quick Actions Modal state
+const showQuickActionsModal = ref(false);
+
+// Menu items for quick actions modal
+const menuItems = {
+    main: [
+        { name: 'Dashboard', href: '/dashboard', icon: 'pi pi-home', color: 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-white', description: 'Overview & balance', active: true },
+        { name: 'Transactions', href: '/transactions', icon: 'pi pi-chart-line', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400', description: 'View transaction history' },
+        { name: 'Cards', href: '/cards', icon: 'pi pi-credit-card', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400', description: 'Manage your cards' },
+    ],
+    transfers: [
+        { name: 'Local Transfer', href: '/transfers/domestic', icon: 'pi pi-send', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400', description: 'Send to local accounts' },
+        { name: 'International', href: '/transfers/wire', icon: 'pi pi-globe', color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400', description: 'Global transfers' },
+        { name: 'Internal', href: '/transfers/internal', icon: 'pi pi-arrow-right-arrow-left', color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400', description: 'To Finora users' },
+        { name: 'Deposit', href: '/deposits', icon: 'pi pi-plus', color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400', description: 'Add funds to account' },
+    ],
+    services: [
+        { name: 'Loans', href: '/loans', icon: 'pi pi-building', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400', description: 'Apply for loans' },
+        { name: 'Grants', href: '/grants', icon: 'pi pi-gift', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400', description: 'Apply for grants' },
+    ],
+    account: [
+        { name: 'Accounts', href: '/accounts', icon: 'pi pi-wallet', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400', description: 'View your accounts' },
+        { name: 'Settings', href: '/settings/profile', icon: 'pi pi-cog', color: 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400', description: 'Manage your account' },
+        { name: 'Support', href: '/support', icon: 'pi pi-headphones', color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400', description: 'Get assistance' },
+    ],
+};
+
 // Greeting based on time of day
 const greeting = computed(() => {
     const hour = new Date().getHours();
@@ -420,12 +447,12 @@ const viewCardDetails = (card) => {
                     </Link>
 
                     <!-- More -->
-                    <Link href="/accounts" class="flex flex-col items-center justify-center">
+                    <button @click="showQuickActionsModal = true" class="flex flex-col items-center justify-center">
                         <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg mb-1 border border-white/10">
                             <i class="pi pi-th-large text-white text-lg"></i>
                         </div>
                         <span class="text-white text-xs font-medium">More</span>
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -976,5 +1003,186 @@ const viewCardDetails = (card) => {
             </div>
         </div>
 
+        <!-- ==================== QUICK ACTIONS MODAL (Mobile Bottom Sheet) ==================== -->
+        <Teleport to="body">
+            <Transition name="modal-backdrop">
+                <div v-if="showQuickActionsModal" class="fixed inset-0 z-50 lg:hidden" @click.self="showQuickActionsModal = false">
+                    <!-- Backdrop with Blur -->
+                    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="showQuickActionsModal = false"></div>
+                    
+                    <!-- Bottom Sheet Container -->
+                    <div class="fixed inset-x-0 bottom-0 z-50">
+                        <Transition name="slide-up">
+                            <div v-if="showQuickActionsModal" class="bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl dark:shadow-gray-900/50 max-h-[85vh] overflow-hidden">
+                                
+                                <!-- Handle Bar -->
+                                <div class="flex justify-center pt-3 pb-2">
+                                    <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                                </div>
+                                
+                                <!-- Header -->
+                                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center">
+                                                <i class="pi pi-user text-white text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-bold text-gray-900 dark:text-white">{{ user?.first_name }} {{ user?.last_name }}</h3>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ user?.email }}</p>
+                                            </div>
+                                        </div>
+                                        <button @click="showQuickActionsModal = false" class="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                            <i class="pi pi-times text-gray-600 dark:text-gray-300 text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Navigation Content -->
+                                <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+                                    
+                                    <!-- Main Section -->
+                                    <div class="mb-6">
+                                        <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Main</h4>
+                                        <div class="space-y-1">
+                                            <Link v-for="item in menuItems.main" :key="item.name" :href="item.href" @click="showQuickActionsModal = false"
+                                                :class="[
+                                                    'flex items-center space-x-4 p-3 rounded-2xl group transition-colors',
+                                                    item.active ? 'bg-indigo-50 dark:bg-slate-700/80 border border-indigo-100 dark:border-slate-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                ]">
+                                                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform', item.color]">
+                                                    <i :class="[item.icon]"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p :class="['font-semibold', item.active ? 'text-indigo-900 dark:text-white' : 'text-gray-900 dark:text-white']">{{ item.name }}</p>
+                                                    <p :class="['text-xs', item.active ? 'text-indigo-600 dark:text-slate-300' : 'text-gray-500 dark:text-gray-400']">{{ item.description }}</p>
+                                                </div>
+                                                <i :class="['pi pi-chevron-right text-xs', item.active ? 'text-indigo-400 dark:text-slate-400' : 'text-gray-400 dark:text-gray-500']"></i>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Transfers Section -->
+                                    <div class="mb-6">
+                                        <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Transfers</h4>
+                                        <div class="space-y-1">
+                                            <Link v-for="item in menuItems.transfers" :key="item.name" :href="item.href" @click="showQuickActionsModal = false"
+                                                class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors">
+                                                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform', item.color]">
+                                                    <i :class="[item.icon]"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.description }}</p>
+                                                </div>
+                                                <i class="pi pi-chevron-right text-gray-400 dark:text-gray-500 text-xs"></i>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Services Section -->
+                                    <div class="mb-6">
+                                        <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Services</h4>
+                                        <div class="space-y-1">
+                                            <Link v-for="item in menuItems.services" :key="item.name" :href="item.href" @click="showQuickActionsModal = false"
+                                                class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors">
+                                                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform', item.color]">
+                                                    <i :class="[item.icon]"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.description }}</p>
+                                                </div>
+                                                <i class="pi pi-chevron-right text-gray-400 dark:text-gray-500 text-xs"></i>
+                                            </Link>
+                                        </div>
+                                    </div>
+
+                                    <!-- Account Section -->
+                                    <div class="mb-4">
+                                        <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Account</h4>
+                                        <div class="space-y-1">
+                                            <Link v-for="item in menuItems.account" :key="item.name" :href="item.href" @click="showQuickActionsModal = false"
+                                                class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors">
+                                                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform', item.color]">
+                                                    <i :class="[item.icon]"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.description }}</p>
+                                                </div>
+                                                <i class="pi pi-chevron-right text-gray-400 dark:text-gray-500 text-xs"></i>
+                                            </Link>
+                                            
+                                            <!-- Logout -->
+                                            <Link href="/logout" method="post" as="button" @click="showQuickActionsModal = false"
+                                                class="w-full text-left flex items-center space-x-4 p-3 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 group transition-colors">
+                                                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center group-hover:bg-red-200 dark:group-hover:bg-red-800/50 transition-colors">
+                                                    <i class="pi pi-sign-out text-red-600 dark:text-red-400"></i>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="font-semibold text-red-900 dark:text-red-400">Sign Out</p>
+                                                    <p class="text-xs text-red-600 dark:text-red-500">Logout from account</p>
+                                                </div>
+                                                <i class="pi pi-chevron-right text-red-400 dark:text-red-500 text-xs"></i>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Footer -->
+                                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+                                    <div class="flex items-center justify-center space-x-6">
+                                        <div class="text-center">
+                                            <div class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-1">
+                                                <i class="pi pi-shield text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                                            </div>
+                                            <p class="text-xs text-gray-600 dark:text-gray-300 font-medium">Secure</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-1">
+                                                <i class="pi pi-clock text-green-600 dark:text-green-400 text-xs"></i>
+                                            </div>
+                                            <p class="text-xs text-gray-600 dark:text-gray-300 font-medium">24/7</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-1">
+                                                <i class="pi pi-phone text-blue-600 dark:text-blue-400 text-xs"></i>
+                                            </div>
+                                            <p class="text-xs text-gray-600 dark:text-gray-300 font-medium">Support</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Transition>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
     </DashboardLayout>
 </template>
+
+<style scoped>
+/* Modal backdrop transition */
+.modal-backdrop-enter-active,
+.modal-backdrop-leave-active {
+    transition: opacity 0.3s ease;
+}
+.modal-backdrop-enter-from,
+.modal-backdrop-leave-to {
+    opacity: 0;
+}
+
+/* Slide up transition for bottom sheet */
+.slide-up-enter-active {
+    transition: transform 0.3s ease-out;
+}
+.slide-up-leave-active {
+    transition: transform 0.2s ease-in;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+    transform: translateY(100%);
+}
+</style>
