@@ -428,8 +428,300 @@ const viewCardDetails = (card) => {
                     </Link>
                 </div>
             </div>
+
+            <!-- Mobile Cards Section -->
+            <div class="px-4 mb-4" v-if="cards.length > 0">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">My Cards</h3>
+                    <Link href="/cards" class="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                        Manage <i class="pi pi-chevron-right text-xs ml-1"></i>
+                    </Link>
+                </div>
+                
+                <div class="space-y-3">
+                    <div v-for="card in cards.slice(0, 2)" :key="card.id" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <!-- Card Preview -->
+                            <div class="relative h-32 rounded-xl overflow-hidden mb-3" :class="card.card_type === 'virtual' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'">
+                                <div class="absolute inset-0 opacity-20">
+                                    <div class="absolute top-2 right-2 w-16 h-16 bg-white rounded-full -translate-y-4 translate-x-4"></div>
+                                </div>
+                                <div class="relative z-10 p-4 text-white">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <p class="text-xs text-white/70 uppercase">{{ card.card_type }} Card</p>
+                                        <i class="pi pi-wifi text-white/70"></i>
+                                    </div>
+                                    <p class="font-mono text-sm tracking-wider mb-2">•••• •••• •••• {{ card.card_number?.slice(-4) || '****' }}</p>
+                                    <p class="text-xs text-white/70">{{ user?.first_name }} {{ user?.last_name }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Card Info -->
+                            <div class="flex justify-between items-center mb-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ card.card_type === 'virtual' ? 'Virtual Card' : 'Physical Card' }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Expires {{ card.expiry_date || 'N/A' }}</p>
+                                </div>
+                                <span :class="[
+                                    'px-2 py-1 text-xs font-medium rounded-full',
+                                    card.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                ]">
+                                    {{ card.status === 'active' ? 'Active' : card.status }}
+                                </span>
+                            </div>
+                            
+                            <Link :href="`/cards/${card.uuid}`" class="block w-full text-center px-3 py-2 bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 rounded-xl text-xs font-medium text-indigo-700 dark:text-indigo-300 transition-colors duration-200">
+                                Manage Card
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Financial Services Overview -->
+            <div class="px-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Financial Services</h3>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Loans -->
+                    <Link href="/loans" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                                    <i class="pi pi-building text-amber-600 dark:text-amber-400"></i>
+                                </div>
+                                <span v-if="pendingItems.loans > 0" class="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
+                                    {{ pendingItems.loans }} Pending
+                                </span>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Loans</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Apply for loans</p>
+                        </div>
+                    </Link>
+
+                    <!-- Grants -->
+                    <Link href="/grants" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                                    <i class="pi pi-gift text-emerald-600 dark:text-emerald-400"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Grants</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Available grants</p>
+                        </div>
+                    </Link>
+
+                    <!-- Deposits -->
+                    <Link href="/deposits" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                                    <i class="pi pi-download text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <span v-if="pendingItems.deposits > 0" class="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
+                                    {{ pendingItems.deposits }} Pending
+                                </span>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Deposits</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Add funds</p>
+                        </div>
+                    </Link>
+
+                    <!-- Transfers -->
+                    <Link href="/transfers" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                                    <i class="pi pi-arrow-right-arrow-left text-purple-600 dark:text-purple-400"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Transfers</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Send money</p>
+                        </div>
+                    </Link>
+                </div>
+            </div>
+
+            <!-- Mobile Financial Insights -->
+            <div class="px-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Financial Insights</h3>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Account Health Card -->
+                    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                                        <i class="pi pi-heart text-green-600 dark:text-green-400 text-sm"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Account Health</span>
+                                </div>
+                                <span class="text-xs font-semibold text-green-600 dark:text-green-400">Good</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Your account is in good standing</p>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Summary -->
+                    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                        <div class="p-4">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Monthly Summary</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Total Income</span>
+                                    <span class="text-sm font-semibold text-green-600 dark:text-green-400">
+                                        {{ balanceVisible ? formatCurrency(stats.monthlyIncome, userCurrency) : '******' }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Total Expenses</span>
+                                    <span class="text-sm font-semibold text-red-600 dark:text-red-400">
+                                        {{ balanceVisible ? formatCurrency(stats.monthlyExpenses, userCurrency) : '******' }}
+                                    </span>
+                                </div>
+                                <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Net Balance</span>
+                                        <span class="text-sm font-bold" :class="stats.monthlyIncome >= stats.monthlyExpenses ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                            {{ balanceVisible ? formatCurrency(stats.monthlyIncome - stats.monthlyExpenses, userCurrency) : '******' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Tip -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl border border-indigo-100 dark:border-gray-600 overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="pi pi-lightbulb text-indigo-600 dark:text-indigo-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <span class="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 mb-1">Tip</span>
+                                    <p class="text-xs text-gray-600 dark:text-gray-300">Set up automatic transfers to your savings account to build your emergency fund faster.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Activity Feed -->
+            <div class="px-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
+                    <Link href="/transactions" class="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                        View All <i class="pi pi-chevron-right ml-1 text-xs"></i>
+                    </Link>
+                </div>
+
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 overflow-hidden">
+                    <div v-if="recentTransactions.length > 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <div v-for="transaction in recentTransactions.slice(0, 5)" :key="transaction.id" class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <div :class="[
+                                    'w-10 h-10 rounded-xl flex items-center justify-center',
+                                    transaction.type === 'credit' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
+                                ]">
+                                    <i :class="[
+                                        'text-sm',
+                                        transaction.type === 'credit' ? 'pi pi-arrow-down-left text-green-600 dark:text-green-400' : 'pi pi-arrow-up-right text-red-600 dark:text-red-400'
+                                    ]"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {{ transaction.description || transaction.transaction_type }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ new Date(transaction.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p :class="[
+                                        'text-sm font-semibold',
+                                        transaction.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                                    ]">
+                                        {{ transaction.type === 'credit' ? '+' : '-' }}{{ formatCurrency(transaction.amount, transaction.currency || userCurrency) }}
+                                    </p>
+                                    <span :class="[
+                                        'text-xs px-1.5 py-0.5 rounded',
+                                        transaction.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                        transaction.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                                        'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                    ]">
+                                        {{ transaction.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="p-8 text-center">
+                        <i class="pi pi-inbox text-3xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Support Widget -->
+            <div class="px-4 mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Need Help?</h3>
+                    <Link href="/support" class="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                        Support Center <i class="pi pi-chevron-right ml-1 text-xs"></i>
+                    </Link>
+                </div>
+
+                <!-- Support Options -->
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <Link href="/support" class="block">
+                        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 p-4 text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="pi pi-comments text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <p class="text-xs font-medium text-gray-900 dark:text-white">Live Chat</p>
+                        </div>
+                    </Link>
+                    <a href="mailto:support@finorabank.com" class="block">
+                        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/50 p-4 text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                <i class="pi pi-envelope text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <p class="text-xs font-medium text-gray-900 dark:text-white">Email Us</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Support Status -->
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl border border-emerald-100 dark:border-gray-600 p-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                            <i class="pi pi-headphones text-emerald-600 dark:text-emerald-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">24/7 Support Available</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">We're here to help anytime</p>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-xs text-green-600 dark:text-green-400 font-medium">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
+        <!-- ==================== DESKTOP VIEW ==================== -->
         <!-- Welcome Message (Desktop only) -->
         <div class="mb-6 hidden lg:block">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -479,8 +771,8 @@ const viewCardDetails = (card) => {
             />
         </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 gap-6 mb-6 xl:grid-cols-3">
+        <!-- Main Content Grid (Desktop only) -->
+        <div class="hidden lg:grid grid-cols-1 gap-6 mb-6 xl:grid-cols-3">
             <!-- Left Column: Chart + Transactions -->
             <div class="space-y-6 xl:col-span-2">
                 <!-- Income vs Expenses Chart -->
@@ -602,8 +894,8 @@ const viewCardDetails = (card) => {
             </div>
         </div>
 
-        <!-- Digital Cards Section -->
-        <div class="mb-6">
+        <!-- Digital Cards Section (Desktop only) -->
+        <div class="hidden lg:block mb-6">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Your Cards</h3>
