@@ -68,7 +68,7 @@ const demoNotifications = [
         color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
         read: false,
         created_at: new Date(Date.now() - 3600000).toISOString(),
-        href: '/settings/security',
+        href: '/dashboard',
     },
     {
         id: 3,
@@ -101,7 +101,7 @@ const demoNotifications = [
         color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400',
         read: true,
         created_at: new Date(Date.now() - 172800000).toISOString(),
-        href: '/offers',
+        href: '/dashboard',
     },
 ];
 
