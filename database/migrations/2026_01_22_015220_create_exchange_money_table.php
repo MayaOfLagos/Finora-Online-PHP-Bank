@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('exchange_money', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('bank_account_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('bank_account_id')->constrained()->onDelete('cascade');
             $table->string('reference_number', 50)->unique();
             $table->string('from_currency', 10);
             $table->string('to_currency', 10);
