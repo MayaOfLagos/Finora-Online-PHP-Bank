@@ -95,7 +95,7 @@ onUnmounted(() => {
 
 <template>
     <!-- Hero Section with Container -->
-    <section class="relative bg-primary-950 pt-4 pb-6 px-3 sm:px-4 lg:px-6">
+    <section class="relative bg-primary-950 pt-30 pb-6 px-3 sm:px-4 lg:px-6">
         <!-- Hero Container with Border Radius -->
         <div 
             class="relative max-w-7xl mx-auto h-[85vh] min-h-[550px] max-h-[800px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl"
@@ -122,10 +122,24 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <!-- Content -->
+            <!-- Content Layout with Side Navigation -->
             <div class="relative h-full flex items-center z-20">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                    <div class="max-w-2xl lg:max-w-3xl pt-16 lg:pt-0">
+                <!-- Left Navigation Arrow (Desktop) -->
+                <div class="hidden lg:flex flex-shrink-0 w-16 xl:w-20 h-full items-center justify-center">
+                    <button 
+                        @click="prevSlide"
+                        class="p-3 xl:p-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
+                        aria-label="Previous slide"
+                    >
+                        <svg class="w-5 h-5 xl:w-6 xl:h-6 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="flex-1 px-6 sm:px-8 lg:px-12 xl:px-16">
+                    <div class="max-w-2xl pt-16 lg:pt-0">
                         <div 
                             v-for="(slide, index) in slides" 
                             :key="slide.id"
@@ -134,25 +148,25 @@ onUnmounted(() => {
                             v-show="currentSlide === index"
                         >
                             <!-- Tag -->
-                            <span class="inline-block px-4 py-1.5 text-xs md:text-sm font-semibold tracking-wider text-gold-400 bg-gold-400/10 border border-gold-400/30 rounded-full mb-4 md:mb-6">
+                            <span class="inline-block px-4 py-1.5 text-xs md:text-sm font-semibold tracking-wider text-gold-400 bg-gold-400/10 border border-gold-400/30 rounded-full mb-5 md:mb-6">
                                 {{ slide.tag }}
                             </span>
 
                             <!-- Title -->
-                            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-4 md:mb-6">
+                            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-5 md:mb-6">
                                 {{ slide.title }}
                             </h1>
 
                             <!-- Subtitle -->
-                            <p class="text-base md:text-lg lg:text-xl text-white/80 leading-relaxed mb-6 md:mb-8 max-w-xl">
+                            <p class="text-base md:text-lg lg:text-xl text-white/80 leading-relaxed mb-8 md:mb-10 max-w-xl">
                                 {{ slide.subtitle }}
                             </p>
 
                             <!-- CTA Buttons -->
-                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <div class="flex flex-col sm:flex-row gap-4">
                                 <Link 
                                     href="/register"
-                                    class="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-semibold text-primary-900 bg-white rounded-xl hover:bg-gray-100 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
+                                    class="inline-flex items-center justify-center px-6 md:px-8 py-3.5 md:py-4 text-sm md:text-base font-semibold text-primary-900 bg-white rounded-xl hover:bg-gray-100 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
                                 >
                                     {{ slide.cta.primary }}
                                     <svg class="ml-2 w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +175,7 @@ onUnmounted(() => {
                                 </Link>
                                 <a 
                                     href="#about"
-                                    class="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl hover:bg-white/20 transition-all duration-200"
+                                    class="inline-flex items-center justify-center px-6 md:px-8 py-3.5 md:py-4 text-sm md:text-base font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl hover:bg-white/20 transition-all duration-200"
                                 >
                                     {{ slide.cta.secondary }}
                                 </a>
@@ -169,30 +183,19 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Navigation Arrows (Desktop) -->
-            <div class="hidden lg:flex absolute inset-y-0 left-4 xl:left-6 items-center z-30">
-                <button 
-                    @click="prevSlide"
-                    class="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
-                    aria-label="Previous slide"
-                >
-                    <svg class="w-5 h-5 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-            </div>
-            <div class="hidden lg:flex absolute inset-y-0 right-4 xl:right-6 items-center z-30">
-                <button 
-                    @click="nextSlide"
-                    class="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
-                    aria-label="Next slide"
-                >
-                    <svg class="w-5 h-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
+                <!-- Right Navigation Arrow (Desktop) -->
+                <div class="hidden lg:flex flex-shrink-0 w-16 xl:w-20 h-full items-center justify-center">
+                    <button 
+                        @click="nextSlide"
+                        class="p-3 xl:p-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
+                        aria-label="Next slide"
+                    >
+                        <svg class="w-5 h-5 xl:w-6 xl:h-6 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Slide Indicators -->
