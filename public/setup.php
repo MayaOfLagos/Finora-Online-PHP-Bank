@@ -19,11 +19,11 @@ define('ALLOW_DANGEROUS_COMMANDS', false); // Set to true only when needed
 // ============================================
 // CONFIGURATION
 // ============================================
-define('BASE_PATH', __DIR__);
-define('PHP_BINARY', '/usr/local/bin/php');
-define('COMPOSER_PATH', '/usr/local/bin/composer');
-define('NPM_PATH', '/usr/local/bin/npm');
-define('NODE_PATH', '/usr/local/bin/node');
+define('FINORA_BASE_PATH', __DIR__);
+define('FINORA_PHP_BIN', '/usr/local/bin/php');
+define('FINORA_COMPOSER', '/usr/local/bin/composer');
+define('FINORA_NPM', '/usr/local/bin/npm');
+define('FINORA_NODE', '/usr/local/bin/node');
 
 // Increase limits for long-running commands
 set_time_limit(600); // 10 minutes
@@ -45,7 +45,7 @@ if ($providedKey !== SECRET_KEY) {
 
 function runCommand($command, $cwd = null)
 {
-    $cwd = $cwd ?? BASE_PATH;
+    $cwd = $cwd ?? FINORA_BASE_PATH;
     $output = [];
     $returnCode = 0;
 
@@ -62,7 +62,7 @@ function runCommand($command, $cwd = null)
 
 function runArtisan($command)
 {
-    return runCommand(PHP_BINARY.' artisan '.$command.' --no-interaction');
+    return runCommand(FINORA_PHP_BIN.' artisan '.$command.' --no-interaction');
 }
 
 function formatOutput($result)
@@ -98,7 +98,7 @@ function checkEnvironment()
     // Writable directories
     $writableDirs = ['storage', 'storage/logs', 'storage/framework', 'storage/framework/cache', 'storage/framework/sessions', 'storage/framework/views', 'bootstrap/cache'];
     foreach ($writableDirs as $dir) {
-        $path = BASE_PATH.'/'.$dir;
+        $path = FINORA_BASE_PATH.'/'.$dir;
         $writable = is_dir($path) && is_writable($path);
         $checks["writable:{$dir}"] = [
             'value' => $writable ? 'Writable' : (is_dir($path) ? 'Not Writable' : 'Missing'),
@@ -108,8 +108,8 @@ function checkEnvironment()
 
     // .env file
     $checks['.env file'] = [
-        'value' => file_exists(BASE_PATH.'/.env') ? 'Exists' : 'Missing',
-        'ok' => file_exists(BASE_PATH.'/.env'),
+        'value' => file_exists(FINORA_BASE_PATH.'/.env') ? 'Exists' : 'Missing',
+        'ok' => file_exists(FINORA_BASE_PATH.'/.env'),
     ];
 
     // Composer
@@ -132,33 +132,33 @@ if ($action) {
     switch ($action) {
         // === COMPOSER ===
         case 'composer_install':
-            $results[] = runCommand(COMPOSER_PATH.' install --no-dev --optimize-autoloader');
+            $results[] = runCommand(FINORA_COMPOSER.' install --no-dev --optimize-autoloader');
             break;
 
         case 'composer_install_dev':
-            $results[] = runCommand(COMPOSER_PATH.' install');
+            $results[] = runCommand(FINORA_COMPOSER.' install');
             break;
 
         case 'composer_update':
-            $results[] = runCommand(COMPOSER_PATH.' update --no-dev');
+            $results[] = runCommand(FINORA_COMPOSER.' update --no-dev');
             break;
 
         case 'composer_dump':
-            $results[] = runCommand(COMPOSER_PATH.' dump-autoload -o');
+            $results[] = runCommand(FINORA_COMPOSER.' dump-autoload -o');
             break;
 
             // === NPM ===
         case 'npm_install':
-            $results[] = runCommand(NPM_PATH.' install');
+            $results[] = runCommand(FINORA_NPM.' install');
             break;
 
         case 'npm_build':
-            $results[] = runCommand(NPM_PATH.' run build');
+            $results[] = runCommand(FINORA_NPM.' run build');
             break;
 
         case 'npm_install_build':
-            $results[] = runCommand(NPM_PATH.' install');
-            $results[] = runCommand(NPM_PATH.' run build');
+            $results[] = runCommand(FINORA_NPM.' install');
+            $results[] = runCommand(FINORA_NPM.' run build');
             break;
 
             // === ARTISAN - CACHE ===
@@ -301,7 +301,7 @@ if ($action) {
 
             // === FULL SETUP ===
         case 'full_setup':
-            $results[] = runCommand(COMPOSER_PATH.' install --no-dev --optimize-autoloader');
+            $results[] = runCommand(FINORA_COMPOSER.' install --no-dev --optimize-autoloader');
             $results[] = runArtisan('storage:link');
             $results[] = runArtisan('migrate --force');
             $results[] = runArtisan('db:seed --force');
@@ -331,14 +331,14 @@ if ($action) {
             // Filament-specific optimizations
             $results[] = runArtisan('filament:optimize'); // Combines component + icon caching
             // Composer autoload optimization
-            $results[] = runCommand(COMPOSER_PATH.' dump-autoload -o');
+            $results[] = runCommand(FINORA_COMPOSER.' dump-autoload -o');
             break;
 
             // === PERMISSIONS ===
         case 'fix_permissions':
-            $results[] = runCommand('chmod -R 755 '.BASE_PATH);
-            $results[] = runCommand('chmod -R 775 '.BASE_PATH.'/storage');
-            $results[] = runCommand('chmod -R 775 '.BASE_PATH.'/bootstrap/cache');
+            $results[] = runCommand('chmod -R 755 '.FINORA_BASE_PATH);
+            $results[] = runCommand('chmod -R 775 '.FINORA_BASE_PATH.'/storage');
+            $results[] = runCommand('chmod -R 775 '.FINORA_BASE_PATH.'/bootstrap/cache');
             break;
 
             // === CREATE STORAGE DIRS ===
@@ -352,7 +352,7 @@ if ($action) {
                 'bootstrap/cache',
             ];
             foreach ($dirs as $dir) {
-                $path = BASE_PATH.'/'.$dir;
+                $path = FINORA_BASE_PATH.'/'.$dir;
                 if (! is_dir($path)) {
                     mkdir($path, 0775, true);
                     $results[] = ['success' => true, 'output' => "Created: {$dir}", 'code' => 0, 'command' => "mkdir {$dir}"];
