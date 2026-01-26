@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
+        $middleware->alias([
+            'verified.email.otp' => \App\Http\Middleware\EnsureEmailOtpVerified::class,
+            'verified.pin' => \App\Http\Middleware\EnsurePinVerified::class,
+        ]);
+
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {

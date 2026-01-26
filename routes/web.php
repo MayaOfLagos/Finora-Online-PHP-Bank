@@ -3,8 +3,12 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountTransferController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\PinVerificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BeneficiaryController;
@@ -21,6 +25,7 @@ use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanRepaymentController;
 use App\Http\Controllers\MobileDepositController;
 use App\Http\Controllers\MoneyRequestController;
+use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\RewardController;
 use App\Http\Controllers\TransactionHistoryController;
 use App\Http\Controllers\TransferController;
@@ -37,6 +42,30 @@ Route::get('/', function () {
     ]);
 });
 
+Route::controller(PublicPageController::class)->group(function () {
+    Route::get('/about', '__invoke')->defaults('page', 'about')->name('public.about');
+    Route::get('/services', '__invoke')->defaults('page', 'services')->name('public.services');
+    Route::get('/personal-banking', '__invoke')->defaults('page', 'personal-banking')->name('public.personal-banking');
+    Route::get('/business-banking', '__invoke')->defaults('page', 'business-banking')->name('public.business-banking');
+    Route::get('/mobile-banking', '__invoke')->defaults('page', 'mobile-banking')->name('public.mobile-banking');
+    Route::get('/loans-and-mortgages', '__invoke')->defaults('page', 'loans-and-mortgages')->name('public.loans');
+    Route::get('/credit-cards', '__invoke')->defaults('page', 'credit-cards')->name('public.credit-cards');
+    Route::get('/contact', '__invoke')->defaults('page', 'contact')->name('public.contact');
+    Route::get('/careers', '__invoke')->defaults('page', 'careers')->name('public.careers');
+    Route::get('/press', '__invoke')->defaults('page', 'press')->name('public.press');
+    Route::get('/blog', '__invoke')->defaults('page', 'blog')->name('public.blog');
+    Route::get('/help-center', '__invoke')->defaults('page', 'help-center')->name('public.help');
+    Route::get('/faqs', '__invoke')->defaults('page', 'faqs')->name('public.faqs');
+    Route::get('/security-center', '__invoke')->defaults('page', 'security-center')->name('public.security');
+    Route::get('/report-fraud', '__invoke')->defaults('page', 'report-fraud')->name('public.report-fraud');
+    Route::get('/atm-locator', '__invoke')->defaults('page', 'atm-locator')->name('public.atm-locator');
+    Route::get('/fees', '__invoke')->defaults('page', 'fees')->name('public.fees');
+    Route::get('/privacy-policy', '__invoke')->defaults('page', 'privacy-policy')->name('public.privacy');
+    Route::get('/terms', '__invoke')->defaults('page', 'terms')->name('public.terms');
+    Route::get('/cookie-policy', '__invoke')->defaults('page', 'cookie-policy')->name('public.cookies');
+    Route::get('/accessibility', '__invoke')->defaults('page', 'accessibility')->name('public.accessibility');
+});
+
 // Guest routes (unauthenticated)
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -45,10 +74,12 @@ Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    // Password reset routes (placeholder - redirect to login)
-    Route::get('forgot-password', function () {
-        return redirect()->route('login')->with('status', 'Password reset feature coming soon');
-    })->name('password.request');
+    // Password reset routes
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
 
 // Email Verification Routes
@@ -65,12 +96,32 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 });
 
+// Login Verification Routes (Email OTP & PIN)
+Route::middleware('auth')->group(function () {
+    // Email OTP Verification
+    Route::get('verify-email-otp', [EmailOtpController::class, 'show'])
+        ->name('verify-email-otp.show');
+    
+    Route::post('verify-email-otp', [EmailOtpController::class, 'verify'])
+        ->name('verify-email-otp.verify');
+    
+    Route::post('verify-email-otp/send', [EmailOtpController::class, 'send'])
+        ->name('verify-email-otp.send');
+    
+    // PIN Verification
+    Route::get('verify-pin', [PinVerificationController::class, 'show'])
+        ->name('verify-pin.show');
+    
+    Route::post('verify-pin', [PinVerificationController::class, 'verify'])
+        ->name('verify-pin.verify');
+});
+
 // Logout (requires auth)
 Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified.email.otp', 'verified.pin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Cards routes

@@ -36,5 +36,5 @@ We have recorded your {{ ucfirst($depositType) }} deposit.
 We will notify you once processing is complete.
 
 Thanks,
-{{ config('app.name') }}
+{{ app_name() }}
 @endcomponent

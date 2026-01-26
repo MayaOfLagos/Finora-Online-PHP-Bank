@@ -1,7 +1,11 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
+import Toast from 'primevue/toast';
+import AppLogo from '@/Components/Common/AppLogo.vue';
+import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
 const props = defineProps({
     status: {
@@ -9,10 +13,28 @@ const props = defineProps({
     },
 });
 
+const toast = useToast();
 const form = useForm({});
 
 const submit = () => {
-    form.post(route('verification.send'));
+    form.post(route('verification.send'), {
+        onSuccess: () => {
+            toast.add({
+                severity: 'success',
+                summary: 'Email Sent',
+                detail: 'Verification link has been sent to your email.',
+                life: 3000,
+            });
+        },
+        onError: () => {
+            toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Failed to send verification email. Please try again.',
+                life: 3000,
+            });
+        },
+    });
 };
 
 const verificationLinkSent = computed(
@@ -23,15 +45,12 @@ const verificationLinkSent = computed(
 <template>
     <Head title="Email Verification" />
     
+    <Toast />
+    
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
         <div class="w-full max-w-md">
             <div class="text-center mb-8">
-                <div class="flex items-center justify-center gap-3 mb-4">
-                    <div class="flex items-center justify-center w-14 h-14 bg-primary-600 rounded-xl shadow-lg">
-                        <span class="text-2xl font-bold text-white">F</span>
-                    </div>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Finora Bank</h1>
+                <AppLogo :show-text="true" size="lg" />
             </div>
             
             <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
@@ -88,9 +107,7 @@ const verificationLinkSent = computed(
             </div>
             
             <div class="mt-6 text-center">
-                <p class="text-xs text-gray-500">
-                    Copyright {{ new Date().getFullYear() }} Finora Bank. All Rights Reserved.
-                </p>
+                <CopyrightText />
             </div>
         </div>
     </div>

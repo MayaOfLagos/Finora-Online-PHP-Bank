@@ -56,8 +56,10 @@ class UserForm
                             ->required()
                             ->numeric()
                             ->default(1),
-                        DateTimePicker::make('last_login_at'),
-                        TextInput::make('last_login_ip'),
+                        DateTimePicker::make('last_login_at')
+                            ->disabled(),
+                        TextInput::make('last_login_ip')
+                            ->disabled(),
                         Textarea::make('two_factor_secret')
                             ->columnSpanFull(),
                         Textarea::make('two_factor_recovery_codes')

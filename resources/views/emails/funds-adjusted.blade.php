@@ -27,5 +27,5 @@ View Account
 If you have any questions regarding this transaction, please contact our support team.
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ app_name() }} Team
 </x-mail::message>

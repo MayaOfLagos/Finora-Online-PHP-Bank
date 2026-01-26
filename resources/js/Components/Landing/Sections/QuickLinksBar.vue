@@ -6,25 +6,25 @@ const quickLinks = [
         icon: 'user',
         title: 'Personal Banking',
         description: 'Savings, checking, and everyday banking solutions for your lifestyle.',
-        href: '/register'
+        href: '/personal-banking'
     },
     {
         icon: 'briefcase',
         title: 'Business Banking',
         description: 'Comprehensive solutions to help your business grow and thrive.',
-        href: '/register'
+        href: '/business-banking'
     },
     {
         icon: 'credit-card',
         title: 'Cards & Payments',
         description: 'Premium debit and credit cards with exclusive rewards.',
-        href: '/register'
+        href: '/credit-cards'
     },
     {
         icon: 'chart',
         title: 'Loans & Financing',
         description: 'Competitive rates on personal, auto, and home loans.',
-        href: '/register'
+        href: '/loans-and-mortgages'
     }
 ];
 </script>

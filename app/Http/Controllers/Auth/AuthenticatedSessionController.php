@@ -58,7 +58,27 @@ class AuthenticatedSessionController extends Controller
                 'status' => 'success',
             ]);
 
-            // Update user's last login
+            // Check if Email OTP verification is required
+            $loginRequireEmailOtp = setting('security', 'login_require_email_otp', true);
+            
+            if ($loginRequireEmailOtp && !$user->skip_email_otp) {
+                // Clear previous verification sessions
+                session()->forget(['email_otp_verified_at', 'pin_verified_at']);
+                
+                return redirect()->route('verify-email-otp.show');
+            }
+
+            // Check if PIN verification is required
+            $loginRequirePin = setting('security', 'login_require_pin', true);
+            
+            if ($loginRequirePin) {
+                // Clear previous PIN verification
+                session()->forget('pin_verified_at');
+                
+                return redirect()->route('verify-pin.show');
+            }
+
+            // If no verification required, update last login and proceed
             $user->update([
                 'last_login_at' => now(),
                 'last_login_ip' => $request->ip(),
@@ -83,6 +103,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('logout', true);
     }
 }

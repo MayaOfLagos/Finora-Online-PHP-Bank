@@ -4,37 +4,37 @@ import { Link } from '@inertiajs/vue3';
 const currentYear = new Date().getFullYear();
 
 const quickLinks = [
-    { name: 'About Us', href: '#about' },
-    { name: 'Our Services', href: '#services' },
-    { name: 'Contact Us', href: '#contact' },
-    { name: 'Careers', href: '#' },
-    { name: 'Press & Media', href: '#' },
-    { name: 'Blog', href: '#' },
+    { name: 'About Us', href: '/about' },
+    { name: 'Our Services', href: '/services' },
+    { name: 'Contact Us', href: '/contact' },
+    { name: 'Careers', href: '/careers' },
+    { name: 'Press & Media', href: '/press' },
+    { name: 'Blog', href: '/blog' },
 ];
 
 const bankingLinks = [
-    { name: 'Personal Banking', href: '#' },
-    { name: 'Business Banking', href: '#' },
+    { name: 'Personal Banking', href: '/personal-banking' },
+    { name: 'Business Banking', href: '/business-banking' },
     { name: 'Online Banking', href: '/login' },
-    { name: 'Mobile Banking', href: '#' },
-    { name: 'Loans & Mortgages', href: '#' },
-    { name: 'Credit Cards', href: '#' },
+    { name: 'Mobile Banking', href: '/mobile-banking' },
+    { name: 'Loans & Mortgages', href: '/loans-and-mortgages' },
+    { name: 'Credit Cards', href: '/credit-cards' },
 ];
 
 const supportLinks = [
-    { name: 'Help Center', href: '#' },
-    { name: 'FAQs', href: '#' },
-    { name: 'Security Center', href: '#' },
-    { name: 'Report Fraud', href: '#' },
-    { name: 'ATM Locator', href: '#' },
-    { name: 'Fee Schedule', href: '#' },
+    { name: 'Help Center', href: '/help-center' },
+    { name: 'FAQs', href: '/faqs' },
+    { name: 'Security Center', href: '/security-center' },
+    { name: 'Report Fraud', href: '/report-fraud' },
+    { name: 'ATM Locator', href: '/atm-locator' },
+    { name: 'Fee Schedule', href: '/fees' },
 ];
 
 const legalLinks = [
-    { name: 'Privacy Policy', href: '#' },
-    { name: 'Terms of Service', href: '#' },
-    { name: 'Cookie Policy', href: '#' },
-    { name: 'Accessibility', href: '#' },
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Terms of Service', href: '/terms' },
+    { name: 'Cookie Policy', href: '/cookie-policy' },
+    { name: 'Accessibility', href: '/accessibility' },
 ];
 
 const socialLinks = [
@@ -97,12 +97,12 @@ const socialLinks = [
                     </h3>
                     <ul class="space-y-3">
                         <li v-for="link in quickLinks" :key="link.name">
-                            <a 
+                            <Link 
                                 :href="link.href" 
                                 class="text-sm text-gray-400 hover:text-gold-400 transition-colors duration-200"
                             >
                                 {{ link.name }}
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </div>
@@ -114,12 +114,12 @@ const socialLinks = [
                     </h3>
                     <ul class="space-y-3">
                         <li v-for="link in bankingLinks" :key="link.name">
-                            <a 
+                            <Link 
                                 :href="link.href" 
                                 class="text-sm text-gray-400 hover:text-gold-400 transition-colors duration-200"
                             >
                                 {{ link.name }}
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </div>
@@ -131,12 +131,12 @@ const socialLinks = [
                     </h3>
                     <ul class="space-y-3">
                         <li v-for="link in supportLinks" :key="link.name">
-                            <a 
+                            <Link 
                                 :href="link.href" 
                                 class="text-sm text-gray-400 hover:text-gold-400 transition-colors duration-200"
                             >
                                 {{ link.name }}
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </div>
@@ -205,14 +205,14 @@ const socialLinks = [
 
                     <!-- Legal Links -->
                     <div class="flex flex-wrap justify-center gap-4 md:gap-6">
-                        <a 
+                        <Link 
                             v-for="link in legalLinks" 
                             :key="link.name"
                             :href="link.href"
                             class="text-sm text-gray-500 hover:text-gold-400 transition-colors duration-200"
                         >
                             {{ link.name }}
-                        </a>
+                        </Link>
                     </div>
                 </div>
 

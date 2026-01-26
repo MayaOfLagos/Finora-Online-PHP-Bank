@@ -29,7 +29,7 @@ You are completing a {{ $transferType }} transfer. Please use the verification c
 **Important Security Information:**
 - This code will expire in **{{ $expiresIn }} minutes**
 - Never share this code with anyone
-- Finora Bank will never ask for your OTP via phone or SMS
+- {{ app_name() }} will never ask for your OTP via phone or SMS
 - If you did not initiate this transfer, please contact us immediately
 
 @if($transferType === 'wire' && isset($transfer->beneficiary_bank_name))
@@ -45,7 +45,7 @@ Complete Transfer
 If you have any questions or concerns, please contact our support team.
 
 Thanks,<br>
-{{ config('app.name') }} Security Team
+{{ app_name() }} Security Team
 
 <x-slot:subcopy>
 This is an automated security message. Please do not reply to this email.

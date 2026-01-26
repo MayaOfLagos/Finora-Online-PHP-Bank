@@ -144,7 +144,7 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>{{ config('app.name', 'Finora Bank') }}</h1>
+            <h1>{{ app_name() }}</h1>
             <p>Your Trusted Financial Partner</p>
         </div>
 
@@ -212,10 +212,10 @@
         </div>
 
         <div class="footer">
-            <p><strong>{{ config('app.name', 'Finora Bank') }}</strong></p>
+            <p><strong>{{ app_name() }}</strong></p>
             <p>This is an automated email. Please do not reply directly to this message.</p>
             <p>For support, visit <a href="{{ config('app.url') }}">{{ config('app.url') }}</a></p>
-            <p>© {{ date('Y') }} {{ config('app.name', 'Finora Bank') }}. All rights reserved.</p>
+            <p>{{ copyright_text() }}. All rights reserved.</p>
         </div>
     </div>
 </body>

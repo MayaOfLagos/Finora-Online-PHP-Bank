@@ -192,7 +192,7 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <div class="logo">{{ config('app.name', 'Finora Bank') }}</div>
+        <div class="logo">{{ app_name() }}</div>
         <div class="tagline">Your Trusted Financial Partner</div>
         <div class="statement-title">Account Statement</div>
         <div class="statement-period">
@@ -305,7 +305,7 @@
         <p class="confidential">Confidential - For Account Holder Only</p>
         <p>This statement was electronically generated and is valid without signature.</p>
         <p>For any discrepancies, please contact our customer support within 30 days.</p>
-        <p>{{ config('app.name', 'Finora Bank') }} | {{ config('app.url') }}</p>
+        <p>{{ app_name() }} | {{ config('app.url') }}</p>
         <p>Document ID: {{ $documentId }}</p>
     </div>
 </body>

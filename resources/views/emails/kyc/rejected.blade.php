@@ -39,7 +39,7 @@ Submit New Verification
 If you believe this decision was made in error or need assistance, please don't hesitate to contact our support team.
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ app_name() }} Team
 
 ---
 

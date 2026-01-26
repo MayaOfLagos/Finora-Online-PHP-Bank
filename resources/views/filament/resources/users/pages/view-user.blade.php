@@ -277,6 +277,23 @@
                                 </div>
                             </div>
 
+                            {{-- Skip Email OTP (Login) --}}
+                            <div class="flex items-center justify-between p-3 transition-colors border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Skip Email OTP (Login)</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Bypass email OTP verification during login</div>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        wire:click="togglePermission('skip_email_otp')"
+                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 {{ $record->skip_email_otp ? 'bg-warning-600' : 'bg-gray-200 dark:bg-gray-700' }}">
+                                        <span class="sr-only">Toggle skip email OTP</span>
+                                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{ $record->skip_email_otp ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                                    </button>
+                                </div>
+                            </div>
+
                             {{-- Account Status (readonly display) --}}
                             <div class="flex items-center justify-between p-3 mt-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                                 <div>

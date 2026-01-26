@@ -4,7 +4,7 @@
 Hello {{ $user->first_name }},
 
 @if($template === 'weekly')
-Here's your weekly update from Finora Bank with the latest news and insights.
+Here's your weekly update from {{ app_name() }} with the latest news and insights.
 
 <x-mail::panel>
 **This Week's Highlights:**
@@ -15,7 +15,7 @@ Here's your weekly update from Finora Bank with the latest news and insights.
 </x-mail::panel>
 
 @elseif($template === 'monthly')
-Thank you for being a valued customer of Finora Bank. Here's your monthly roundup.
+Thank you for being a valued customer of {{ app_name() }}. Here's your monthly roundup.
 
 <x-mail::panel>
 **This Month's Summary:**
@@ -54,5 +54,5 @@ View Your Account
 To unsubscribe from newsletters, please update your email preferences in your account settings.
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ app_name() }} Team
 </x-mail::message>

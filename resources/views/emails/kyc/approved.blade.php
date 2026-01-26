@@ -3,7 +3,7 @@
 
 Dear {{ $user->first_name }},
 
-Great news! Your KYC (Know Your Customer) verification has been **approved**. You now have full access to all features of your {{ config('app.name') }} account.
+Great news! Your KYC (Know Your Customer) verification has been **approved**. You now have full access to all features of your {{ app_name() }} account.
 
 ## Verification Details
 
@@ -29,10 +29,10 @@ With your verified account, you can now:
 Access Your Account
 </x-mail::button>
 
-Thank you for choosing {{ config('app.name') }}. We're committed to providing you with the best banking experience.
+Thank you for choosing {{ app_name() }}. We're committed to providing you with the best banking experience.
 
 If you have any questions, our support team is always here to help.
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ app_name() }} Team
 </x-mail::message>

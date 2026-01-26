@@ -1,6 +1,13 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { Link, usePage, router } from '@inertiajs/vue3';
+import { useToast } from 'primevue/usetoast';
+import Toast from 'primevue/toast';
+import CopyrightText from '@/Components/Common/CopyrightText.vue';
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const toast = useToast();
 
 const isScrolled = ref(false);
 const isMobileMenuOpen = ref(false);
@@ -9,12 +16,12 @@ const lastScrollY = ref(0);
 
 const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'About Us', href: '#about' },
-    { name: 'Services', href: '#services' },
+    { name: 'About Us', href: '/about' },
+    { name: 'Services', href: '/services' },
     { name: 'Online Banking', href: '/login' },
-    { name: 'Cards', href: '#services' },
-    { name: 'Loans', href: '#services' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Cards', href: '/credit-cards' },
+    { name: 'Loans', href: '/loans-and-mortgages' },
+    { name: 'Contact', href: '/contact' },
 ];
 
 const handleScroll = () => {
@@ -38,6 +45,19 @@ const toggleMobileMenu = () => {
 const closeMobileMenu = () => {
     isMobileMenuOpen.value = false;
     document.body.style.overflow = '';
+};
+
+const handleLogout = () => {
+    toast.add({
+        severity: 'info',
+        summary: 'Logging Out',
+        detail: 'You are being logged out. Goodbye!',
+        life: 2000,
+    });
+    
+    setTimeout(() => {
+        router.post(route('logout'));
+    }, 500);
 };
 
 onMounted(() => {
@@ -75,68 +95,79 @@ onUnmounted(() => {
                         class="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-xl transition-all duration-300 backdrop-blur-xl"
                         :class="isScrolled 
                             ? 'bg-primary-600 shadow-lg shadow-primary-600/30' 
-                            : 'bg-white/20 border border-white/30'"
+                            : 'bg-primary-600 shadow-lg shadow-primary-600/20'"
                     >
                         <span class="text-lg lg:text-xl font-bold text-white">F</span>
                     </div>
                     <div class="hidden sm:block">
                         <span 
                             class="text-lg lg:text-xl font-bold tracking-tight transition-colors duration-300"
-                            :class="isScrolled ? 'text-gray-900' : 'text-white'"
+                            :class="isScrolled ? 'text-gray-900' : 'text-gray-900'"
                         >Finora</span>
                         <span 
                             class="text-lg lg:text-xl font-light transition-colors duration-300"
-                            :class="isScrolled ? 'text-primary-600' : 'text-white/80'"
+                            :class="isScrolled ? 'text-primary-600' : 'text-primary-600'"
                         >Bank</span>
                     </div>
                 </Link>
 
                 <!-- Desktop Navigation Links -->
                 <nav class="hidden lg:flex items-center space-x-1">
-                    <template v-for="link in navLinks" :key="link.name">
-                        <a 
-                            v-if="link.href.startsWith('#')"
-                            :href="link.href"
-                            class="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
-                            :class="isScrolled 
-                                ? 'text-gray-700 hover:text-primary-600 hover:bg-primary-50/80' 
-                                : 'text-white/90 hover:text-white hover:bg-white/15'"
-                        >
-                            {{ link.name }}
-                        </a>
-                        <Link 
-                            v-else
-                            :href="link.href"
-                            class="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
-                            :class="isScrolled 
-                                ? 'text-gray-700 hover:text-primary-600 hover:bg-primary-50/80' 
-                                : 'text-white/90 hover:text-white hover:bg-white/15'"
-                        >
-                            {{ link.name }}
-                        </Link>
-                    </template>
+                    <Link 
+                        v-for="link in navLinks" 
+                        :key="link.name"
+                        :href="link.href"
+                        class="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
+                        :class="isScrolled 
+                            ? 'text-gray-700 hover:text-primary-600 hover:bg-primary-50/80' 
+                            : 'text-gray-700 hover:text-primary-600 hover:bg-primary-50/80'"
+                    >
+                        {{ link.name }}
+                    </Link>
                 </nav>
 
                 <!-- Desktop CTA Buttons -->
                 <div class="hidden lg:flex items-center space-x-3">
-                    <Link 
-                        href="/login"
-                        class="px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200"
-                        :class="isScrolled 
-                            ? 'text-primary-600 hover:bg-primary-50/80' 
-                            : 'text-white hover:bg-white/15'"
-                    >
-                        Sign In
-                    </Link>
-                    <Link 
-                        href="/register"
-                        class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5"
-                        :class="isScrolled 
-                            ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-600/30 hover:shadow-xl hover:shadow-primary-600/40' 
-                            : 'bg-white/95 text-primary-700 hover:bg-white shadow-lg shadow-black/10'"
-                    >
-                        Open Account
-                    </Link>
+                    <template v-if="!user">
+                        <Link 
+                            href="/login"
+                            class="px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200"
+                            :class="isScrolled 
+                                ? 'text-primary-600 hover:bg-primary-50/80' 
+                                : 'text-primary-600 hover:bg-primary-50/80'"
+                        >
+                            Sign In
+                        </Link>
+                        <Link 
+                            href="/register"
+                            class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                            :class="isScrolled 
+                                ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-600/30 hover:shadow-xl hover:shadow-primary-600/40' 
+                                : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-600/30 hover:shadow-xl hover:shadow-primary-600/40'"
+                        >
+                            Open Account
+                        </Link>
+                    </template>
+                    <template v-else>
+                        <Link 
+                            href="/dashboard"
+                            class="px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200"
+                            :class="isScrolled 
+                                ? 'text-primary-600 hover:bg-primary-50/80' 
+                                : 'text-primary-600 hover:bg-primary-50/80'"
+                        >
+                            Dashboard
+                        </Link>
+                        <button
+                            @click="handleLogout"
+                            class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                            :class="isScrolled 
+                                ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/30 hover:shadow-xl hover:shadow-red-600/40' 
+                                : 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/30 hover:shadow-xl hover:shadow-red-600/40'"
+                        >
+                            Logout
+                        </button>
+                    </template>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -145,7 +176,7 @@ onUnmounted(() => {
                     class="lg:hidden p-2 rounded-xl transition-all duration-200"
                     :class="isScrolled 
                         ? 'text-gray-700 hover:bg-gray-100/80' 
-                        : 'text-white hover:bg-white/15'"
+                        : 'text-gray-700 hover:bg-gray-100/80'"
                     :aria-expanded="isMobileMenuOpen"
                     aria-label="Toggle menu"
                 >
@@ -160,6 +191,9 @@ onUnmounted(() => {
         </div>
     </header>
 
+    <!-- Toast Notification -->
+    <Toast />
+
     <!-- Mobile Menu Overlay -->
     <Transition
         enter-active-class="transition-opacity duration-300"
@@ -171,12 +205,12 @@ onUnmounted(() => {
     >
         <div 
             v-if="isMobileMenuOpen" 
-            class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            class="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] lg:hidden"
             @click="closeMobileMenu"
         ></div>
     </Transition>
 
-    <!-- Mobile Menu Panel -->
+    <!-- Mobile Menu Panel - Offcanvas Detached -->
     <Transition
         enter-active-class="transition-transform duration-300 ease-out"
         enter-from-class="translate-x-full"
@@ -187,7 +221,7 @@ onUnmounted(() => {
     >
         <div 
             v-if="isMobileMenuOpen"
-            class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white/95 backdrop-blur-2xl shadow-2xl z-50 lg:hidden overflow-y-auto"
+            class="fixed top-4 right-4 bottom-4 w-80 max-w-[85vw] bg-white/98 backdrop-blur-2xl shadow-2xl rounded-3xl z-[70] lg:hidden overflow-hidden flex flex-col"
         >
             <!-- Mobile Menu Header -->
             <div class="flex items-center justify-between p-4 border-b border-gray-100/50">
@@ -207,52 +241,62 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <!-- Mobile Menu Links -->
-            <nav class="p-4 space-y-1">
-                <template v-for="link in navLinks" :key="link.name">
-                    <a 
-                        v-if="link.href.startsWith('#')"
-                        :href="link.href"
-                        @click="closeMobileMenu"
-                        class="flex items-center px-4 py-3 text-gray-700 hover:text-primary-600 hover:bg-primary-50/80 rounded-xl transition-colors duration-200"
-                    >
-                        {{ link.name }}
-                    </a>
+            <!-- Mobile Menu Content - Scrollable -->
+            <div class="flex-1 overflow-y-auto">
+                <!-- Mobile Menu Links -->
+                <nav class="p-4 space-y-1">
                     <Link 
-                        v-else
+                        v-for="link in navLinks" 
+                        :key="link.name"
                         :href="link.href"
                         @click="closeMobileMenu"
                         class="flex items-center px-4 py-3 text-gray-700 hover:text-primary-600 hover:bg-primary-50/80 rounded-xl transition-colors duration-200"
                     >
                         {{ link.name }}
                     </Link>
-                </template>
-            </nav>
+                </nav>
 
-            <!-- Mobile Menu CTA -->
-            <div class="p-4 mt-4 space-y-3 border-t border-gray-100/50">
-                <Link 
-                    href="/login"
-                    @click="closeMobileMenu"
-                    class="flex items-center justify-center w-full px-4 py-3 text-primary-600 font-semibold border-2 border-primary-200 rounded-xl hover:bg-primary-50 transition-colors duration-200"
-                >
-                    Sign In
-                </Link>
-                <Link 
-                    href="/register"
-                    @click="closeMobileMenu"
-                    class="flex items-center justify-center w-full px-4 py-3 text-white font-semibold bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors duration-200 shadow-lg shadow-primary-600/30"
-                >
-                    Open Account
-                </Link>
+                <!-- Mobile Menu CTA -->
+                <div class="p-4 mt-4 space-y-3 border-t border-gray-100/50">
+                    <template v-if="!user">
+                        <Link 
+                            href="/login"
+                            @click="closeMobileMenu"
+                            class="flex items-center justify-center w-full px-4 py-3 text-primary-600 font-semibold border-2 border-primary-200 rounded-xl hover:bg-primary-50 transition-colors duration-200"
+                        >
+                            Sign In
+                        </Link>
+                        <Link 
+                            href="/register"
+                            @click="closeMobileMenu"
+                            class="flex items-center justify-center w-full px-4 py-3 text-white font-semibold bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors duration-200 shadow-lg shadow-primary-600/30"
+                        >
+                            Open Account
+                        </Link>
+                    </template>
+                    <template v-else>
+                        <Link 
+                            href="/dashboard"
+                            @click="closeMobileMenu"
+                            class="flex items-center justify-center w-full px-4 py-3 text-primary-600 font-semibold border-2 border-primary-200 rounded-xl hover:bg-primary-50 transition-colors duration-200"
+                        >
+                            Dashboard
+                        </Link>
+                        <button
+                            @click="handleLogout"
+                            class="flex items-center justify-center w-full px-4 py-3 text-white font-semibold bg-red-600 rounded-xl hover:bg-red-700 transition-colors duration-200 shadow-lg shadow-red-600/30"
+                        >
+                            Logout
+                        </button>
+                    </template>
+                </div>
             </div>
 
             <!-- Mobile Menu Footer Info -->
-            <div class="p-4 mt-auto border-t border-gray-100/50 bg-gray-50/50">
-                <p class="text-xs text-gray-500 text-center">
-                    © 2026 Finora Bank. All Rights Reserved.<br>
-                    Member FDIC | Equal Housing Lender
-                </p>
+            <div class="p-4 border-t border-gray-100/50 bg-gray-50/50">
+                <div class="text-center">
+                    <CopyrightText :show-extra-text="true" />
+                </div>
             </div>
         </div>
     </Transition>
@@ -263,17 +307,17 @@ onUnmounted(() => {
 .glass-header {
     background: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.1) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0.1) 100%
+        rgba(255, 255, 255, 0.85) 0%,
+        rgba(255, 255, 255, 0.75) 50%,
+        rgba(255, 255, 255, 0.85) 100%
     );
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(0, 86, 179, 0.15);
     box-shadow: 
         0 4px 30px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .shadow-glass {

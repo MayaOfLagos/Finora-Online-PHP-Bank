@@ -1,13 +1,16 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
-import Message from 'primevue/message';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Toast from 'primevue/toast';
+import AppLogo from '@/Components/Common/AppLogo.vue';
+import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
 const props = defineProps({
     canResetPassword: Boolean,
@@ -15,6 +18,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const toast = useToast();
 const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
 const siteLogo = computed(() => page.props.settings?.branding?.site_logo);
 const siteLogoDark = computed(() => page.props.settings?.branding?.site_logo_dark);
@@ -54,6 +58,14 @@ const submit = () => {
     isLoading.value = true;
     
     form.post(route('login'), {
+        onError: () => {
+            toast.add({
+                severity: 'error',
+                summary: 'Login Failed',
+                detail: 'Invalid email or password. Please try again.',
+                life: 3000,
+            });
+        },
         onFinish: () => {
             isLoading.value = false;
             form.reset('password');
@@ -68,6 +80,8 @@ const goToRegister = () => {
 
 <template>
     <Head :title="'Sign In - ' + siteName" />
+    
+    <Toast />
     
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
         
@@ -127,16 +141,6 @@ const goToRegister = () => {
                 <!-- Login Card -->
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 p-8 transition-colors duration-300">
                     
-                    <!-- Status Message -->
-                    <Message 
-                        v-if="status" 
-                        severity="success" 
-                        :closable="false"
-                        class="mb-6"
-                    >
-                        {{ status }}
-                    </Message>
-
                     <!-- Login Form -->
                     <form @submit.prevent="submit" class="space-y-5">
                         <!-- Email Field -->
@@ -241,9 +245,7 @@ const goToRegister = () => {
                 
                 <!-- Footer -->
                 <div class="mt-8 text-center">
-                    <p class="text-sm text-gray-500 dark:text-gray-500">
-                        © 2026 {{ siteName }}. All rights reserved.
-                    </p>
+                    <CopyrightText text-class="text-sm text-gray-500 dark:text-gray-500" />
                 </div>
             </div>
         </div>

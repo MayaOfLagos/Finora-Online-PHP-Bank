@@ -80,9 +80,9 @@
         </div>
         
         <div class="footer">
-            <p>This is an automated email from Finora Bank Support System.</p>
+            <p>This is an automated email from {{ app_name() }} Support System.</p>
             <p>Please do not reply to this email. For assistance, contact our support team.</p>
-            <p>&copy; {{ date('Y') }} Finora Bank. All rights reserved.</p>
+            <p>{{ copyright_text() }}. All rights reserved.</p>
         </div>
     </div>
 </body>

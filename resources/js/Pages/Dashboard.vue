@@ -3,13 +3,15 @@
  * Dashboard Page
  * Main overview of user's banking information
  */
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
+import { useToast } from 'primevue/usetoast';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import Button from 'primevue/button';
 import Carousel from 'primevue/carousel';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
+import Toast from 'primevue/toast';
 
 // Components
 import StatCard from '@/Components/Cards/StatCard.vue';
@@ -21,7 +23,29 @@ import IncomeExpenseChart from '@/Components/Charts/IncomeExpenseChart.vue';
 import PendingItemsWidget from '@/Components/Widgets/PendingItemsWidget.vue';
 
 const page = usePage();
+const toast = useToast();
 const user = computed(() => page.props.auth?.user);
+
+// Show welcome toast on first dashboard load after login
+onMounted(() => {
+    // Check if this is a fresh login (within last 10 seconds)
+    const lastLoginAt = user.value?.last_login_at;
+    if (lastLoginAt) {
+        const lastLogin = new Date(lastLoginAt);
+        const now = new Date();
+        const secondsSinceLogin = (now - lastLogin) / 1000;
+        
+        // If logged in within last 10 seconds, show welcome message
+        if (secondsSinceLogin < 10) {
+            toast.add({
+                severity: 'success',
+                summary: 'Welcome Back!',
+                detail: `Good to see you, ${user.value?.first_name || user.value?.name?.split(' ')[0] || 'User'}! 👋`,
+                life: 4000,
+            });
+        }
+    }
+});
 
 // Get data from props
 const accounts = computed(() => page.props.accounts || []);
@@ -130,6 +154,8 @@ const viewCardDetails = (card) => {
 
 <template>
     <DashboardLayout title="Dashboard">
+        <Toast position="top-right" :pt="{ root: { style: 'z-index: 9999' } }" />
+        
         <!-- Welcome Message -->
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">

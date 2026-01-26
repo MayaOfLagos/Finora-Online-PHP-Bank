@@ -132,6 +132,10 @@ class ManageSettings extends Page
             'require_special_char' => (bool) Setting::getValue('security', 'require_special_char', true),
             'require_uppercase' => (bool) Setting::getValue('security', 'require_uppercase', true),
 
+            // Login Verification Settings
+            'login_require_email_otp' => (bool) Setting::getValue('security', 'login_require_email_otp', true),
+            'login_require_pin' => (bool) Setting::getValue('security', 'login_require_pin', true),
+
             // Email OTP Login Settings
             'email_otp_enabled' => (bool) Setting::getValue('security', 'email_otp_enabled', false),
             'email_otp_enforce_admin' => (bool) Setting::getValue('security', 'email_otp_enforce_admin', false),
@@ -850,6 +854,27 @@ class ManageSettings extends Page
                             ->placeholder('30')
                             ->helperText('Account lockout time'),
                     ]),
+                ]),
+
+            Section::make('Login Verification')
+                ->description('Configure multi-step login verification requirements')
+                ->icon('heroicon-o-shield-check')
+                ->collapsible()
+                ->schema([
+                    Grid::make(2)->schema([
+                        Toggle::make('login_require_email_otp')
+                            ->label('Require Email OTP on Login')
+                            ->helperText('Users must verify email OTP code after password login')
+                            ->default(true),
+                        Toggle::make('login_require_pin')
+                            ->label('Require PIN Verification on Login')
+                            ->helperText('Users must enter transaction PIN after email verification')
+                            ->default(true),
+                    ]),
+                    Placeholder::make('login_verification_note')
+                        ->label('')
+                        ->content('💡 **Note:** Individual users can be exempted from Email OTP verification in User Management → Edit User → "Skip Email OTP Verification" toggle.')
+                        ->columnSpanFull(),
                 ]),
 
             Section::make('Email OTP Login')
@@ -2133,6 +2158,10 @@ class ManageSettings extends Page
         Setting::setValue('security', 'password_min_length', $data['password_min_length'] ?? '8', 'string');
         Setting::setValue('security', 'require_special_char', $data['require_special_char'] ?? true, 'boolean');
         Setting::setValue('security', 'require_uppercase', $data['require_uppercase'] ?? true, 'boolean');
+
+        // Login Verification Settings
+        Setting::setValue('security', 'login_require_email_otp', $data['login_require_email_otp'] ?? true, 'boolean');
+        Setting::setValue('security', 'login_require_pin', $data['login_require_pin'] ?? true, 'boolean');
 
         // Email OTP Settings
         Setting::setValue('security', 'email_otp_enabled', $data['email_otp_enabled'] ?? false, 'boolean');

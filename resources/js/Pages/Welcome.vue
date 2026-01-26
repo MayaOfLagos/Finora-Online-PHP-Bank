@@ -1,6 +1,8 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
+import { ref, onMounted, computed } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import Toast from 'primevue/toast';
 
 // Import landing page components - Minimal Design
 import Preloader from '@/Components/Landing/Preloader.vue';
@@ -19,6 +21,8 @@ defineProps({
     canRegister: Boolean,
 });
 
+const page = usePage();
+const toast = useToast();
 const isLoading = ref(true);
 const isPageReady = ref(false);
 
@@ -35,6 +39,16 @@ onMounted(() => {
             isLoading.value = false;
             setTimeout(() => {
                 isPageReady.value = true;
+                
+                // Show logout toast if user just logged out
+                if (page.props.flash?.logout) {
+                    toast.add({
+                        severity: 'success',
+                        summary: 'Logged Out',
+                        detail: 'You have been successfully logged out. See you soon!',
+                        life: 4000,
+                    });
+                }
             }, 300);
         }, remaining);
     };
@@ -49,6 +63,8 @@ onMounted(() => {
 
 <template>
     <Head title="Welcome to Finora Bank - Modern Banking Solutions" />
+
+    <Toast />
 
     <!-- Preloader -->
     <Preloader v-if="isLoading" />

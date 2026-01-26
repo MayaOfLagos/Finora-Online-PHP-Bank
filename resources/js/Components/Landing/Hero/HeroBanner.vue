@@ -95,7 +95,7 @@ onUnmounted(() => {
 
 <template>
     <!-- Hero Section with Container -->
-    <section class="relative bg-primary-950 pt-30 pb-6 px-3 sm:px-4 lg:px-6">
+    <section class="relative bg-primary-950 pt-22 sm:pt-30 pb-6 px-3 sm:px-4 lg:px-6">
         <!-- Hero Container with Border Radius -->
         <div 
             class="relative max-w-7xl mx-auto h-[85vh] min-h-[550px] max-h-[800px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl"

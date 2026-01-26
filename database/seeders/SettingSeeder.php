@@ -16,6 +16,14 @@ class SettingSeeder extends Seeder
             ['group' => 'general', 'key' => 'support_email', 'value' => 'support@finorabank.com', 'type' => 'string'],
             ['group' => 'general', 'key' => 'support_phone', 'value' => '+1-800-FINORA', 'type' => 'string'],
 
+            // Branding Settings
+            ['group' => 'branding', 'key' => 'logo_light', 'value' => '', 'type' => 'string'], // Path to light theme logo
+            ['group' => 'branding', 'key' => 'logo_dark', 'value' => '', 'type' => 'string'], // Path to dark theme logo
+            ['group' => 'branding', 'key' => 'favicon', 'value' => '', 'type' => 'string'], // Path to favicon
+            ['group' => 'branding', 'key' => 'copyright_text', 'value' => 'Finora Bank', 'type' => 'string'],
+            ['group' => 'branding', 'key' => 'copyright_year', 'value' => '2026', 'type' => 'string'],
+            ['group' => 'branding', 'key' => 'footer_extra_text', 'value' => 'Member FDIC | Equal Housing Lender', 'type' => 'string'],
+
             // Transfer Limits
             ['group' => 'transfers', 'key' => 'wire_transfer_daily_limit', 'value' => '10000000', 'type' => 'integer'],
             ['group' => 'transfers', 'key' => 'internal_transfer_daily_limit', 'value' => '5000000', 'type' => 'integer'],
@@ -34,6 +42,8 @@ class SettingSeeder extends Seeder
             ['group' => 'security', 'key' => 'lockout_duration_minutes', 'value' => '30', 'type' => 'integer'],
             ['group' => 'security', 'key' => 'session_timeout_minutes', 'value' => '30', 'type' => 'integer'],
             ['group' => 'security', 'key' => 'require_2fa_for_transfers', 'value' => '1', 'type' => 'boolean'],
+            ['group' => 'security', 'key' => 'login_require_email_otp', 'value' => '1', 'type' => 'boolean'],
+            ['group' => 'security', 'key' => 'login_require_pin', 'value' => '1', 'type' => 'boolean'],
 
             // Deposit Settings
             ['group' => 'deposits', 'key' => 'check_hold_days', 'value' => '5', 'type' => 'integer'],

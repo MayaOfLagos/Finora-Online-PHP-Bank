@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -33,6 +34,22 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+            ],
+            'settings' => [
+                'general' => [
+                    'app_name' => Setting::getValue('general', 'app_name', 'Finora Bank'),
+                    'app_tagline' => Setting::getValue('general', 'app_tagline', 'Banking Made Simple'),
+                    'support_email' => Setting::getValue('general', 'support_email', 'support@finorabank.com'),
+                    'support_phone' => Setting::getValue('general', 'support_phone', '+1-800-FINORA'),
+                ],
+                'branding' => [
+                    'logo_light' => Setting::getValue('branding', 'logo_light', ''),
+                    'logo_dark' => Setting::getValue('branding', 'logo_dark', ''),
+                    'favicon' => Setting::getValue('branding', 'favicon', ''),
+                    'copyright_text' => Setting::getValue('branding', 'copyright_text', 'Finora Bank'),
+                    'copyright_year' => Setting::getValue('branding', 'copyright_year', date('Y')),
+                    'footer_extra_text' => Setting::getValue('branding', 'footer_extra_text', 'Member FDIC | Equal Housing Lender'),
+                ],
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

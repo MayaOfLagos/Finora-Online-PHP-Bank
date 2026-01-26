@@ -69,10 +69,14 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'cot_code',
         // User-level OTP override
         'skip_transfer_otp',
+        'skip_email_otp',
         // Filament MFA columns
         'app_authentication_secret',
         'app_authentication_recovery_codes',
         'has_email_authentication',
+        // Login tracking
+        'last_login_at',
+        'last_login_ip',
     ];
 
     protected $hidden = [
@@ -88,6 +92,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_otp_verified_at' => 'datetime',
+            'pin_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
             'transaction_pin' => 'hashed',
             'date_of_birth' => 'date',
@@ -375,5 +382,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         }
 
         return $codes;
+    }
+
+    // ==================== AUTH & NOTIFICATIONS ====================
+
+    /**
+     * Send the password reset notification.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\CustomResetPasswordNotification($token));
     }
 }

@@ -30,5 +30,5 @@ View Dashboard
 If you did not submit this verification request, please contact our support team immediately.
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ app_name() }} Team
 </x-mail::message>

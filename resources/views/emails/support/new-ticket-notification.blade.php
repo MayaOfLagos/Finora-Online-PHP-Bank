@@ -34,5 +34,5 @@ View Ticket in Admin Panel
 @endif
 
 Thanks,<br>
-{{ config('app.name') }} Support System
+{{ app_name() }} Support System
 </x-mail::message>

@@ -10,5 +10,5 @@ View Dashboard
 </x-mail::button>
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ app_name() }} Team
 </x-mail::message>
