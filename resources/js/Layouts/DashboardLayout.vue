@@ -187,7 +187,7 @@ const handleMarkAllRead = () => {
         >
             <div
                 v-if="mobileMenuOpen"
-                class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
+                class="fixed inset-0 z-[60] bg-gray-900/50 lg:hidden"
                 @click="closeMobileMenu"
             />
         </Transition>
@@ -203,7 +203,7 @@ const handleMarkAllRead = () => {
         >
             <aside
                 v-if="mobileMenuOpen"
-                class="mobile-sidebar-glass fixed top-3 bottom-3 left-3 z-50 flex flex-col w-[280px] lg:hidden overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl shadow-black/20"
+                class="mobile-sidebar-glass fixed top-3 bottom-3 left-3 z-[70] flex flex-col w-[280px] lg:hidden overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl shadow-black/20"
             >
                 <!-- Glass overlay for depth -->
                 <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-white/20 dark:from-white/10 dark:to-white/5 pointer-events-none"></div>
