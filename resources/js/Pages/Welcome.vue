@@ -1,17 +1,16 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 
-// Import all landing page components
+// Import landing page components - Minimal Design
 import Preloader from '@/Components/Landing/Preloader.vue';
 import MainHeader from '@/Components/Landing/Header/MainHeader.vue';
 import HeroBanner from '@/Components/Landing/Hero/HeroBanner.vue';
-import AboutSection from '@/Components/Landing/Sections/AboutSection.vue';
-import ServicesSection from '@/Components/Landing/Sections/ServicesSection.vue';
-import FeaturesSection from '@/Components/Landing/Sections/FeaturesSection.vue';
-import StatsSection from '@/Components/Landing/Sections/StatsSection.vue';
-import TestimonialsSection from '@/Components/Landing/Sections/TestimonialsSection.vue';
-import CTASection from '@/Components/Landing/Sections/CTASection.vue';
+import QuickLinksBar from '@/Components/Landing/Sections/QuickLinksBar.vue';
+import WhoWeAreSection from '@/Components/Landing/Sections/WhoWeAreSection.vue';
+import CoreValuesSection from '@/Components/Landing/Sections/CoreValuesSection.vue';
+import OnlineBankingSection from '@/Components/Landing/Sections/OnlineBankingSection.vue';
+import NewsSection from '@/Components/Landing/Sections/NewsSection.vue';
 import MainFooter from '@/Components/Landing/Footer/MainFooter.vue';
 import MobileStickyFooter from '@/Components/Landing/Footer/MobileStickyFooter.vue';
 
@@ -65,23 +64,20 @@ onMounted(() => {
         <!-- Hero Banner -->
         <HeroBanner />
 
-        <!-- About Section -->
-        <AboutSection id="about" />
+        <!-- Quick Links Bar (Personal Banking, Business Banking, etc.) -->
+        <QuickLinksBar />
 
-        <!-- Services Section -->
-        <ServicesSection id="services" />
+        <!-- Who We Are Section -->
+        <WhoWeAreSection id="about" />
 
-        <!-- Features Section (Why Choose Us) -->
-        <FeaturesSection />
+        <!-- Core Values Section -->
+        <CoreValuesSection />
 
-        <!-- Stats Section -->
-        <StatsSection />
+        <!-- Online Banking CTA Section -->
+        <OnlineBankingSection />
 
-        <!-- Testimonials Section -->
-        <TestimonialsSection />
-
-        <!-- CTA Section -->
-        <CTASection />
+        <!-- News & Updates Section -->
+        <NewsSection />
 
         <!-- Footer -->
         <MainFooter />
@@ -101,3 +97,4 @@ onMounted(() => {
     animation: fadeIn 0.5s ease-out forwards;
 }
 </style>
+
