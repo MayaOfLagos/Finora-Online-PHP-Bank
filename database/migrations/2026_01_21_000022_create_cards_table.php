@@ -27,8 +27,8 @@ return new class extends Migration
             $table->bigInteger('daily_limit')->nullable(); // in cents
             $table->string('status')->default('active'); // active, frozen, blocked, expired
             $table->boolean('is_virtual')->default(false);
-            $table->timestamp('issued_at');
-            $table->timestamp('expires_at');
+            $table->timestamp('issued_at')->useCurrent();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamp('blocked_at')->nullable();
             $table->timestamps();
 
