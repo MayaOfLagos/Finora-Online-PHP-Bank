@@ -16,8 +16,14 @@ define('INSTALL_KEY', 'finora_install_2026');
 // ============================================
 // CONFIGURATION
 // ============================================
-define('BASE_PATH', dirname(__FILE__));
-define('ROOT_PATH', dirname(BASE_PATH)); // Go up from public to root
+define('PUBLIC_PATH', dirname(__FILE__));
+
+// Auto-detect Laravel app path (supports both local dev and shared hosting)
+$appPath = dirname(PUBLIC_PATH); // Default: go up from public to root
+if (is_dir('/home/txepiedg/finora_app/bootstrap')) {
+    $appPath = '/home/txepiedg/finora_app';
+}
+define('APP_PATH', $appPath);
 
 set_time_limit(600);
 ini_set('memory_limit', '512M');
@@ -51,21 +57,21 @@ function getStatus() {
     $status = [];
     
     // Check paths
-    $status['base_path'] = BASE_PATH;
-    $status['root_path'] = ROOT_PATH;
-    $status['is_laravel_root'] = file_exists(ROOT_PATH . '/artisan');
-    $status['public_is_root'] = file_exists(BASE_PATH . '/artisan');
+    $status['public_path'] = PUBLIC_PATH;
+    $status['app_path'] = APP_PATH;
+    $status['is_laravel_root'] = file_exists(APP_PATH . '/artisan');
+    $status['public_is_root'] = file_exists(PUBLIC_PATH . '/artisan');
     
     // Determine actual Laravel root
     if ($status['is_laravel_root']) {
-        $status['laravel_root'] = ROOT_PATH;
+        $status['laravel_root'] = APP_PATH;
     } elseif ($status['public_is_root']) {
-        $status['laravel_root'] = BASE_PATH;
+        $status['laravel_root'] = PUBLIC_PATH;
     } else {
         $status['laravel_root'] = null;
     }
     
-    $root = $status['laravel_root'] ?? ROOT_PATH;
+    $root = $status['laravel_root'] ?? APP_PATH;
     
     // Check files
     $status['has_composer_json'] = file_exists($root . '/composer.json');
@@ -98,7 +104,7 @@ function getStatus() {
 }
 
 $status = getStatus();
-$laravelRoot = $status['laravel_root'] ?? ROOT_PATH;
+$laravelRoot = $status['laravel_root'] ?? APP_PATH;
 $phpBin = $status['php_binary'] ?? 'php';
 
 // Handle actions

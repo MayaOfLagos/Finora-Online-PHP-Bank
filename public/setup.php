@@ -19,7 +19,14 @@ define('ALLOW_DANGEROUS_COMMANDS', false); // Set to true only when needed
 // ============================================
 // CONFIGURATION
 // ============================================
-define('FINORA_BASE_PATH', __DIR__);
+// Auto-detect Laravel app path (supports both local dev and shared hosting)
+$appPath = __DIR__.'/..';
+if (is_dir('/home/txepiedg/finora_app/bootstrap')) {
+    $appPath = '/home/txepiedg/finora_app';
+}
+
+define('FINORA_BASE_PATH', $appPath);
+define('FINORA_PUBLIC_PATH', __DIR__);
 define('FINORA_PHP_BIN', '/usr/local/bin/php');
 define('FINORA_COMPOSER', '/usr/local/bin/composer');
 define('FINORA_NPM', '/usr/local/bin/npm');
