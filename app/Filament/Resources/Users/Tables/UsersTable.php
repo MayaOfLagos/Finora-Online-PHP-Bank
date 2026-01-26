@@ -58,7 +58,7 @@ class UsersTable
             ->filters([
                 TrashedFilter::make(),
             ])
-            ->recordUrl(null)
+            ->recordUrl(fn (User $record): string => UserResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 ActionGroup::make([
                     Action::make('view')
