@@ -168,7 +168,7 @@ const viewCardDetails = (card) => {
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-2 gap-3 mb-6 lg:grid-cols-4 sm:gap-4">
+        <div class="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
             <StatCard
                 title="Total Balance"
                 :value="stats.totalBalance"
