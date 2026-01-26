@@ -924,4 +924,50 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - To run all tests: `php artisan test --compact`.
 - To run all tests in a file: `php artisan test --compact tests/Feature/ExampleTest.php`.
 - To filter on a particular test name: `php artisan test --compact --filter=testName` (recommended after making a change to a related file).
+
+=== production deployment ===
+
+## Production Server (StackCP)
+
+### SSH Configuration
+- **SSH Alias:** `finora-server` (configured in ~/.ssh/config)
+- **Host:** ssh.gb.stackcp.com
+- **User:** finorafundtrust.com
+- **Document Root:** ~/public_html
+
+### PHP Path (CRITICAL)
+The default `php` command on the server points to PHP 8.0.30, which is incompatible with Laravel 12.
+**Always use the full path to PHP 8.5:**
+
+```bash
+/usr/php85/usr/bin/php
+```
+
+### Available PHP Versions on Server
+- `/usr/php80/usr/bin/php` - PHP 8.0
+- `/usr/php81/usr/bin/php` - PHP 8.1
+- `/usr/php82/usr/bin/php` - PHP 8.2
+- `/usr/php83/usr/bin/php` - PHP 8.3
+- `/usr/php84/usr/bin/php` - PHP 8.4
+- `/usr/php85/usr/bin/php` - PHP 8.5 ✅ (USE THIS)
+
+### Deployment Commands
+```bash
+# Pull latest changes
+ssh finora-server "cd ~/public_html && git pull origin main"
+
+# Run migrations
+ssh finora-server "cd ~/public_html && /usr/php85/usr/bin/php artisan migrate --force"
+
+# Clear all caches
+ssh finora-server "cd ~/public_html && /usr/php85/usr/bin/php artisan config:clear && /usr/php85/usr/bin/php artisan cache:clear && /usr/php85/usr/bin/php artisan view:clear && /usr/php85/usr/bin/php artisan route:clear"
+
+# Full deployment (one command)
+ssh finora-server "cd ~/public_html && git pull origin main && /usr/php85/usr/bin/php artisan migrate --force && /usr/php85/usr/bin/php artisan config:clear && /usr/php85/usr/bin/php artisan cache:clear && /usr/php85/usr/bin/php artisan view:clear && /usr/php85/usr/bin/php artisan route:clear"
+```
+
+### Composer Commands on Production
+```bash
+ssh finora-server "cd ~/public_html && /usr/php85/usr/bin/php /usr/bin/composer install --no-dev --optimize-autoloader"
+```
 </laravel-boost-guidelines>

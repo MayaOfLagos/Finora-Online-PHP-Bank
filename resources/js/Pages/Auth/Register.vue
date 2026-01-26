@@ -143,7 +143,7 @@ const accountTypeOptions = computed(() => {
             ...type,
             id: type.value,
             name: type.label,
-            icon: type.value === 'SAV' ? 'pi-piggy-bank' : 
+            icon: type.value === 'SAV' ? 'pi-money-bill' : 
                   type.value === 'CHK' ? 'pi-credit-card' : 
                   type.value === 'BUS' ? 'pi-briefcase' : 
                   type.value === 'PRM' ? 'pi-star' : 'pi-wallet',
@@ -151,7 +151,7 @@ const accountTypeOptions = computed(() => {
     }
     // Fallback account types (using actual database codes)
     return [
-        { id: 'SAV', value: 'SAV', name: 'Savings Account', label: 'Savings Account', icon: 'pi-piggy-bank', description: 'Earn interest on your balance' },
+        { id: 'SAV', value: 'SAV', name: 'Savings Account', label: 'Savings Account', icon: 'pi-money-bill', description: 'Earn interest on your balance' },
         { id: 'CHK', value: 'CHK', name: 'Checking Account', label: 'Checking Account', icon: 'pi-credit-card', description: 'Daily transactions' },
         { id: 'BUS', value: 'BUS', name: 'Business Account', label: 'Business Account', icon: 'pi-briefcase', description: 'For business needs' }
     ];
