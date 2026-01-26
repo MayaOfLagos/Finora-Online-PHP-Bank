@@ -21,11 +21,76 @@ import DigitalCard from '@/Components/Cards/DigitalCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import IncomeExpenseChart from '@/Components/Charts/IncomeExpenseChart.vue';
 import PendingItemsWidget from '@/Components/Widgets/PendingItemsWidget.vue';
+import { useCurrency } from '@/Composables/useCurrency';
 
 const page = usePage();
 const toast = useToast();
+const { formatCurrency } = useCurrency();
 const user = computed(() => page.props.auth?.user);
 const userCurrency = computed(() => page.props.auth?.currency || page.props.userCurrency || 'USD');
+
+// Mobile wallet slider state
+const currentCard = ref(0);
+const balanceVisible = ref(true);
+const isDragging = ref(false);
+const startX = ref(0);
+const currentX = ref(0);
+
+// Greeting based on time of day
+const greeting = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+});
+
+// Primary account for mobile display
+const primaryAccount = computed(() => {
+    const accs = page.props.accounts || [];
+    return accs.find(a => a.is_primary) || accs[0] || null;
+});
+
+// Format date for mobile card
+const lastUpdated = computed(() => {
+    const now = new Date();
+    return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + 
+           now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+});
+
+// Toggle balance visibility
+const toggleBalance = () => {
+    balanceVisible.value = !balanceVisible.value;
+};
+
+// Swipe handlers for mobile wallet cards
+const handleTouchStart = (e) => {
+    startX.value = e.touches ? e.touches[0].clientX : e.clientX;
+    isDragging.value = true;
+};
+
+const handleTouchMove = (e) => {
+    if (!isDragging.value) return;
+    currentX.value = e.touches ? e.touches[0].clientX : e.clientX;
+};
+
+const handleTouchEnd = () => {
+    if (!isDragging.value) return;
+    const diffX = startX.value - currentX.value;
+    const threshold = 50;
+    const totalCards = 2;
+    
+    if (Math.abs(diffX) > threshold) {
+        if (diffX > 0 && currentCard.value < totalCards - 1) {
+            currentCard.value++;
+        } else if (diffX < 0 && currentCard.value > 0) {
+            currentCard.value--;
+        }
+    }
+    
+    isDragging.value = false;
+    startX.value = 0;
+    currentX.value = 0;
+};
 
 // Show welcome toast on first dashboard load after login
 onMounted(() => {
@@ -157,8 +222,216 @@ const viewCardDetails = (card) => {
     <DashboardLayout title="Dashboard">
         <Toast position="top-right" :pt="{ root: { style: 'z-index: 9999' } }" />
         
-        <!-- Welcome Message -->
-        <div class="mb-6">
+        <!-- Mobile Header with Extended Gradient Background -->
+        <div class="lg:hidden -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-6">
+            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-white px-4 pt-6 pb-8 rounded-b-3xl">
+                <!-- Header Section -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-11 h-11 rounded-full border-2 border-white/20 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                            {{ user?.first_name?.charAt(0) || 'U' }}
+                        </div>
+                        <div>
+                            <p class="text-white/80 text-xs">{{ greeting }} 👋</p>
+                            <p class="text-white font-semibold text-base">
+                                {{ user?.first_name }} {{ user?.last_name }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Swipeable Mobile Wallet Cards -->
+                <div class="mb-6">
+                    <!-- Card Container -->
+                    <div class="relative overflow-hidden">
+                        <div 
+                            class="flex transition-transform duration-300 ease-in-out"
+                            :style="`transform: translateX(-${currentCard * 100}%)`"
+                            @touchstart="handleTouchStart"
+                            @touchmove="handleTouchMove"
+                            @touchend="handleTouchEnd"
+                            @mousedown="handleTouchStart"
+                            @mousemove="isDragging && handleTouchMove($event)"
+                            @mouseup="handleTouchEnd"
+                            @mouseleave="handleTouchEnd"
+                        >
+                            <!-- Fiat Balance Card -->
+                            <div class="w-full flex-shrink-0">
+                                <div class="bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-700 dark:from-indigo-700 dark:via-indigo-600 dark:to-indigo-800 rounded-2xl p-4 text-white shadow-xl relative overflow-hidden">
+                                    <!-- Background Pattern -->
+                                    <div class="absolute inset-0 opacity-10">
+                                        <div class="absolute top-3 right-3 w-24 h-24 bg-white rounded-full -translate-y-6 translate-x-6"></div>
+                                        <div class="absolute bottom-3 left-3 w-20 h-20 bg-white rounded-full translate-y-4 -translate-x-4"></div>
+                                    </div>
+
+                                    <div class="relative z-10">
+                                        <!-- Account Info -->
+                                        <div class="flex justify-between items-start mb-3">
+                                            <div>
+                                                <p class="text-white/60 text-xs uppercase tracking-wide">Finora Bank</p>
+                                                <p class="text-white/80 text-xs">{{ user?.first_name }} {{ user?.last_name }}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-white/60 text-xs">Fiat Account</p>
+                                                <p class="text-white/80 text-xs font-mono" v-if="primaryAccount">
+                                                    •••• {{ primaryAccount.account_number?.slice(-4) }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Balance Section -->
+                                        <div class="text-center mb-3">
+                                            <p class="text-white/80 text-xs mb-1">Available Balance</p>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <p v-if="balanceVisible" class="text-2xl sm:text-3xl font-bold">
+                                                    {{ formatCurrency(stats.totalBalance, userCurrency) }}
+                                                </p>
+                                                <p v-else class="text-2xl sm:text-3xl font-bold">
+                                                    {{ userCurrency === 'USD' ? '$' : userCurrency === 'EUR' ? '€' : userCurrency === 'GBP' ? '£' : '$' }} ******
+                                                </p>
+                                                <button 
+                                                    @click.stop="toggleBalance" 
+                                                    @touchstart.stop
+                                                    @mousedown.stop
+                                                    class="text-white/60 hover:text-white p-1"
+                                                >
+                                                    <i v-if="balanceVisible" class="pi pi-eye-slash text-base"></i>
+                                                    <i v-else class="pi pi-eye text-base"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Account Status -->
+                                        <div class="flex justify-between items-center text-xs">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                                                <span class="text-white/70">Active</span>
+                                            </div>
+                                            <div class="text-white/70">
+                                                Last updated: {{ lastUpdated }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats Summary Card -->
+                            <div class="w-full flex-shrink-0">
+                                <div class="bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-600 dark:from-emerald-700 dark:via-emerald-600 dark:to-teal-700 rounded-2xl p-4 text-white shadow-xl relative overflow-hidden">
+                                    <!-- Background Pattern -->
+                                    <div class="absolute inset-0 opacity-10">
+                                        <div class="absolute top-3 right-3 w-24 h-24 bg-white rounded-full -translate-y-6 translate-x-6"></div>
+                                        <div class="absolute bottom-3 left-3 w-20 h-20 bg-white rounded-full translate-y-4 -translate-x-4"></div>
+                                    </div>
+
+                                    <div class="relative z-10">
+                                        <!-- Header -->
+                                        <div class="flex justify-between items-start mb-3">
+                                            <div>
+                                                <p class="text-white/60 text-xs uppercase tracking-wide">Monthly Overview</p>
+                                                <p class="text-white/80 text-xs">{{ new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-white/60 text-xs">Statistics</p>
+                                                <i class="pi pi-chart-line text-white/80"></i>
+                                            </div>
+                                        </div>
+
+                                        <!-- Stats Section -->
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            <div class="text-center">
+                                                <p class="text-white/60 text-xs mb-1">Income</p>
+                                                <p v-if="balanceVisible" class="text-lg font-bold text-green-200">
+                                                    {{ formatCurrency(stats.monthlyIncome, userCurrency) }}
+                                                </p>
+                                                <p v-else class="text-lg font-bold text-green-200">******</p>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="text-white/60 text-xs mb-1">Expenses</p>
+                                                <p v-if="balanceVisible" class="text-lg font-bold text-red-200">
+                                                    {{ formatCurrency(stats.monthlyExpenses, userCurrency) }}
+                                                </p>
+                                                <p v-else class="text-lg font-bold text-red-200">******</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pending Info -->
+                                        <div class="flex justify-between items-center text-xs">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+                                                <span class="text-white/70">{{ stats.pendingTransfers }} pending transfers</span>
+                                            </div>
+                                            <div class="text-white/70">
+                                                <i class="pi pi-refresh mr-1"></i> Live
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Indicators -->
+                    <div class="flex justify-center space-x-2 mt-3">
+                        <button 
+                            @click="currentCard = 0"
+                            :class="currentCard === 0 ? 'bg-white' : 'bg-white/30'"
+                            class="w-2 h-2 rounded-full transition-colors duration-200"
+                        ></button>
+                        <button 
+                            @click="currentCard = 1"
+                            :class="currentCard === 1 ? 'bg-white' : 'bg-white/30'"
+                            class="w-2 h-2 rounded-full transition-colors duration-200"
+                        ></button>
+                    </div>
+
+                    <!-- Swipe Instructions -->
+                    <div class="text-center mt-2">
+                        <p class="text-white/50 text-xs">
+                            <i class="pi pi-arrows-h mr-1"></i> Swipe to switch views
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Mobile Quick Actions - Circular Design -->
+                <div class="grid grid-cols-4 gap-3">
+                    <!-- Top Up -->
+                    <Link href="/deposits" class="flex flex-col items-center justify-center">
+                        <div class="w-14 h-14 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center shadow-lg mb-1">
+                            <i class="pi pi-plus text-slate-900 text-lg"></i>
+                        </div>
+                        <span class="text-white text-xs font-medium">Top Up</span>
+                    </Link>
+
+                    <!-- Send -->
+                    <Link href="/transfers" class="flex flex-col items-center justify-center">
+                        <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg mb-1 border border-white/10">
+                            <i class="pi pi-send text-white text-lg"></i>
+                        </div>
+                        <span class="text-white text-xs font-medium">Send</span>
+                    </Link>
+
+                    <!-- Cards -->
+                    <Link href="/cards" class="flex flex-col items-center justify-center">
+                        <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg mb-1 border border-white/10">
+                            <i class="pi pi-credit-card text-white text-lg"></i>
+                        </div>
+                        <span class="text-white text-xs font-medium">Cards</span>
+                    </Link>
+
+                    <!-- More -->
+                    <Link href="/accounts" class="flex flex-col items-center justify-center">
+                        <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg mb-1 border border-white/10">
+                            <i class="pi pi-th-large text-white text-lg"></i>
+                        </div>
+                        <span class="text-white text-xs font-medium">More</span>
+                    </Link>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Welcome Message (Desktop only) -->
+        <div class="mb-6 hidden lg:block">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
                 Welcome back, {{ user?.first_name || user?.name?.split(' ')[0] || 'User' }}! 👋
             </h2>
@@ -167,8 +440,8 @@ const viewCardDetails = (card) => {
             </p>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
+        <!-- Stats Grid (Hidden on mobile - shown in mobile header) -->
+        <div class="hidden sm:grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
             <StatCard
                 title="Total Balance"
                 :value="stats.totalBalance"
