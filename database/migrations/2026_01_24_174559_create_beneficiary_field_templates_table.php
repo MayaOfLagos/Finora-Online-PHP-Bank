@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['field_key', 'applies_to']);
-            $table->index(['applies_to', 'is_enabled', 'display_order']);
+            $table->index(['applies_to', 'is_enabled', 'display_order'], 'bft_applies_enabled_order_idx');
         });
     }
 
