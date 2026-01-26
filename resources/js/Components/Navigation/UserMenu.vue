@@ -49,7 +49,7 @@ const menuItems = ref([
             {
                 label: 'Contact Us',
                 icon: 'pi pi-envelope',
-                command: () => router.visit('/support/new'),
+                command: () => router.visit('/support'),
             },
         ],
     },

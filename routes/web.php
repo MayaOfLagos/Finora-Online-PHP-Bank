@@ -27,8 +27,10 @@ use App\Http\Controllers\LoanRepaymentController;
 use App\Http\Controllers\MobileDepositController;
 use App\Http\Controllers\MoneyRequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\RewardController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TaxRefundController;
 use App\Http\Controllers\TransactionHistoryController;
@@ -250,6 +252,23 @@ Route::middleware(['auth', 'verified.email.otp', 'verified.pin'])->group(functio
     // Rewards
     Route::get('/rewards', [RewardController::class, 'index'])->name('rewards.index');
     Route::post('/rewards/redeem', [RewardController::class, 'redeem'])->name('rewards.redeem');
+
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/pin', [ProfileController::class, 'setPin'])->name('profile.pin.set');
+    Route::put('/profile/pin', [ProfileController::class, 'updatePin'])->name('profile.pin.update');
+    Route::post('/profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
+
+    // Settings routes
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences');
+    Route::put('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications');
+    Route::get('/settings/export-data', [SettingsController::class, 'exportData'])->name('settings.export-data');
+    Route::delete('/settings/account', [SettingsController::class, 'deleteAccount'])->name('settings.delete-account');
 
     // Tax Refunds
     Route::get('/tax-refunds', [TaxRefundController::class, 'index'])->name('tax-refunds.index');
