@@ -31,7 +31,7 @@ class PaymentGateway extends Model
     {
         return [
             'type' => PaymentGatewayType::class,
-            'credentials' => 'encrypted:array',
+            'credentials' => 'array',
             'settings' => 'array',
             'is_active' => 'boolean',
             'is_test_mode' => 'boolean',
