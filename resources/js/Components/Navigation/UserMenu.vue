@@ -66,6 +66,11 @@ const menuItems = ref([
 const toggle = (event) => {
     menu.value.toggle(event);
 };
+
+// Handle image load errors - hide the image so Avatar fallback shows
+const handleImageError = (event) => {
+    event.target.style.display = 'none';
+};
 </script>
 
 <template>
@@ -74,7 +79,15 @@ const toggle = (event) => {
             @click="toggle"
             class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
+            <img
+                v-if="user?.avatar_url"
+                :src="user.avatar_url"
+                :alt="user?.full_name || 'User'"
+                class="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-100 dark:ring-indigo-900/50"
+                @error="handleImageError"
+            />
             <Avatar
+                v-else
                 :label="getInitials(`${user?.first_name} ${user?.last_name}`)"
                 class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
                 shape="circle"

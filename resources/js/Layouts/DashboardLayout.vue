@@ -299,9 +299,15 @@ const handleMarkAllRead = () => {
                         @click="closeMobileMenu"
                         class="flex items-center gap-3 px-4 py-3 text-gray-600 transition-colors rounded-xl dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200"
                     >
-                        <div class="flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-full dark:bg-indigo-900/50">
-                            <span class="font-medium text-indigo-600 dark:text-indigo-400">
-                                {{ user?.first_name?.charAt(0) || 'U' }}
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden bg-indigo-100 dark:bg-indigo-900/50">
+                            <img
+                                v-if="user?.avatar_url"
+                                :src="user.avatar_url"
+                                :alt="user?.full_name || 'User'"
+                                class="w-full h-full object-cover"
+                            />
+                            <span v-else class="font-medium text-indigo-600 dark:text-indigo-400">
+                                {{ user?.initials || user?.first_name?.charAt(0) || 'U' }}
                             </span>
                         </div>
                         <div class="min-w-0">

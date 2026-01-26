@@ -88,6 +88,17 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'app_authentication_recovery_codes',
     ];
 
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'avatar_url',
+        'full_name',
+        'initials',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -184,6 +195,62 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function getNameAttribute(): string
     {
         return $this->getFullNameAttribute();
+    }
+
+    /**
+     * Get user initials (first letter of first name + first letter of last name).
+     */
+    public function getInitialsAttribute(): string
+    {
+        $firstInitial = $this->first_name ? mb_strtoupper(mb_substr($this->first_name, 0, 1)) : '';
+        $lastInitial = $this->last_name ? mb_strtoupper(mb_substr($this->last_name, 0, 1)) : '';
+        
+        return $firstInitial . $lastInitial ?: 'U';
+    }
+
+    /**
+     * Get the user's avatar URL.
+     * Returns the uploaded profile photo URL if exists, otherwise returns a UI Avatars fallback.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        // If user has uploaded a profile photo, return its URL
+        if ($this->profile_photo_path && Storage::disk('public')->exists($this->profile_photo_path)) {
+            return Storage::url($this->profile_photo_path);
+        }
+
+        // Generate fallback avatar using UI Avatars service
+        return $this->generateFallbackAvatarUrl();
+    }
+
+    /**
+     * Check if user has a custom profile photo uploaded.
+     */
+    public function hasProfilePhoto(): bool
+    {
+        return $this->profile_photo_path && Storage::disk('public')->exists($this->profile_photo_path);
+    }
+
+    /**
+     * Generate a fallback avatar URL using UI Avatars service.
+     * This creates a nice looking avatar with the user's initials.
+     */
+    protected function generateFallbackAvatarUrl(): string
+    {
+        $name = urlencode($this->full_name ?: 'User');
+        $background = '6366f1'; // Indigo-500 to match app theme
+        $color = 'ffffff'; // White text
+        $size = 128; // Good size for retina displays
+        
+        return "https://ui-avatars.com/api/?name={$name}&background={$background}&color={$color}&size={$size}&bold=true&format=svg";
+    }
+
+    /**
+     * Get the profile photo URL (alias for avatar_url for backward compatibility).
+     */
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        return $this->avatar_url;
     }
 
     // ==================== RELATIONSHIPS ====================

@@ -1024,8 +1024,14 @@ const viewCardDetails = (card) => {
                                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-3">
-                                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center">
-                                                <i class="pi pi-user text-white text-sm"></i>
+                                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden" :class="user?.avatar_url ? '' : 'bg-gradient-to-br from-indigo-500 to-indigo-700'">
+                                                <img
+                                                    v-if="user?.avatar_url"
+                                                    :src="user.avatar_url"
+                                                    :alt="user?.full_name || 'User'"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                                <i v-else class="pi pi-user text-white text-sm"></i>
                                             </div>
                                             <div>
                                                 <h3 class="font-bold text-gray-900 dark:text-white">{{ user?.first_name }} {{ user?.last_name }}</h3>
