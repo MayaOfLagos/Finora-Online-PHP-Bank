@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 
 const slides = [
@@ -46,7 +46,6 @@ const slides = [
 ];
 
 const currentSlide = ref(0);
-const isAutoPlaying = ref(true);
 const isPaused = ref(false);
 let autoPlayInterval = null;
 
@@ -95,56 +94,45 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <section 
-        class="relative h-screen min-h-[600px] max-h-[900px] lg:max-h-none overflow-hidden"
-        @mouseenter="pauseAutoPlay"
-        @mouseleave="resumeAutoPlay"
-    >
-        <!-- Slides -->
-        <div class="absolute inset-0">
-            <TransitionGroup
-                enter-active-class="transition-all duration-1000 ease-out"
-                enter-from-class="opacity-0 scale-105"
-                enter-to-class="opacity-100 scale-100"
-                leave-active-class="transition-all duration-1000 ease-in absolute inset-0"
-                leave-from-class="opacity-100 scale-100"
-                leave-to-class="opacity-0 scale-95"
-            >
+    <!-- Hero Section with Container -->
+    <section class="relative bg-primary-950 pt-4 pb-6 px-3 sm:px-4 lg:px-6">
+        <!-- Hero Container with Border Radius -->
+        <div 
+            class="relative max-w-7xl mx-auto h-[85vh] min-h-[550px] max-h-[800px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl"
+            @mouseenter="pauseAutoPlay"
+            @mouseleave="resumeAutoPlay"
+        >
+            <!-- Slides -->
+            <div class="absolute inset-0">
                 <div 
                     v-for="(slide, index) in slides" 
                     :key="slide.id"
-                    v-show="currentSlide === index"
-                    class="absolute inset-0"
+                    class="absolute inset-0 transition-opacity duration-700 ease-in-out"
+                    :class="currentSlide === index ? 'opacity-100 z-10' : 'opacity-0 z-0'"
                 >
                     <!-- Background Image -->
                     <div 
-                        class="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear"
-                        :style="{ 
-                            backgroundImage: `url(${slide.image})`,
-                            transform: currentSlide === index ? 'scale(1.1)' : 'scale(1)'
-                        }"
+                        class="absolute inset-0 bg-cover bg-center"
+                        :style="{ backgroundImage: `url(${slide.image})` }"
                     ></div>
                     
                     <!-- Overlay Gradient -->
                     <div class="absolute inset-0 bg-gradient-to-r from-primary-900/90 via-primary-900/70 to-primary-900/40"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-primary-900/80 via-transparent to-primary-900/30"></div>
                 </div>
-            </TransitionGroup>
-        </div>
+            </div>
 
-        <!-- Content -->
-        <div class="relative h-full flex items-center">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <div class="max-w-2xl lg:max-w-3xl pt-20 lg:pt-0">
-                    <TransitionGroup
-                        enter-active-class="transition-all duration-700 ease-out"
-                        enter-from-class="opacity-0 translate-y-8"
-                        enter-to-class="opacity-100 translate-y-0"
-                        leave-active-class="transition-all duration-300 ease-in absolute"
-                        leave-from-class="opacity-100 translate-y-0"
-                        leave-to-class="opacity-0 -translate-y-4"
-                    >
-                        <div v-for="(slide, index) in slides" :key="slide.id" v-show="currentSlide === index">
+            <!-- Content -->
+            <div class="relative h-full flex items-center z-20">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                    <div class="max-w-2xl lg:max-w-3xl pt-16 lg:pt-0">
+                        <div 
+                            v-for="(slide, index) in slides" 
+                            :key="slide.id"
+                            class="transition-opacity duration-500 ease-in-out"
+                            :class="currentSlide === index ? 'opacity-100' : 'opacity-0 absolute'"
+                            v-show="currentSlide === index"
+                        >
                             <!-- Tag -->
                             <span class="inline-block px-4 py-1.5 text-xs md:text-sm font-semibold tracking-wider text-gold-400 bg-gold-400/10 border border-gold-400/30 rounded-full mb-4 md:mb-6">
                                 {{ slide.tag }}
@@ -179,97 +167,56 @@ onUnmounted(() => {
                                 </a>
                             </div>
                         </div>
-                    </TransitionGroup>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Navigation Arrows (Desktop) -->
-        <div class="hidden lg:flex absolute inset-y-0 left-4 xl:left-8 items-center">
-            <button 
-                @click="prevSlide"
-                class="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
-                aria-label="Previous slide"
-            >
-                <svg class="w-6 h-6 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-        </div>
-        <div class="hidden lg:flex absolute inset-y-0 right-4 xl:right-8 items-center">
-            <button 
-                @click="nextSlide"
-                class="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
-                aria-label="Next slide"
-            >
-                <svg class="w-6 h-6 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-        </div>
-
-        <!-- Slide Indicators -->
-        <div class="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center space-x-2 md:space-x-3">
-            <button 
-                v-for="(slide, index) in slides" 
-                :key="slide.id"
-                @click="goToSlide(index)"
-                class="group relative p-1"
-                :aria-label="`Go to slide ${index + 1}`"
-                :aria-current="currentSlide === index ? 'true' : 'false'"
-            >
-                <span 
-                    class="block w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300"
-                    :class="currentSlide === index 
-                        ? 'bg-white scale-100' 
-                        : 'bg-white/40 scale-75 group-hover:bg-white/60 group-hover:scale-90'"
-                ></span>
-                <!-- Progress indicator for current slide -->
-                <svg 
-                    v-if="currentSlide === index"
-                    class="absolute -inset-1 w-4 h-4 md:w-5 md:h-5 -rotate-90"
-                    viewBox="0 0 20 20"
+            <!-- Navigation Arrows (Desktop) -->
+            <div class="hidden lg:flex absolute inset-y-0 left-4 xl:left-6 items-center z-30">
+                <button 
+                    @click="prevSlide"
+                    class="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
+                    aria-label="Previous slide"
                 >
-                    <circle 
-                        cx="10" cy="10" r="8" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        stroke-width="1.5"
-                        class="text-white/30"
-                    />
-                    <circle 
-                        cx="10" cy="10" r="8" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        stroke-width="1.5"
-                        stroke-dasharray="50.27"
-                        class="text-white animate-progress"
-                    />
-                </svg>
-            </button>
-        </div>
+                    <svg class="w-5 h-5 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </div>
+            <div class="hidden lg:flex absolute inset-y-0 right-4 xl:right-6 items-center z-30">
+                <button 
+                    @click="nextSlide"
+                    class="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-200 group"
+                    aria-label="Next slide"
+                >
+                    <svg class="w-5 h-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
 
-        <!-- Scroll Indicator -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center text-white/60 animate-bounce">
-            <span class="text-xs tracking-wider mb-2">SCROLL</span>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            <!-- Slide Indicators -->
+            <div class="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center space-x-2 md:space-x-3 z-30">
+                <button 
+                    v-for="(slide, index) in slides" 
+                    :key="slide.id"
+                    @click="goToSlide(index)"
+                    class="group relative p-1"
+                    :aria-label="`Go to slide ${index + 1}`"
+                    :aria-current="currentSlide === index ? 'true' : 'false'"
+                >
+                    <span 
+                        class="block w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-300"
+                        :class="currentSlide === index 
+                            ? 'bg-white w-6 md:w-8' 
+                            : 'bg-white/40 group-hover:bg-white/60'"
+                    ></span>
+                </button>
+            </div>
         </div>
     </section>
 </template>
 
 <style scoped>
-@keyframes progress {
-    from {
-        stroke-dashoffset: 50.27;
-    }
-    to {
-        stroke-dashoffset: 0;
-    }
-}
-
-.animate-progress {
-    animation: progress 6s linear;
-}
+/* Simple fade transition only */
 </style>
