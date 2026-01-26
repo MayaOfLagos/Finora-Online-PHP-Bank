@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VoucherRedeemedMail;
 use App\Models\Voucher;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class VoucherController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Display vouchers page
      */
@@ -55,17 +54,37 @@ class VoucherController extends Controller
         $validated = $request->validate([
             'voucher_code' => 'required|string',
             'bank_account_id' => 'required|exists:bank_accounts,id',
+            'pin' => 'required|string|size:6',
         ]);
 
         $user = $request->user();
-        $voucher = Voucher::where('code', $validated['voucher_code'])
-            ->where('is_used', false)
+        
+        // Verify PIN
+        if (!$user->transaction_pin || !Hash::check($validated['pin'], $user->transaction_pin)) {
+            return back()->withErrors(['pin' => 'Invalid transaction PIN. Please try again.']);
+        }
+        
+        // Find voucher - for multi-use, check times_used < usage_limit
+        $voucher = Voucher::where('code', strtoupper($validated['voucher_code']))
             ->where('status', 'active')
-            ->firstOrFail();
+            ->where(function ($query) {
+                $query->where('is_used', false)
+                    ->orWhereColumn('times_used', '<', 'usage_limit');
+            })
+            ->first();
+
+        if (!$voucher) {
+            return back()->withErrors(['voucher_code' => 'Invalid or already used voucher code.']);
+        }
 
         // Check expiry
         if ($voucher->expires_at && $voucher->expires_at->isPast()) {
             return back()->withErrors(['voucher_code' => 'This voucher has expired.']);
+        }
+
+        // Check if usage limit reached
+        if ($voucher->times_used >= $voucher->usage_limit) {
+            return back()->withErrors(['voucher_code' => 'This voucher has reached its usage limit.']);
         }
 
         $bankAccount = $user->bankAccounts()->findOrFail($validated['bank_account_id']);
@@ -73,21 +92,35 @@ class VoucherController extends Controller
         // Add voucher amount to account
         $bankAccount->increment('balance', $voucher->amount);
 
-        // Mark voucher as used
+        // Update voucher usage
+        $newTimesUsed = $voucher->times_used + 1;
+        $isFullyUsed = $newTimesUsed >= $voucher->usage_limit;
+        
         $voucher->update([
-            'user_id' => $user->id,
-            'is_used' => true,
-            'status' => 'used',
-            'used_at' => now(),
-            'times_used' => $voucher->times_used + 1,
+            'times_used' => $newTimesUsed,
+            'is_used' => $isFullyUsed,
+            'status' => $isFullyUsed ? 'used' : 'active',
+            'used_at' => $isFullyUsed ? now() : $voucher->used_at,
+            'user_id' => $isFullyUsed ? $user->id : $voucher->user_id,
         ]);
 
         // Log activity
-        ActivityLogger::logTransaction('voucher_redeemed', $user, $voucher, [
+        ActivityLogger::logTransaction('voucher_redeemed', $voucher, $user, [
             'code' => $validated['voucher_code'],
             'amount' => $voucher->amount / 100,
+            'times_used' => $newTimesUsed,
+            'usage_limit' => $voucher->usage_limit,
         ]);
 
-        return back()->with('success', 'Voucher redeemed successfully!');
+        // Send email notification
+        try {
+            Mail::to($user->email)->send(new VoucherRedeemedMail($user, $voucher, $bankAccount));
+        } catch (\Exception $e) {
+            // Log the error but don't fail the redemption
+            Log::error('Failed to send voucher redemption email: ' . $e->getMessage());
+        }
+
+        $amountFormatted = number_format($voucher->amount / 100, 2);
+        return back()->with('success', "Voucher redeemed! \${$amountFormatted} has been added to your account.");
     }
 }

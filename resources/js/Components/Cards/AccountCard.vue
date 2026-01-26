@@ -120,7 +120,7 @@ const accountTypeLabel = computed(() => {
                         Transfer
                     </button>
                     <Link
-                        :href="`/accounts/${account.id}`"
+                        :href="`/accounts/${account.uuid}`"
                         class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors"
                     >
                         <i class="pi pi-eye mr-1"></i>

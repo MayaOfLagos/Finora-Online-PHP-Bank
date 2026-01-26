@@ -80,6 +80,7 @@ class ActivityLogger
             'check_deposit_created' => 'Check deposit submitted',
             'mobile_deposit_created' => 'Mobile deposit submitted',
             'crypto_deposit_created' => 'Crypto deposit initiated',
+            'voucher_redeemed' => 'Voucher redeemed successfully',
         ];
 
         return self::log(

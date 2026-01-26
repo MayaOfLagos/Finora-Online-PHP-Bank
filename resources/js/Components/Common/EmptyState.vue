@@ -3,6 +3,8 @@
  * EmptyState Component
  * Displays a placeholder when there's no data
  */
+import { Link } from '@inertiajs/vue3';
+
 defineProps({
     icon: {
         type: String,
@@ -17,6 +19,10 @@ defineProps({
         default: '',
     },
     actionLabel: {
+        type: String,
+        default: '',
+    },
+    actionHref: {
         type: String,
         default: '',
     },
@@ -45,9 +51,18 @@ const emit = defineEmits(['action']);
         <!-- Slot for custom content -->
         <slot />
 
-        <!-- Action Button -->
+        <!-- Action Button - Link version -->
+        <Link
+            v-if="actionLabel && actionHref"
+            :href="actionHref"
+            class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+            {{ actionLabel }}
+        </Link>
+
+        <!-- Action Button - Emit version -->
         <button
-            v-if="actionLabel"
+            v-else-if="actionLabel"
             @click="emit('action')"
             class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
         >

@@ -3,7 +3,7 @@
  * Internal Transfer Page
  * Transfer funds to another Finora Bank user
  */
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
@@ -41,6 +41,10 @@ const props = defineProps({
         type: [String, Number],
         default: null
     },
+    preselectedBeneficiary: {
+        type: Object,
+        default: null
+    },
     verificationConfig: {
         type: Object,
         default: () => ({
@@ -72,6 +76,7 @@ const recipientInfo = ref(null);
 const isProcessing = ref(false);
 const transferComplete = ref(false);
 const transferResult = ref(null);
+const selectedBeneficiary = ref(null);
 
 // Steps
 const steps = [
@@ -165,10 +170,36 @@ const verifyRecipient = async () => {
     }
 };
 
+// Select beneficiary and auto-fill recipient
+const selectBeneficiary = (beneficiary) => {
+    selectedBeneficiary.value = beneficiary;
+    form.to_account_number = beneficiary.account_number;
+    
+    // Auto-verify the beneficiary since it's already saved
+    recipientVerified.value = true;
+    recipientInfo.value = {
+        name: beneficiary.nickname || beneficiary.beneficiary_name,
+        account_type: 'Savings' // Default, as we don't have this in beneficiary data
+    };
+    
+    toast.add({
+        severity: 'success',
+        summary: 'Beneficiary Selected',
+        detail: `Transferring to ${beneficiary.nickname || beneficiary.beneficiary_name}`,
+        life: 2000
+    });
+};
+
 // Watch for account number changes
-watch(() => form.to_account_number, () => {
-    recipientVerified.value = false;
-    recipientInfo.value = null;
+watch(() => form.to_account_number, (newVal) => {
+    // Only reset if manually typing (not selecting beneficiary)
+    if (selectedBeneficiary.value && selectedBeneficiary.value.account_number !== newVal) {
+        selectedBeneficiary.value = null;
+    }
+    if (!selectedBeneficiary.value) {
+        recipientVerified.value = false;
+        recipientInfo.value = null;
+    }
 });
 
 // Navigation
@@ -353,7 +384,15 @@ const startNewTransfer = () => {
     transferResult.value = null;
     recipientVerified.value = false;
     recipientInfo.value = null;
+    selectedBeneficiary.value = null;
 };
+
+// Auto-select beneficiary if preselected
+onMounted(() => {
+    if (props.preselectedBeneficiary) {
+        selectBeneficiary(props.preselectedBeneficiary);
+    }
+});
 </script>
 
 <template>
@@ -463,6 +502,62 @@ const startNewTransfer = () => {
                             <small v-if="form.errors.from_account_id" class="mt-2 text-red-500 block">
                                 {{ form.errors.from_account_id }}
                             </small>
+                        </div>
+
+                        <!-- Saved Beneficiaries Section -->
+                        <div v-if="props.beneficiaries && props.beneficiaries.length > 0">
+                            <label class="block mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-users text-primary-600"></i>
+                                    Quick Select from Saved Beneficiaries
+                                </div>
+                            </label>
+                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                <div
+                                    v-for="beneficiary in props.beneficiaries"
+                                    :key="beneficiary.uuid"
+                                    @click="selectBeneficiary(beneficiary)"
+                                    class="p-3 transition-all border-2 rounded-lg cursor-pointer hover:shadow-md"
+                                    :class="[
+                                        selectedBeneficiary?.uuid === beneficiary.uuid
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+                                    ]"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <div 
+                                            class="flex items-center justify-center w-10 h-10 rounded-full"
+                                            :class="[
+                                                selectedBeneficiary?.uuid === beneficiary.uuid
+                                                    ? 'bg-indigo-500 text-white'
+                                                    : 'bg-gray-100 dark:bg-gray-700'
+                                            ]"
+                                        >
+                                            <i v-if="beneficiary.is_favorite" class="pi pi-star-fill text-yellow-400"></i>
+                                            <i v-else class="pi pi-user" :class="selectedBeneficiary?.uuid === beneficiary.uuid ? 'text-white' : 'text-gray-500'"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-gray-900 truncate dark:text-white">
+                                                {{ beneficiary.nickname || beneficiary.beneficiary_name }}
+                                            </p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                ****{{ beneficiary.account_number?.slice(-4) }} • {{ beneficiary.currency }}
+                                            </p>
+                                        </div>
+                                        <i 
+                                            v-if="selectedBeneficiary?.uuid === beneficiary.uuid" 
+                                            class="pi pi-check-circle text-indigo-600"
+                                        ></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Divider -->
+                            <div class="flex items-center my-4">
+                                <div class="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
+                                <span class="px-4 text-sm text-gray-500 dark:text-gray-400">or enter manually</span>
+                                <div class="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
+                            </div>
                         </div>
 
                         <!-- To Account Number -->

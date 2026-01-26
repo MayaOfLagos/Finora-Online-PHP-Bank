@@ -42,6 +42,7 @@ const form = useForm({
 
 const currentStep = ref(1);
 const showPinInput = ref(false);
+const showTermsModal = ref(false);
 
 // Currency options
 const currencyOptions = computed(() => {
@@ -239,7 +240,7 @@ const handleClose = () => {
                         :disabled="form.processing"
                     />
                     <label for="terms" class="text-sm text-gray-700 cursor-pointer dark:text-gray-300">
-                        I accept the <a href="/terms" target="_blank" class="text-indigo-600 hover:underline">Terms and Conditions</a>
+                        I accept the <button type="button" @click="showTermsModal = true" class="text-indigo-600 hover:underline font-medium">Terms and Conditions</button>
                         <span class="text-red-500">*</span>
                     </label>
                 </div>
@@ -303,6 +304,94 @@ const handleClose = () => {
                         :loading="form.processing"
                     />
                 </div>
+            </div>
+        </template>
+    </Dialog>
+
+    <!-- Terms and Conditions Modal -->
+    <Dialog 
+        v-model:visible="showTermsModal" 
+        modal 
+        header="Terms and Conditions" 
+        :style="{ width: '90vw', maxWidth: '800px' }"
+        :breakpoints="{ '960px': '95vw' }"
+        class="terms-modal"
+    >
+        <div class="prose prose-sm max-w-none dark:prose-invert overflow-y-auto max-h-[60vh] pr-2">
+            <p class="text-gray-600 dark:text-gray-400 mb-4"><strong>Effective Date:</strong> January 1, 2026</p>
+            
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">1. Account Terms</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                By opening an account with Finora Bank, you agree to maintain accurate and complete information about yourself. 
+                You must be at least 18 years of age to open an account. You are responsible for maintaining the confidentiality 
+                of your account credentials, including your password and transaction PIN.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">2. Banking Services</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Finora Bank provides various banking services including but not limited to: savings accounts, checking accounts, 
+                wire transfers, domestic transfers, internal transfers, loan services, and card services. All services are subject 
+                to applicable fees and charges as outlined in our fee schedule.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">3. Transaction Limits</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Daily and monthly transaction limits apply to all accounts. These limits vary based on your account type and 
+                verification status. Wire transfers may require additional verification including IMF Code, Tax Code, and 
+                Cost of Transfer (COT) Code for international transactions.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">4. Security Responsibilities</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                You agree to: (a) keep your login credentials and transaction PIN confidential; (b) notify us immediately of 
+                any unauthorized access; (c) use secure networks when accessing your account; (d) regularly review your account 
+                statements for unauthorized transactions.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">5. Fees and Charges</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                You agree to pay all applicable fees associated with your account and transactions. Fees include but are not 
+                limited to: monthly maintenance fees, wire transfer fees, ATM fees, overdraft fees, and card replacement fees. 
+                Current fee schedules are available upon request.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">6. Account Closure</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Either party may close the account at any time. Upon closure, any outstanding fees or negative balances must 
+                be settled. Finora Bank reserves the right to close accounts that violate these terms or are used for 
+                fraudulent activities.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">7. Limitation of Liability</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Finora Bank shall not be liable for any indirect, incidental, special, or consequential damages arising from 
+                the use of our services. Our liability is limited to the amount of fees paid by you in the preceding 12 months.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">8. Amendments</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Finora Bank reserves the right to modify these terms at any time. We will notify you of material changes via 
+                email or through our online banking platform. Continued use of our services after such changes constitutes 
+                acceptance of the modified terms.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">9. Governing Law</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                These terms shall be governed by and construed in accordance with applicable banking regulations and laws. 
+                Any disputes shall be resolved through binding arbitration.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">10. Contact Information</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                For questions regarding these terms, please contact our customer support team through the Support section 
+                in your online banking portal or email us at support@finorabank.com.
+            </p>
+        </div>
+        
+        <template #footer>
+            <div class="flex justify-end gap-3">
+                <Button label="Close" severity="secondary" @click="showTermsModal = false" />
+                <Button label="I Accept" icon="pi pi-check" @click="form.terms_accepted = true; showTermsModal = false" />
             </div>
         </template>
     </Dialog>

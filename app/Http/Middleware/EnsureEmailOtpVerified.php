@@ -22,7 +22,31 @@ class EnsureEmailOtpVerified
             return $next($request);
         }
 
-        // Check if global email OTP is required
+        // Check for session idle timeout (lockscreen)
+        $enableLockscreen = setting('security', 'enable_lockscreen', true);
+        $idleTimeout = (int) setting('security', 'session_idle_timeout', 15); // minutes
+        $lastActivity = session('last_activity_at');
+
+        // If lockscreen is enabled and we have last activity recorded and it's expired
+        if ($enableLockscreen && $lastActivity && now()->diffInMinutes($lastActivity) > $idleTimeout) {
+            // Only redirect to lockscreen if user has a PIN set
+            if ($user->transaction_pin) {
+                // Store when the session was locked
+                session(['locked_at' => now()]);
+                
+                // Store intended URL
+                if (!$request->routeIs('lockscreen.*')) {
+                    session(['url.intended' => $request->fullUrl()]);
+                }
+                
+                return redirect()->route('lockscreen.show');
+            }
+        }
+
+        // Update last activity timestamp
+        session(['last_activity_at' => now()]);
+
+        // Check if global email OTP is required (only for initial login)
         $loginRequireEmailOtp = setting('security', 'login_require_email_otp', true);
 
         // If global setting is disabled, proceed
@@ -35,8 +59,8 @@ class EnsureEmailOtpVerified
             return $next($request);
         }
 
-        // Check if email OTP is verified in this session
-        if (session('email_otp_verified_at') && session('email_otp_verified_at') > now()->subMinutes(30)) {
+        // Check if email OTP is verified in this session (only required once per session)
+        if (session('email_otp_verified_at')) {
             return $next($request);
         }
 

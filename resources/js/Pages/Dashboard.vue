@@ -162,6 +162,7 @@ const pendingItems = computed(() => page.props.pendingItems || {
     loans: 0,
     tickets: 0,
     cardRequests: 0,
+    grants: 0,
 });
 const cardStats = computed(() => page.props.cardStats || {
     total: 0,
@@ -190,14 +191,14 @@ const carouselResponsiveOptions = [
 // Quick action items
 const quickActions = [
     {
-        name: 'Wire Transfer',
+        name: 'Wire',
         href: '/transfers/wire',
         icon: 'pi pi-globe',
         color: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400',
         description: 'International',
     },
     {
-        name: 'Internal Transfer',
+        name: 'Internal',
         href: '/transfers/internal',
         icon: 'pi pi-arrow-right-arrow-left',
         color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
@@ -844,9 +845,6 @@ const viewCardDetails = (card) => {
                             <span class="text-xs font-medium text-center text-gray-900 dark:text-white sm:text-sm">
                                 {{ action.name }}
                             </span>
-                            <span class="hidden sm:block text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
-                                {{ action.description }}
-                            </span>
                         </Link>
                     </div>
                 </div>
@@ -909,7 +907,7 @@ const viewCardDetails = (card) => {
                         title="No accounts"
                         description="Open an account to get started"
                         action-label="Open Account"
-                        action-href="/accounts/open"
+                        action-href="/accounts"
                         class="py-8"
                     />
                 </div>

@@ -14,6 +14,7 @@ const props = defineProps({
             loans: 0,
             tickets: 0,
             cardRequests: 0,
+            grants: 0,
         }),
     },
 });
@@ -35,7 +36,7 @@ const pendingItems = computed(() => [
     },
     {
         label: 'Grant Applications',
-        count: props.items.grants || 0,
+        count: props.items.grants,
         icon: 'pi-gift',
         color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/40',
         href: '/grants/applications',

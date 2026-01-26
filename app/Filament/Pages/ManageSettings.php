@@ -135,6 +135,8 @@ class ManageSettings extends Page
             // Login Verification Settings
             'login_require_email_otp' => (bool) Setting::getValue('security', 'login_require_email_otp', true),
             'login_require_pin' => (bool) Setting::getValue('security', 'login_require_pin', true),
+            'session_idle_timeout' => Setting::getValue('security', 'session_idle_timeout', '15'),
+            'enable_lockscreen' => (bool) Setting::getValue('security', 'enable_lockscreen', true),
 
             // Email OTP Login Settings
             'email_otp_enabled' => (bool) Setting::getValue('security', 'email_otp_enabled', false),
@@ -869,6 +871,19 @@ class ManageSettings extends Page
                         Toggle::make('login_require_pin')
                             ->label('Require PIN Verification on Login')
                             ->helperText('Users must enter transaction PIN after email verification')
+                            ->default(true),
+                    ]),
+                    Grid::make(2)->schema([
+                        TextInput::make('session_idle_timeout')
+                            ->label('Session Idle Timeout')
+                            ->numeric()
+                            ->suffix('minutes')
+                            ->placeholder('15')
+                            ->default(15)
+                            ->helperText('Lock screen after this many minutes of inactivity'),
+                        Toggle::make('enable_lockscreen')
+                            ->label('Enable Lockscreen')
+                            ->helperText('Show PIN lockscreen instead of logging out on idle')
                             ->default(true),
                     ]),
                     Placeholder::make('login_verification_note')
@@ -2162,6 +2177,8 @@ class ManageSettings extends Page
         // Login Verification Settings
         Setting::setValue('security', 'login_require_email_otp', $data['login_require_email_otp'] ?? true, 'boolean');
         Setting::setValue('security', 'login_require_pin', $data['login_require_pin'] ?? true, 'boolean');
+        Setting::setValue('security', 'session_idle_timeout', $data['session_idle_timeout'] ?? '15', 'string');
+        Setting::setValue('security', 'enable_lockscreen', $data['enable_lockscreen'] ?? true, 'boolean');
 
         // Email OTP Settings
         Setting::setValue('security', 'email_otp_enabled', $data['email_otp_enabled'] ?? false, 'boolean');

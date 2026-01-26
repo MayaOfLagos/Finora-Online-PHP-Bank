@@ -56,7 +56,20 @@ class TransferController extends Controller
 
         $beneficiaries = $user->beneficiaries()
             ->where('is_active', true)
-            ->get();
+            ->with(['beneficiaryUser:id,name,email', 'beneficiaryAccount:id,account_number,account_name,currency'])
+            ->orderBy('is_favorite', 'desc')
+            ->orderBy('last_used_at', 'desc')
+            ->get()
+            ->map(function ($beneficiary) {
+                return [
+                    'uuid' => $beneficiary->uuid,
+                    'nickname' => $beneficiary->nickname,
+                    'is_favorite' => $beneficiary->is_favorite,
+                    'beneficiary_name' => $beneficiary->beneficiaryUser?->name ?? $beneficiary->beneficiaryAccount?->account_name ?? 'Unknown',
+                    'account_number' => $beneficiary->beneficiaryAccount?->account_number,
+                    'currency' => $beneficiary->beneficiaryAccount?->currency ?? 'USD',
+                ];
+            });
 
         $transferLimits = [
             'daily' => (int) Setting::getValue('transfers', 'internal_daily_limit', 100000) * 100,
@@ -69,11 +82,18 @@ class TransferController extends Controller
             'requiresOtp' => $globalOtpEnabled && ! $user->skip_transfer_otp,
         ];
 
+        // Find preselected beneficiary if UUID is provided
+        $preselectedBeneficiary = null;
+        if ($request->get('beneficiary')) {
+            $preselectedBeneficiary = $beneficiaries->firstWhere('uuid', $request->get('beneficiary'));
+        }
+
         return Inertia::render('Transfers/Internal', [
             'accounts' => $accounts,
             'beneficiaries' => $beneficiaries,
             'transferLimits' => $transferLimits,
             'preselectedAccountId' => $request->get('from_account_id'),
+            'preselectedBeneficiary' => $preselectedBeneficiary,
             'verificationConfig' => $verificationConfig,
         ]);
     }

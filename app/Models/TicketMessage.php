@@ -17,12 +17,14 @@ class TicketMessage extends Model
         'user_id',
         'message',
         'type',
+        'read_at',
     ];
 
     protected function casts(): array
     {
         return [
             'type' => TicketMessageType::class,
+            'read_at' => 'datetime',
         ];
     }
 

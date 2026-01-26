@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\LockscreenController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\PinVerificationController;
@@ -27,7 +28,9 @@ use App\Http\Controllers\MobileDepositController;
 use App\Http\Controllers\MoneyRequestController;
 use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\RewardController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TransactionHistoryController;
+use App\Http\Controllers\TaxRefundController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WireTransferController;
@@ -114,6 +117,16 @@ Route::middleware('auth')->group(function () {
     
     Route::post('verify-pin', [PinVerificationController::class, 'verify'])
         ->name('verify-pin.verify');
+
+    // Lockscreen (for idle session timeout)
+    Route::get('lockscreen', [LockscreenController::class, 'show'])
+        ->name('lockscreen.show');
+    
+    Route::post('lockscreen/unlock', [LockscreenController::class, 'unlock'])
+        ->name('lockscreen.unlock');
+    
+    Route::post('lockscreen/logout', [LockscreenController::class, 'logout'])
+        ->name('lockscreen.logout');
 });
 
 // Logout (requires auth)
@@ -238,10 +251,18 @@ Route::middleware(['auth', 'verified.email.otp', 'verified.pin'])->group(functio
     Route::post('/rewards/redeem', [RewardController::class, 'redeem'])->name('rewards.redeem');
 
     // Tax Refunds
-    Route::get('/tax-refunds', fn () => Inertia::render('TaxRefunds/Index'))->name('tax-refunds.index');
+    Route::get('/tax-refunds', [TaxRefundController::class, 'index'])->name('tax-refunds.index');
+    Route::get('/tax-refunds/verify/idme', [TaxRefundController::class, 'idMeVerification'])->name('tax-refunds.idme');
+    Route::post('/tax-refunds/verify/idme', [TaxRefundController::class, 'processIdMeVerification'])->name('tax-refunds.idme.process');
+    Route::get('/tax-refunds/verify/documents', [TaxRefundController::class, 'uploadDocsVerification'])->name('tax-refunds.documents');
+    Route::post('/tax-refunds/verify/documents', [TaxRefundController::class, 'processUploadDocsVerification'])->name('tax-refunds.documents.process');
 
     // Support
-    Route::get('/support', fn () => Inertia::render('Support/Index'))->name('support.index');
+    Route::get('/support', [SupportController::class, 'index'])->name('support.index');
+    Route::post('/support/tickets', [SupportController::class, 'store'])->name('support.store');
+    Route::get('/support/tickets/{uuid}', [SupportController::class, 'show'])->name('support.show');
+    Route::post('/support/tickets/{uuid}/reply', [SupportController::class, 'reply'])->name('support.reply');
+    Route::post('/support/tickets/{uuid}/close', [SupportController::class, 'close'])->name('support.close');
 
     // API-like routes for AJAX calls
     Route::get('/api/accounts/verify/{accountNumber}', [TransferController::class, 'verifyAccount'])->name('api.accounts.verify');
