@@ -16,6 +16,7 @@ import Checkbox from 'primevue/checkbox';
 import Divider from 'primevue/divider';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Dialog from 'primevue/dialog';
 
 const props = defineProps({
     countries: {
@@ -99,6 +100,10 @@ const formData = ref({
 });
 
 const isProcessing = ref(false);
+
+// Modal dialogs state
+const showTermsModal = ref(false);
+const showPrivacyModal = ref(false);
 
 // Step configuration
 const steps = [
@@ -866,7 +871,7 @@ watch(() => props.errors, (newErrors) => {
                                                     :class="{ 'p-invalid': stepErrors.agree_terms }"
                                                 />
                                                 <label for="terms" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                                    I agree to the <Link href="/terms" class="text-primary-600 hover:underline">Terms and Conditions</Link>
+                                                    I agree to the <button type="button" @click="showTermsModal = true" class="text-primary-600 hover:underline font-medium">Terms and Conditions</button>
                                                 </label>
                                             </div>
                                             <small v-if="stepErrors.agree_terms" class="text-red-500 block ml-7">
@@ -881,7 +886,7 @@ watch(() => props.errors, (newErrors) => {
                                                     :class="{ 'p-invalid': stepErrors.agree_privacy }"
                                                 />
                                                 <label for="privacy" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                                    I agree to the <Link href="/privacy" class="text-primary-600 hover:underline">Privacy Policy</Link>
+                                                    I agree to the <button type="button" @click="showPrivacyModal = true" class="text-primary-600 hover:underline font-medium">Privacy Policy</button>
                                                 </label>
                                             </div>
                                             <small v-if="stepErrors.agree_privacy" class="text-red-500 block ml-7">
@@ -947,6 +952,184 @@ watch(() => props.errors, (newErrors) => {
             </div>
         </div>
     </div>
+
+    <!-- Terms and Conditions Modal -->
+    <Dialog 
+        v-model:visible="showTermsModal" 
+        modal 
+        header="Terms and Conditions" 
+        :style="{ width: '90vw', maxWidth: '800px' }"
+        :breakpoints="{ '960px': '95vw' }"
+        class="terms-modal"
+    >
+        <div class="prose prose-sm max-w-none dark:prose-invert overflow-y-auto max-h-[60vh] pr-2">
+            <p class="text-gray-600 dark:text-gray-400 mb-4"><strong>Effective Date:</strong> January 1, 2026</p>
+            
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">1. Account Terms</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                By opening an account with Finora Bank, you agree to maintain accurate and complete information about yourself. 
+                You must be at least 18 years of age to open an account. You are responsible for maintaining the confidentiality 
+                of your account credentials, including your password and transaction PIN.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">2. Banking Services</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Finora Bank provides various banking services including but not limited to: savings accounts, checking accounts, 
+                wire transfers, domestic transfers, internal transfers, loan services, and card services. All services are subject 
+                to applicable fees and charges as outlined in our fee schedule.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">3. Transaction Limits</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Daily and monthly transaction limits apply to all accounts. These limits vary based on your account type and 
+                verification status. Wire transfers may require additional verification including IMF Code, Tax Code, and 
+                Cost of Transfer (COT) Code for international transactions.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">4. Security Responsibilities</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                You agree to: (a) keep your login credentials and transaction PIN confidential; (b) notify us immediately of 
+                any unauthorized access; (c) use secure networks when accessing your account; (d) regularly review your account 
+                statements for unauthorized transactions.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">5. Fees and Charges</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                You agree to pay all applicable fees associated with your account and transactions. Fees include but are not 
+                limited to: monthly maintenance fees, wire transfer fees, ATM fees, overdraft fees, and card replacement fees. 
+                Current fee schedules are available upon request.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">6. Account Closure</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Either party may close the account at any time. Upon closure, any outstanding fees or negative balances must 
+                be settled. Finora Bank reserves the right to close accounts that violate these terms or are used for 
+                fraudulent activities.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">7. Limitation of Liability</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Finora Bank shall not be liable for any indirect, incidental, special, or consequential damages arising from 
+                the use of our services. Our liability is limited to the amount of fees paid by you in the preceding 12 months.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">8. Amendments</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Finora Bank reserves the right to modify these terms at any time. We will notify you of material changes via 
+                email or through our online banking platform. Continued use of our services after such changes constitutes 
+                acceptance of the modified terms.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">9. Governing Law</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                These terms shall be governed by and construed in accordance with applicable banking regulations and laws. 
+                Any disputes shall be resolved through binding arbitration.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">10. Contact Information</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                For questions regarding these terms, please contact our customer support team through the Support section 
+                in your online banking portal or email us at support@finorabank.com.
+            </p>
+        </div>
+        
+        <template #footer>
+            <div class="flex justify-end gap-3">
+                <Button label="Close" severity="secondary" @click="showTermsModal = false" />
+                <Button label="I Accept" icon="pi pi-check" @click="formData.agree_terms = true; showTermsModal = false" />
+            </div>
+        </template>
+    </Dialog>
+
+    <!-- Privacy Policy Modal -->
+    <Dialog 
+        v-model:visible="showPrivacyModal" 
+        modal 
+        header="Privacy Policy" 
+        :style="{ width: '90vw', maxWidth: '800px' }"
+        :breakpoints="{ '960px': '95vw' }"
+        class="privacy-modal"
+    >
+        <div class="prose prose-sm max-w-none dark:prose-invert overflow-y-auto max-h-[60vh] pr-2">
+            <p class="text-gray-600 dark:text-gray-400 mb-4"><strong>Effective Date:</strong> January 1, 2026</p>
+            
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">1. Information We Collect</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                We collect information you provide directly to us, including: personal identification information (name, address, 
+                date of birth), contact information (email, phone number), financial information (income, employment status), 
+                and government-issued identification numbers for verification purposes.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">2. How We Use Your Information</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                We use the information we collect to: (a) process your transactions and maintain your accounts; (b) verify your 
+                identity and prevent fraud; (c) comply with legal and regulatory requirements; (d) communicate with you about 
+                your accounts; (e) improve our services and develop new features.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">3. Information Sharing</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                We do not sell your personal information. We may share your information with: (a) regulatory authorities as 
+                required by law; (b) service providers who assist in our operations; (c) credit bureaus for credit reporting; 
+                (d) fraud prevention agencies. All third parties are bound by confidentiality agreements.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">4. Data Security</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                We implement industry-standard security measures to protect your information, including: 256-bit SSL encryption, 
+                two-factor authentication, secure data centers, regular security audits, and employee access controls. However, 
+                no method of transmission over the Internet is 100% secure.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">5. Data Retention</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                We retain your personal information for as long as your account is active or as needed to provide services. 
+                We also retain information as necessary to comply with legal obligations, resolve disputes, and enforce our 
+                agreements. Financial records are retained for a minimum of 7 years as required by banking regulations.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">6. Your Rights</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                You have the right to: (a) access your personal information; (b) correct inaccurate information; (c) request 
+                deletion of your information (subject to legal requirements); (d) opt-out of marketing communications; 
+                (e) receive a copy of your data in a portable format.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">7. Cookies and Tracking</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                We use cookies and similar technologies to enhance your experience, analyze usage patterns, and improve our 
+                services. You can control cookie preferences through your browser settings. Disabling cookies may limit some 
+                features of our online banking platform.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">8. Children's Privacy</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal 
+                information from children. If we become aware that we have collected information from a child, we will take 
+                steps to delete such information.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">9. International Transfers</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Your information may be transferred to and processed in countries other than your own. We ensure appropriate 
+                safeguards are in place to protect your information in accordance with this privacy policy and applicable 
+                data protection laws.
+            </p>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">10. Contact Us</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                If you have questions about this Privacy Policy or wish to exercise your rights, please contact our Data 
+                Protection Officer at privacy@finorabank.com or through the Support section in your online banking portal.
+            </p>
+        </div>
+        
+        <template #footer>
+            <div class="flex justify-end gap-3">
+                <Button label="Close" severity="secondary" @click="showPrivacyModal = false" />
+                <Button label="I Accept" icon="pi pi-check" @click="formData.agree_privacy = true; showPrivacyModal = false" />
+            </div>
+        </template>
+    </Dialog>
 </template>
 
 <style scoped>
