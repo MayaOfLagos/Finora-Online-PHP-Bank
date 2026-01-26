@@ -192,34 +192,37 @@ const handleMarkAllRead = () => {
             />
         </Transition>
 
-        <!-- Mobile Sidebar Panel -->
+        <!-- Mobile Sidebar Panel - Glassmorphism -->
         <Transition
-            enter-active-class="transition-transform duration-300 ease-out"
-            enter-from-class="-translate-x-full"
-            enter-to-class="translate-x-0"
-            leave-active-class="transition-transform duration-300 ease-in"
-            leave-from-class="translate-x-0"
-            leave-to-class="-translate-x-full"
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="-translate-x-full opacity-0"
+            enter-to-class="translate-x-0 opacity-100"
+            leave-active-class="transition-all duration-300 ease-in"
+            leave-from-class="translate-x-0 opacity-100"
+            leave-to-class="-translate-x-full opacity-0"
         >
             <aside
                 v-if="mobileMenuOpen"
-                class="fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-xl w-72 dark:bg-gray-800 lg:hidden"
+                class="mobile-sidebar-glass fixed top-3 bottom-3 left-3 z-50 flex flex-col w-[280px] lg:hidden overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl shadow-black/20"
             >
+                <!-- Glass overlay for depth -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-white/20 dark:from-white/10 dark:to-white/5 pointer-events-none"></div>
+                
                 <!-- Mobile Sidebar Header -->
-                <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="relative flex items-center justify-between h-16 px-5 border-b border-white/20 dark:border-white/10">
                     <Link href="/dashboard" @click="closeMobileMenu">
                         <AppLogo />
                     </Link>
                     <button
                         @click="closeMobileMenu"
-                        class="p-2 text-gray-500 transition-colors dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"
+                        class="p-2.5 text-gray-600 dark:text-gray-300 transition-all hover:bg-white/50 dark:hover:bg-white/10 rounded-xl active:scale-95"
                     >
-                        <i class="text-xl pi pi-times"></i>
+                        <i class="text-lg pi pi-times"></i>
                     </button>
                 </div>
 
                 <!-- Mobile Navigation -->
-                <nav class="flex-1 p-4 overflow-y-auto">
+                <nav class="relative flex-1 p-4 overflow-y-auto">
                     <ul class="space-y-1">
                         <li v-for="item in MOBILE_NAV_ITEMS" :key="item.name">
                             <!-- Parent Menu Item with Children -->
@@ -230,16 +233,16 @@ const handleMarkAllRead = () => {
                                     :class="[
                                         'flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left',
                                         isParentActivePath(item) || isMobileExpanded(item.name)
-                                            ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                                            ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm'
+                                            : 'text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/10'
                                     ]"
                                 >
                                     <i :class="[item.icon, 'text-lg']"></i>
                                     <span class="flex-1">{{ item.name }}</span>
                                     <i 
                                         :class="[
-                                            'pi transition-transform text-xs',
-                                            isMobileExpanded(item.name) ? 'pi-angle-down' : 'pi-angle-right'
+                                            'pi transition-transform duration-200 text-xs',
+                                            isMobileExpanded(item.name) ? 'pi-angle-down rotate-0' : 'pi-angle-right'
                                         ]"
                                     ></i>
                                 </button>
@@ -247,22 +250,22 @@ const handleMarkAllRead = () => {
                                 <!-- Submenu -->
                                 <Transition
                                     enter-active-class="transition-all duration-200 ease-out"
-                                    enter-from-class="opacity-0 -translate-y-2"
-                                    enter-to-class="opacity-100 translate-y-0"
+                                    enter-from-class="opacity-0 -translate-y-2 max-h-0"
+                                    enter-to-class="opacity-100 translate-y-0 max-h-96"
                                     leave-active-class="transition-all duration-150 ease-in"
-                                    leave-from-class="opacity-100 translate-y-0"
-                                    leave-to-class="opacity-0 -translate-y-2"
+                                    leave-from-class="opacity-100 translate-y-0 max-h-96"
+                                    leave-to-class="opacity-0 -translate-y-2 max-h-0"
                                 >
-                                    <ul v-if="isMobileExpanded(item.name)" class="mt-1 ml-4 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                                    <ul v-if="isMobileExpanded(item.name)" class="mt-1 ml-4 space-y-1 border-l-2 border-indigo-300/30 dark:border-indigo-500/30 pl-3 overflow-hidden">
                                         <li v-for="child in item.children" :key="child.name">
                                             <Link
                                                 :href="child.href"
                                                 @click="closeMobileMenu"
                                                 :class="[
-                                                    'flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm',
+                                                    'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm',
                                                     isActivePath(child.href)
-                                                        ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
-                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                                                        ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-medium'
+                                                        : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/10'
                                                 ]"
                                             >
                                                 <i :class="[child.icon, 'text-base']"></i>
@@ -281,8 +284,8 @@ const handleMarkAllRead = () => {
                                 :class="[
                                     'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
                                     isActivePath(item.href)
-                                        ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                                        ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm'
+                                        : 'text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/10'
                                 ]"
                             >
                                 <i :class="[item.icon, 'text-lg']"></i>
@@ -293,20 +296,20 @@ const handleMarkAllRead = () => {
                 </nav>
 
                 <!-- Mobile User Section -->
-                <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="relative p-4 border-t border-white/20 dark:border-white/10">
                     <Link
                         href="/profile"
                         @click="closeMobileMenu"
-                        class="flex items-center gap-3 px-4 py-3 text-gray-600 transition-colors rounded-xl dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200"
+                        class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-200 transition-all rounded-xl hover:bg-white/50 dark:hover:bg-white/10"
                     >
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden bg-indigo-100 dark:bg-indigo-900/50">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden bg-indigo-500/20 ring-2 ring-white/50">
                             <img
                                 v-if="user?.avatar_url"
                                 :src="user.avatar_url"
                                 :alt="user?.full_name || 'User'"
                                 class="w-full h-full object-cover"
                             />
-                            <span v-else class="font-medium text-indigo-600 dark:text-indigo-400">
+                            <span v-else class="font-medium text-indigo-700 dark:text-indigo-300">
                                 {{ user?.initials || user?.first_name?.charAt(0) || 'U' }}
                             </span>
                         </div>
@@ -453,3 +456,16 @@ const handleMarkAllRead = () => {
         <BottomNav @open-menu="mobileMenuOpen = true" />
     </div>
 </template>
+
+<style scoped>
+/* Mobile Sidebar Glassmorphism */
+.mobile-sidebar-glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.dark .mobile-sidebar-glass {
+    background: rgba(30, 30, 40, 0.85);
+}
+</style>
