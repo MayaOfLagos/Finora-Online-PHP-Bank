@@ -364,6 +364,25 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * Get the user's primary bank account.
+     */
+    public function getPrimaryBankAccount(): ?BankAccount
+    {
+        return $this->bankAccounts()->where('is_primary', true)->first()
+            ?? $this->bankAccounts()->first();
+    }
+
+    /**
+     * Get the user's primary currency (from primary bank account).
+     * Falls back to 'USD' if no bank account exists.
+     */
+    public function getPrimaryCurrency(): string
+    {
+        $primaryAccount = $this->getPrimaryBankAccount();
+        return $primaryAccount?->currency ?? 'USD';
+    }
+
+    /**
      * Get the required transfer codes for wire transfer verification.
      * Returns array of code types that are set for this user.
      */

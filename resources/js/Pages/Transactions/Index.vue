@@ -4,7 +4,7 @@
  * Display user's transaction history with filters
  */
 import { ref, computed, watch } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -41,6 +41,8 @@ const props = defineProps({
 
 const toast = useToast();
 const { formatCurrency } = useCurrency();
+const page = usePage();
+const userCurrency = computed(() => page.props.auth?.currency || 'USD');
 
 // Filter state
 const search = ref(props.filters.search || '');
@@ -189,7 +191,7 @@ watch(search, () => {
                         <div>
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Credits</p>
                             <p class="mt-1 text-3xl font-bold text-green-600 dark:text-green-400">
-                                {{ formatCurrency((stats.total_credits || 0) * 100, 'USD') }}
+                                {{ formatCurrency((stats.total_credits || 0) * 100, userCurrency) }}
                             </p>
                         </div>
                         <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30">
@@ -203,7 +205,7 @@ watch(search, () => {
                         <div>
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Debits</p>
                             <p class="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">
-                                {{ formatCurrency((stats.total_debits || 0) * 100, 'USD') }}
+                                {{ formatCurrency((stats.total_debits || 0) * 100, userCurrency) }}
                             </p>
                         </div>
                         <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30">

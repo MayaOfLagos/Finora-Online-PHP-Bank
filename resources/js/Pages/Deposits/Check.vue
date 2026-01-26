@@ -4,7 +4,7 @@
  * Upload check images for mobile deposit
  */
 import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -37,6 +37,8 @@ const props = defineProps({
 
 const toast = useToast();
 const { formatCurrency } = useCurrency();
+const page = usePage();
+const userCurrency = computed(() => page.props.auth?.currency || 'USD');
 
 const form = useForm({
     bank_account_id: null,
@@ -373,7 +375,7 @@ const startNewDeposit = () => {
                             <InputNumber
                                 v-model="form.amount"
                                 mode="currency"
-                                currency="USD"
+                                :currency="userCurrency"
                                 locale="en-US"
                                 placeholder="0.00"
                                 class="w-full"
@@ -381,8 +383,8 @@ const startNewDeposit = () => {
                                 :max="maxAmount"
                             />
                             <div class="flex justify-between mt-2 text-xs text-gray-500">
-                                <span>Max per check: ${{ (depositLimits.perTransaction / 100).toFixed(2) }}</span>
-                                <span>Available today: {{ formatCurrency(remainingDaily * 100, 'USD') }}</span>
+                                <span>Max per check: {{ formatCurrency(depositLimits.perTransaction, userCurrency) }}</span>
+                                <span>Available today: {{ formatCurrency(remainingDaily * 100, userCurrency) }}</span>
                             </div>
                         </div>
 
@@ -548,7 +550,7 @@ const startNewDeposit = () => {
                             <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Deposit Amount</p>
                                 <p class="mt-1 text-lg font-bold text-green-600 dark:text-green-400">
-                                    {{ formatCurrency(form.amount * 100, 'USD') }}
+                                    {{ formatCurrency(form.amount * 100, userCurrency) }}
                                 </p>
                             </div>
                         </div>
@@ -593,7 +595,7 @@ const startNewDeposit = () => {
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Amount</span>
                                     <span class="font-bold text-gray-900 dark:text-white">
-                                        {{ formatCurrency(form.amount * 100, 'USD') }}
+                                        {{ formatCurrency(form.amount * 100, userCurrency) }}
                                     </span>
                                 </div>
                                 <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">

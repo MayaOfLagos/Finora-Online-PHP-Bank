@@ -522,7 +522,7 @@ const startNewTransfer = () => {
                                     Available: {{ formatCurrency(selectedAccount.balance, selectedAccount.currency) }}
                                 </span>
                                 <span>
-                                    Limit: {{ formatCurrency(props.transferLimits.perTransaction * 100, 'USD') }}/transaction
+                                    Limit: {{ formatCurrency(props.transferLimits.perTransaction * 100, selectedAccount?.currency || 'USD') }}/transaction
                                 </span>
                             </div>
                             <small v-if="form.errors.amount" class="text-red-500">

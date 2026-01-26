@@ -25,6 +25,7 @@ import PendingItemsWidget from '@/Components/Widgets/PendingItemsWidget.vue';
 const page = usePage();
 const toast = useToast();
 const user = computed(() => page.props.auth?.user);
+const userCurrency = computed(() => page.props.auth?.currency || page.props.userCurrency || 'USD');
 
 // Show welcome toast on first dashboard load after login
 onMounted(() => {
@@ -173,6 +174,7 @@ const viewCardDetails = (card) => {
                 :value="stats.totalBalance"
                 icon="pi-wallet"
                 :is-currency="true"
+                :currency="userCurrency"
                 trend-label="across all accounts"
             />
             <StatCard
@@ -181,6 +183,7 @@ const viewCardDetails = (card) => {
                 icon="pi-arrow-down-left"
                 icon-color="text-green-500"
                 :is-currency="true"
+                :currency="userCurrency"
                 :trend="stats.incomeTrend"
                 trend-label="vs last month"
             />
@@ -190,6 +193,7 @@ const viewCardDetails = (card) => {
                 icon="pi-arrow-up-right"
                 icon-color="text-red-500"
                 :is-currency="true"
+                :currency="userCurrency"
                 :trend="stats.expensesTrend"
                 trend-label="vs last month"
             />

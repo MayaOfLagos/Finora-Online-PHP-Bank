@@ -103,6 +103,9 @@ class DashboardController extends Controller
             'physical' => $user->cards->where('is_virtual', false)->count(),
         ];
 
+        // Get user's primary currency
+        $userCurrency = $user->getPrimaryCurrency();
+
         return Inertia::render('Dashboard', [
             'accounts' => $accounts,
             'cards' => $cards,
@@ -111,6 +114,7 @@ class DashboardController extends Controller
             'chartData' => $chartData,
             'pendingItems' => $pendingItems,
             'cardStats' => $cardStats,
+            'userCurrency' => $userCurrency,
         ]);
     }
 

@@ -4,7 +4,7 @@
  * Pay via payment gateways (Stripe, PayPal, Paystack, etc.)
  */
 import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -44,6 +44,8 @@ const props = defineProps({
 
 const toast = useToast();
 const { formatCurrency } = useCurrency();
+const page = usePage();
+const userCurrency = computed(() => page.props.auth?.currency || 'USD');
 
 const form = useForm({
     bank_account_id: null,
@@ -557,7 +559,7 @@ const renderPayPalButtons = (depositData) => {
                 purchase_units: [{
                     amount: {
                         value: form.amount.toFixed(2),
-                        currency_code: 'USD'
+                        currency_code: userCurrency.value
                     },
                     description: `Deposit to ${selectedAccount.value?.account_type?.name}`,
                     custom_id: depositData?.uuid
@@ -1117,7 +1119,7 @@ const startNewDeposit = () => {
                             <InputNumber
                                 v-model="form.amount"
                                 mode="currency"
-                                currency="USD"
+                                :currency="userCurrency"
                                 locale="en-US"
                                 placeholder="0.00"
                                 class="w-full"
@@ -1125,8 +1127,8 @@ const startNewDeposit = () => {
                                 :max="maxAmount"
                             />
                             <div class="flex justify-between mt-2 text-xs text-gray-500">
-                                <span>Max per transaction: ${{ (depositLimits.perTransaction / 100).toFixed(2) }}</span>
-                                <span>Available today: {{ formatCurrency(remainingDaily * 100, 'USD') }}</span>
+                                <span>Max per transaction: {{ formatCurrency(depositLimits.perTransaction, userCurrency) }}</span>
+                                <span>Available today: {{ formatCurrency(remainingDaily * 100, userCurrency) }}</span>
                             </div>
                         </div>
 
@@ -1245,7 +1247,7 @@ const startNewDeposit = () => {
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Amount</span>
                                     <span class="font-bold text-gray-900 dark:text-white">
-                                        {{ formatCurrency(form.amount * 100, 'USD') }}
+                                        {{ formatCurrency(form.amount * 100, userCurrency) }}
                                     </span>
                                 </div>
                                 <div class="flex justify-between">

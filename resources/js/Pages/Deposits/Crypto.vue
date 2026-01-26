@@ -4,7 +4,7 @@
  * Deposit cryptocurrencies via blockchain transactions
  */
 import { ref, computed, watch } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -39,8 +39,12 @@ const props = defineProps({
     }
 });
 
+const page = usePage();
 const toast = useToast();
 const { formatCurrency } = useCurrency();
+
+// Get user's currency from global auth data
+const userCurrency = computed(() => page.props.auth?.currency || 'USD');
 
 const form = useForm({
     bank_account_id: null,
@@ -580,9 +584,9 @@ const startNewDeposit = () => {
                         <Divider />
 
                         <div class="text-xs text-gray-500">
-                            Max daily: ${{ (depositLimits.daily / 100).toFixed(2) }} | 
-                            Max per tx: ${{ (depositLimits.perTransaction / 100).toFixed(2) }} |
-                            Available today: {{ formatCurrency(remainingDaily * 100, 'USD') }}
+                            Max daily: {{ formatCurrency(depositLimits.daily, userCurrency) }} | 
+                            Max per tx: {{ formatCurrency(depositLimits.perTransaction, userCurrency) }} |
+                            Available today: {{ formatCurrency(remainingDaily * 100, userCurrency) }}
                         </div>
 
                         <Message v-if="remainingDaily <= 0" severity="error" :closable="false">
@@ -642,9 +646,9 @@ const startNewDeposit = () => {
                                 <span class="font-semibold text-gray-900 dark:text-white">{{ form.crypto_amount }} {{ selectedCrypto?.symbol }}</span>
                             </div>
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
-                                <span class="text-gray-500">USD Amount</span>
+                                <span class="text-gray-500">Fiat Equivalent</span>
                                 <span class="text-lg font-bold text-green-600 dark:text-green-400">
-                                    {{ formatCurrency(form.usd_amount * 100, 'USD') }}
+                                    {{ formatCurrency(form.usd_amount * 100, userCurrency) }}
                                 </span>
                             </div>
                             <div class="flex justify-between">
@@ -700,9 +704,9 @@ const startNewDeposit = () => {
                                     </span>
                                 </div>
                                 <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
-                                    <span class="text-gray-500">USD Value</span>
+                                    <span class="text-gray-500">Fiat Value</span>
                                     <span class="font-bold text-orange-600 dark:text-orange-400">
-                                        {{ formatCurrency(form.usd_amount * 100, 'USD') }}
+                                        {{ formatCurrency(form.usd_amount * 100, userCurrency) }}
                                     </span>
                                 </div>
                                 <div class="flex justify-between">
