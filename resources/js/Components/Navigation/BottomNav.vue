@@ -27,34 +27,10 @@ const navItems = [
 ];
 
 const transferOptions = [
-    { 
-        name: 'Wire Transfer', 
-        href: '/transfers/wire', 
-        icon: 'pi pi-globe',
-        color: 'from-purple-500 to-indigo-600',
-        description: 'International'
-    },
-    { 
-        name: 'Domestic', 
-        href: '/transfers/domestic', 
-        icon: 'pi pi-building',
-        color: 'from-blue-500 to-cyan-600',
-        description: 'Local banks'
-    },
-    { 
-        name: 'Internal', 
-        href: '/transfers/internal', 
-        icon: 'pi pi-users',
-        color: 'from-emerald-500 to-teal-600',
-        description: 'Finora users'
-    },
-    { 
-        name: 'My Accounts', 
-        href: '/transfers/account',
-        icon: 'pi pi-sync',
-        color: 'from-amber-500 to-orange-600',
-        description: 'Between accounts'
-    },
+    { name: 'Wire Transfer', href: '/transfers/wire', icon: 'pi pi-globe', color: 'from-purple-500 to-indigo-600' },
+    { name: 'Domestic', href: '/transfers/domestic', icon: 'pi pi-building', color: 'from-blue-500 to-cyan-600' },
+    { name: 'Internal', href: '/transfers/internal', icon: 'pi pi-users', color: 'from-emerald-500 to-teal-600' },
+    { name: 'My Accounts', href: '/transfers/account', icon: 'pi pi-sync', color: 'from-amber-500 to-orange-600' },
 ];
 
 const toggleSpeedDial = () => {
@@ -125,10 +101,7 @@ const emit = defineEmits(['openMenu']);
                         <div :class="['speed-dial-icon bg-gradient-to-br', option.color]">
                             <i :class="[option.icon, 'text-lg text-white']"></i>
                         </div>
-                        <div class="text-left">
-                            <span class="text-xs font-semibold text-gray-800 dark:text-white block">{{ option.name }}</span>
-                            <span class="text-[10px] text-gray-500 dark:text-gray-400">{{ option.description }}</span>
-                        </div>
+                        <span class="text-xs font-semibold text-gray-800 dark:text-white">{{ option.name }}</span>
                     </button>
                 </div>
             </div>
