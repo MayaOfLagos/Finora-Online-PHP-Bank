@@ -326,4 +326,158 @@ class UserDetailsTabs extends Widget
         $this->dispatch('close-modal', id: 'edit-user-info');
         $this->dispatch('refresh');
     }
+
+    /**
+     * Reset user password
+     */
+    public function resetPassword(string $password, string $password_confirmation): void
+    {
+        if ($password !== $password_confirmation) {
+            Notification::make()
+                ->title('Password Mismatch')
+                ->body('The password confirmation does not match.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if (strlen($password) < 8) {
+            Notification::make()
+                ->title('Password Too Short')
+                ->body('Password must be at least 8 characters.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $this->record->update([
+            'password' => bcrypt($password),
+        ]);
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            'user_password_reset',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+            ]
+        );
+
+        Notification::make()
+            ->title('Password Reset')
+            ->body("Password has been reset for {$this->record->email}")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'reset-password');
+    }
+
+    /**
+     * Force logout user by deleting all sessions
+     */
+    public function forceLogout(): void
+    {
+        // Delete all sessions for this user
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $this->record->id)
+            ->delete();
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            'user_force_logout',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+            ]
+        );
+
+        Notification::make()
+            ->title('User Logged Out')
+            ->body("All active sessions have been invalidated for {$this->record->email}")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'force-logout');
+    }
+
+    /**
+     * Lock or unlock user account
+     */
+    public function toggleAccountLock(): void
+    {
+        $newStatus = !$this->record->is_active;
+        
+        $this->record->update([
+            'is_active' => $newStatus,
+        ]);
+
+        // If locking, also force logout
+        if (!$newStatus) {
+            \Illuminate\Support\Facades\DB::table('sessions')
+                ->where('user_id', $this->record->id)
+                ->delete();
+        }
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            $newStatus ? 'user_account_unlocked' : 'user_account_locked',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+                'new_status' => $newStatus ? 'active' : 'locked',
+            ]
+        );
+
+        Notification::make()
+            ->title($newStatus ? 'Account Unlocked' : 'Account Locked')
+            ->body($newStatus 
+                ? "Account has been unlocked for {$this->record->email}" 
+                : "Account has been locked for {$this->record->email}. User has been logged out.")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'lock-account');
+        $this->dispatch('refresh');
+    }
+
+    /**
+     * Reset two-factor authentication
+     */
+    public function resetTwoFactor(): void
+    {
+        $hadTwoFactor = !empty($this->record->two_factor_secret);
+
+        $this->record->update([
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            'user_2fa_reset',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+                'had_2fa_enabled' => $hadTwoFactor,
+            ]
+        );
+
+        Notification::make()
+            ->title('2FA Reset')
+            ->body("Two-factor authentication has been disabled for {$this->record->email}")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'two-factor');
+        $this->dispatch('refresh');
+    }
 }

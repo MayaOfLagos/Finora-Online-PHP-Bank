@@ -574,11 +574,21 @@
                     <x-filament::section>
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <p class="text-sm font-semibold text-gray-800">Lock account</p>
-                                <p class="text-sm text-gray-600">Temporarily disable sign-in for this user.</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $record->is_active ? 'Lock account' : 'Unlock account' }}</p>
+                                <p class="text-sm text-gray-600">
+                                    @if($record->is_active)
+                                        Temporarily disable sign-in for this user.
+                                    @else
+                                        <span class="text-danger-600 dark:text-danger-400 font-medium">Account is currently locked.</span> Click to unlock.
+                                    @endif
+                                </p>
                             </div>
-                            <x-filament::button color="secondary" icon="heroicon-o-lock-closed" x-on:click="$dispatch('open-modal', { id: 'lock-account' })">
-                                Lock
+                            <x-filament::button 
+                                color="{{ $record->is_active ? 'gray' : 'success' }}" 
+                                icon="{{ $record->is_active ? 'heroicon-o-lock-closed' : 'heroicon-o-lock-open' }}" 
+                                x-on:click="$dispatch('open-modal', { id: 'lock-account' })"
+                            >
+                                {{ $record->is_active ? 'Lock' : 'Unlock' }}
                             </x-filament::button>
                         </div>
                     </x-filament::section>
@@ -587,7 +597,19 @@
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Two-factor authentication</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">View or reset 2FA status.</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    @if($record->two_factor_secret)
+                                        <span class="inline-flex items-center gap-1 text-success-600 dark:text-success-400">
+                                            <x-heroicon-o-check-circle class="w-4 h-4" />
+                                            2FA is enabled
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                                            <x-heroicon-o-x-circle class="w-4 h-4" />
+                                            2FA is not enabled
+                                        </span>
+                                    @endif
+                                </p>
                             </div>
                             <x-filament::button color="primary" icon="heroicon-o-shield-check" x-on:click="$dispatch('open-modal', { id: 'two-factor' })">
                                 Manage
@@ -806,18 +828,19 @@
         <x-filament::modal id="reset-password">
             <x-slot name="heading">Reset password</x-slot>
 
-            <form class="space-y-4" x-on:submit.prevent="$dispatch('close-modal', { id: 'reset-password' })">
+            <form class="space-y-4" wire:submit.prevent="resetPassword($refs.newPassword.value, $refs.confirmPassword.value)">
                 <div>
                     <label for="new-password" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">New password</label>
                     <x-filament::input.wrapper>
-                        <x-filament::input id="new-password" name="password" type="password" />
+                        <x-filament::input x-ref="newPassword" id="new-password" name="password" type="password" required minlength="8" />
                     </x-filament::input.wrapper>
+                    <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
                 </div>
 
                 <div>
                     <label for="confirm-password" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Confirm password</label>
                     <x-filament::input.wrapper>
-                        <x-filament::input id="confirm-password" name="password_confirmation" type="password" />
+                        <x-filament::input x-ref="confirmPassword" id="confirm-password" name="password_confirmation" type="password" required minlength="8" />
                     </x-filament::input.wrapper>
                 </div>
 
@@ -832,39 +855,72 @@
         <x-filament::modal id="force-logout">
             <x-slot name="heading">Force logout</x-slot>
 
-            <form class="space-y-4" x-on:submit.prevent="$dispatch('close-modal', { id: 'force-logout' })">
-                <p class="text-sm text-gray-600">This will invalidate all active sessions for {{ $record->email }}.</p>
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">This will invalidate all active sessions for <strong>{{ $record->email }}</strong>.</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">The user will be logged out from all devices and will need to sign in again.</p>
                 <div class="flex justify-end gap-2">
                     <x-filament::button color="secondary" type="button" x-on:click="$dispatch('close-modal', { id: 'force-logout' })">Cancel</x-filament::button>
-                    <x-filament::button color="warning" type="submit">Force logout</x-filament::button>
+                    <x-filament::button color="warning" wire:click="forceLogout">Force logout</x-filament::button>
                 </div>
-            </form>
+            </div>
         </x-filament::modal>
 
         {{-- Lock account modal --}}
         <x-filament::modal id="lock-account">
-            <x-slot name="heading">Lock account</x-slot>
+            <x-slot name="heading">{{ $record->is_active ? 'Lock account' : 'Unlock account' }}</x-slot>
 
-            <form class="space-y-4" x-on:submit.prevent="$dispatch('close-modal', { id: 'lock-account' })">
-                <p class="text-sm text-gray-600">Prevent sign-in until unlocked by an admin.</p>
+            <div class="space-y-4">
+                @if($record->is_active)
+                    <p class="text-sm text-gray-600 dark:text-gray-400">This will prevent <strong>{{ $record->email }}</strong> from signing in until unlocked by an admin.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">The user will also be logged out from all active sessions.</p>
+                @else
+                    <p class="text-sm text-gray-600 dark:text-gray-400">This will allow <strong>{{ $record->email }}</strong> to sign in again.</p>
+                @endif
                 <div class="flex justify-end gap-2">
                     <x-filament::button color="secondary" type="button" x-on:click="$dispatch('close-modal', { id: 'lock-account' })">Cancel</x-filament::button>
-                    <x-filament::button color="secondary" type="submit">Lock account</x-filament::button>
+                    <x-filament::button color="{{ $record->is_active ? 'danger' : 'success' }}" wire:click="toggleAccountLock">
+                        {{ $record->is_active ? 'Lock account' : 'Unlock account' }}
+                    </x-filament::button>
                 </div>
-            </form>
+            </div>
         </x-filament::modal>
 
         {{-- Two-factor modal --}}
         <x-filament::modal id="two-factor">
             <x-slot name="heading">Two-factor authentication</x-slot>
 
-            <form class="space-y-4" x-on:submit.prevent="$dispatch('close-modal', { id: 'two-factor' })">
-                <p class="text-sm text-gray-600">Current status: {{ $record->two_factor_secret ? 'Enabled' : 'Disabled' }}.</p>
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 p-4 rounded-lg {{ $record->two_factor_secret ? 'bg-success-50 dark:bg-success-900/20' : 'bg-gray-50 dark:bg-gray-800' }}">
+                    @if($record->two_factor_secret)
+                        <x-heroicon-o-shield-check class="w-8 h-8 text-success-600 dark:text-success-400" />
+                        <div>
+                            <p class="font-semibold text-success-700 dark:text-success-300">2FA is Enabled</p>
+                            <p class="text-sm text-success-600 dark:text-success-400">This account has two-factor authentication enabled.</p>
+                        </div>
+                    @else
+                        <x-heroicon-o-shield-exclamation class="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                        <div>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300">2FA is Disabled</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">This account does not have two-factor authentication enabled.</p>
+                        </div>
+                    @endif
+                </div>
+
+                @if($record->two_factor_secret)
+                    <div class="p-4 bg-warning-50 dark:bg-warning-900/20 rounded-lg">
+                        <p class="text-sm text-warning-700 dark:text-warning-300">
+                            <strong>Warning:</strong> Resetting 2FA will disable two-factor authentication for this user. They will need to set it up again from their account settings.
+                        </p>
+                    </div>
+                @endif
+
                 <div class="flex justify-end gap-2">
                     <x-filament::button color="secondary" type="button" x-on:click="$dispatch('close-modal', { id: 'two-factor' })">Close</x-filament::button>
-                    <x-filament::button color="primary" type="submit">Toggle 2FA</x-filament::button>
+                    @if($record->two_factor_secret)
+                        <x-filament::button color="danger" wire:click="resetTwoFactor">Reset 2FA</x-filament::button>
+                    @endif
                 </div>
-            </form>
+            </div>
         </x-filament::modal>
 
         {{-- Transactions Tab Content --}}
