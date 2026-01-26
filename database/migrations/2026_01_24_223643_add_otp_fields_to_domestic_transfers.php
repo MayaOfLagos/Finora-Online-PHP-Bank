@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('domestic_transfers', function (Blueprint $table) {
-            $table->string('otp_code', 255)->nullable()->after('current_step');
+            $table->string('otp_code', 255)->nullable()->after('status');
             $table->dateTime('otp_expires_at')->nullable()->after('otp_code');
         });
     }
