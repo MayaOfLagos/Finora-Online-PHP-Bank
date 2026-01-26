@@ -451,13 +451,5 @@ const handleMarkAllRead = () => {
 
         <!-- Mobile Bottom Navigation -->
         <BottomNav @open-menu="mobileMenuOpen = true" />
-
-        <!-- Quick Action FAB (Mobile) -->
-        <button
-            class="fixed z-40 flex items-center justify-center text-white transition-transform shadow-lg lg:hidden bottom-20 right-4 w-14 h-14 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl shadow-indigo-500/30 hover:scale-105 active:scale-95"
-            v-tooltip.left="'Quick Transfer'"
-        >
-            <i class="text-xl pi pi-send"></i>
-        </button>
     </div>
 </template>

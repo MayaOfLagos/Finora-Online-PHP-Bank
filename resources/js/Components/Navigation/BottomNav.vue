@@ -27,10 +27,10 @@ const navItems = [
 ];
 
 const transferOptions = [
-    { name: 'Wire Transfer', href: '/transfers/wire', icon: 'pi pi-globe', color: 'from-purple-500 to-indigo-600' },
+    { name: 'Wire', href: '/transfers/wire', icon: 'pi pi-globe', color: 'from-purple-500 to-indigo-600' },
     { name: 'Domestic', href: '/transfers/domestic', icon: 'pi pi-building', color: 'from-blue-500 to-cyan-600' },
     { name: 'Internal', href: '/transfers/internal', icon: 'pi pi-users', color: 'from-emerald-500 to-teal-600' },
-    { name: 'My Accounts', href: '/transfers/account', icon: 'pi pi-sync', color: 'from-amber-500 to-orange-600' },
+    { name: 'Self', href: '/transfers/account', icon: 'pi pi-sync', color: 'from-amber-500 to-orange-600' },
 ];
 
 const toggleSpeedDial = () => {
