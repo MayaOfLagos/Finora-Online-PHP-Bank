@@ -16,14 +16,8 @@ define('INSTALL_KEY', 'finora_install_2026');
 // ============================================
 // CONFIGURATION
 // ============================================
-define('PUBLIC_PATH', dirname(__FILE__));
-
-// Auto-detect Laravel app path (supports both local dev and shared hosting)
-$appPath = dirname(PUBLIC_PATH); // Default: go up from public to root
-if (is_dir('/home/txepiedg/finora_app/bootstrap')) {
-    $appPath = '/home/txepiedg/finora_app';
-}
-define('APP_PATH', $appPath);
+define('PUBLIC_PATH', __DIR__);
+define('APP_PATH', dirname(__DIR__)); // Laravel root (parent of public)
 
 set_time_limit(600);
 ini_set('memory_limit', '512M');

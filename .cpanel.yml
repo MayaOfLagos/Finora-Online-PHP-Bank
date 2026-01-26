@@ -1,25 +1,13 @@
 ---
 deployment:
   tasks:
-    # Deploy Laravel app to home directory (outside public_html)
-    - export APPPATH=/home/txepiedg/finora_app
-    - export PUBLICPATH=/home/txepiedg/public_html
+    # Deploy Laravel directly to public_html
+    - export DEPLOYPATH=/home/txepiedg/public_html
     
-    # Create app directory if not exists
-    - /bin/mkdir -p $APPPATH
-    
-    # Copy all Laravel files to app directory
-    - /bin/cp -R . $APPPATH/
-    
-    # Remove old public_html contents (except cPanel files)
-    - /bin/rm -rf $PUBLICPATH/* 2>/dev/null || true
-    
-    # Copy public folder contents to public_html
-    - /bin/cp -R $APPPATH/public/* $PUBLICPATH/
-    - /bin/cp $APPPATH/public/.htaccess $PUBLICPATH/ 2>/dev/null || true
+    # Copy all files to public_html
+    - /bin/cp -R . $DEPLOYPATH/
     
     # Set correct permissions
-    - /bin/chmod -R 755 $APPPATH
-    - /bin/chmod -R 775 $APPPATH/storage
-    - /bin/chmod -R 775 $APPPATH/bootstrap/cache
-    - /bin/chmod -R 755 $PUBLICPATH
+    - /bin/chmod -R 755 $DEPLOYPATH
+    - /bin/chmod -R 775 $DEPLOYPATH/storage
+    - /bin/chmod -R 775 $DEPLOYPATH/bootstrap/cache
