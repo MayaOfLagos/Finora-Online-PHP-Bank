@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('transaction_type'); // wire_transfer, domestic_transfer, internal_transfer, check_deposit, mobile_deposit, crypto_deposit
             $table->string('reference_number')->unique();
-            $table->morphs('transactionable'); // Polymorphic relation to actual transaction
+            $table->string('transactionable_type');
+            $table->unsignedBigInteger('transactionable_id');
             $table->decimal('amount', 15, 2);
             $table->string('currency')->default('USD');
             $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled', 'reversed'])->default('pending');
@@ -34,6 +35,7 @@ return new class extends Migration
             $table->index(['user_id', 'status']);
             $table->index(['transaction_type', 'status']);
             $table->index('reference_number');
+            $table->index(['transactionable_type', 'transactionable_id'], 'txn_hist_morph_idx');
         });
     }
 
