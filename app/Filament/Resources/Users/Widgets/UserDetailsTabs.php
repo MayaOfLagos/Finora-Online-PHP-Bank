@@ -185,10 +185,17 @@ class UserDetailsTabs extends Widget
     #[Computed]
     public function grantsStats()
     {
+        $approvedGrants = $this->record->grantApplications()
+            ->where('status', 'approved')
+            ->with('grantProgram')
+            ->get();
+        
+        $totalAmount = $approvedGrants->sum(fn ($grant) => $grant->grantProgram?->amount ?? 0);
+
         return [
             'applied' => $this->record->grantApplications()->count(),
-            'approved' => $this->record->grantApplications()->where('status', 'approved')->count(),
-            'total_amount' => $this->record->grantApplications()->where('status', 'approved')->sum('amount') / 100,
+            'approved' => $approvedGrants->count(),
+            'total_amount' => $totalAmount / 100,
         ];
     }
 
