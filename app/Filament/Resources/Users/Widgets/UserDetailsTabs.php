@@ -125,7 +125,7 @@ class UserDetailsTabs extends Widget
             'check' => $this->record->checkDeposits()->where('status', 'completed')->count(),
             'mobile' => $this->record->mobileDeposits()->where('status', 'completed')->count(),
             'crypto' => $this->record->cryptoDeposits()->where('status', 'completed')->count(),
-            'total_amount' => ($this->record->checkDeposits()->where('status', 'completed')->sum('amount') + $this->record->mobileDeposits()->where('status', 'completed')->sum('amount') + $this->record->cryptoDeposits()->where('status', 'completed')->sum('amount')) / 100,
+            'total_amount' => ($this->record->checkDeposits()->where('status', 'completed')->sum('amount') + $this->record->mobileDeposits()->where('status', 'completed')->sum('amount') + $this->record->cryptoDeposits()->where('status', 'completed')->sum('usd_amount')) / 100,
         ];
     }
 
