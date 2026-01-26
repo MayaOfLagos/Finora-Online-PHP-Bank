@@ -1,6 +1,19 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Redirect everything to public folder
-    RewriteRule ^(.*)$ public/$1 [L]
+    # Handle Front Controller
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Deny access to sensitive files
+<FilesMatch "^\.env|artisan|composer\.(json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to sensitive directories
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|vendor)/ - [F,L]
 </IfModule>
