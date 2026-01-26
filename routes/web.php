@@ -26,11 +26,12 @@ use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanRepaymentController;
 use App\Http\Controllers\MobileDepositController;
 use App\Http\Controllers\MoneyRequestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\RewardController;
 use App\Http\Controllers\SupportController;
-use App\Http\Controllers\TransactionHistoryController;
 use App\Http\Controllers\TaxRefundController;
+use App\Http\Controllers\TransactionHistoryController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WireTransferController;
@@ -104,27 +105,27 @@ Route::middleware('auth')->group(function () {
     // Email OTP Verification
     Route::get('verify-email-otp', [EmailOtpController::class, 'show'])
         ->name('verify-email-otp.show');
-    
+
     Route::post('verify-email-otp', [EmailOtpController::class, 'verify'])
         ->name('verify-email-otp.verify');
-    
+
     Route::post('verify-email-otp/send', [EmailOtpController::class, 'send'])
         ->name('verify-email-otp.send');
-    
+
     // PIN Verification
     Route::get('verify-pin', [PinVerificationController::class, 'show'])
         ->name('verify-pin.show');
-    
+
     Route::post('verify-pin', [PinVerificationController::class, 'verify'])
         ->name('verify-pin.verify');
 
     // Lockscreen (for idle session timeout)
     Route::get('lockscreen', [LockscreenController::class, 'show'])
         ->name('lockscreen.show');
-    
+
     Route::post('lockscreen/unlock', [LockscreenController::class, 'unlock'])
         ->name('lockscreen.unlock');
-    
+
     Route::post('lockscreen/logout', [LockscreenController::class, 'logout'])
         ->name('lockscreen.logout');
 });
@@ -263,6 +264,15 @@ Route::middleware(['auth', 'verified.email.otp', 'verified.pin'])->group(functio
     Route::get('/support/tickets/{uuid}', [SupportController::class, 'show'])->name('support.show');
     Route::post('/support/tickets/{uuid}/reply', [SupportController::class, 'reply'])->name('support.reply');
     Route::post('/support/tickets/{uuid}/close', [SupportController::class, 'close'])->name('support.close');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/dropdown', [NotificationController::class, 'dropdown'])->name('notifications.dropdown');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
 
     // API-like routes for AJAX calls
     Route::get('/api/accounts/verify/{accountNumber}', [TransferController::class, 'verifyAccount'])->name('api.accounts.verify');

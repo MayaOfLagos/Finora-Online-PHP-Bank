@@ -507,7 +507,7 @@ const viewCardDetails = (card) => {
             </div>
 
             <!-- Mobile Financial Services Overview -->
-            <div class="px-4 mb-4">
+            <div class="px-4 mb-4 mt-6">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Financial Services</h3>
                 </div>

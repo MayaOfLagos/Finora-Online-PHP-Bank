@@ -154,11 +154,21 @@ watch(searchQuery, handleSearch);
 
 // Notification handlers
 const handleMarkRead = (id) => {
-    // router.post(`/notifications/${id}/read`);
+    router.post(`/notifications/${id}/mark-read`, {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Notification will be updated via page props refresh
+        },
+    });
 };
 
 const handleMarkAllRead = () => {
-    // router.post('/notifications/read-all');
+    router.post('/notifications/mark-all-read', {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Notifications will be updated via page props refresh
+        },
+    });
 };
 </script>
 

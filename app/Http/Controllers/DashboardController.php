@@ -106,6 +106,14 @@ class DashboardController extends Controller
         // Get user's primary currency
         $userCurrency = $user->getPrimaryCurrency();
 
+        // Get user notifications for the panel
+        $notifications = $user->notifications()
+            ->take(10)
+            ->get()
+            ->map(function ($notification) {
+                return $this->formatNotification($notification);
+            });
+
         return Inertia::render('Dashboard', [
             'accounts' => $accounts,
             'cards' => $cards,
@@ -115,7 +123,88 @@ class DashboardController extends Controller
             'pendingItems' => $pendingItems,
             'cardStats' => $cardStats,
             'userCurrency' => $userCurrency,
+            'notifications' => $notifications,
+            'unreadNotificationCount' => $user->unreadNotifications()->count(),
         ]);
+    }
+
+    /**
+     * Format a notification for the frontend.
+     */
+    private function formatNotification($notification): array
+    {
+        $data = $notification->data;
+        $type = $data['type'] ?? 'general';
+
+        // Map notification types to icons and colors
+        $typeConfig = $this->getNotificationTypeConfig($type);
+
+        return [
+            'id' => $notification->id,
+            'type' => $type,
+            'title' => $data['title'] ?? $typeConfig['defaultTitle'],
+            'message' => $data['message'] ?? $data['body'] ?? '',
+            'icon' => $data['icon'] ?? $typeConfig['icon'],
+            'color' => $data['color'] ?? $typeConfig['color'],
+            'href' => $data['href'] ?? $data['action_url'] ?? null,
+            'read' => $notification->read_at !== null,
+            'created_at' => $notification->created_at->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Get configuration for notification type.
+     */
+    private function getNotificationTypeConfig(string $type): array
+    {
+        $configs = [
+            'transfer' => [
+                'icon' => 'pi-send',
+                'color' => 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
+                'defaultTitle' => 'Transfer Update',
+            ],
+            'transfer_received' => [
+                'icon' => 'pi-download',
+                'color' => 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400',
+                'defaultTitle' => 'Transfer Received',
+            ],
+            'deposit' => [
+                'icon' => 'pi-download',
+                'color' => 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
+                'defaultTitle' => 'Deposit Update',
+            ],
+            'security' => [
+                'icon' => 'pi-shield',
+                'color' => 'text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400',
+                'defaultTitle' => 'Security Alert',
+            ],
+            'loan' => [
+                'icon' => 'pi-wallet',
+                'color' => 'text-violet-600 bg-violet-100 dark:bg-violet-900/30 dark:text-violet-400',
+                'defaultTitle' => 'Loan Update',
+            ],
+            'card' => [
+                'icon' => 'pi-credit-card',
+                'color' => 'text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400',
+                'defaultTitle' => 'Card Update',
+            ],
+            'support' => [
+                'icon' => 'pi-comments',
+                'color' => 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400',
+                'defaultTitle' => 'Support Update',
+            ],
+            'admin' => [
+                'icon' => 'pi-megaphone',
+                'color' => 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400',
+                'defaultTitle' => 'Admin Message',
+            ],
+        ];
+
+        return $configs[strtolower($type)] ?? [
+            'icon' => 'pi-bell',
+            'color' => 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400',
+            'defaultTitle' => 'Notification',
+        ];
     }
 
     /**

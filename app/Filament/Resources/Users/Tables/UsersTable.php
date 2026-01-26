@@ -8,6 +8,7 @@ use App\Mail\AdminNotificationMail;
 use App\Mail\NewsletterMail;
 use App\Mail\PushNotificationMail;
 use App\Models\User;
+use App\Notifications\GeneralNotification;
 use App\Services\ActivityLogger;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -107,6 +108,14 @@ class UsersTable
                                 )
                             );
 
+                            // Store database notification for the user
+                            $record->notify(
+                                GeneralNotification::adminMessage(
+                                    $data['subject'],
+                                    strip_tags($data['message'])
+                                )
+                            );
+
                             // Log the activity
                             ActivityLogger::logAdmin(
                                 'user_email_sent',
@@ -157,6 +166,14 @@ class UsersTable
                                     user: $record,
                                     title: $data['title'],
                                     message: $data['message'],
+                                )
+                            );
+
+                            // Store database notification for the user
+                            $record->notify(
+                                GeneralNotification::adminMessage(
+                                    $data['title'],
+                                    strip_tags($data['message'])
                                 )
                             );
 

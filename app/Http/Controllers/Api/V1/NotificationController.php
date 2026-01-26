@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
 {
@@ -14,28 +14,19 @@ class NotificationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Notification::where('notifiable_id', $request->user()->id)
-            ->where('notifiable_type', get_class($request->user()));
+        $query = $request->user()->notifications();
 
-        if ($request->unread_only) {
+        if ($request->boolean('unread_only')) {
             $query->whereNull('read_at');
         }
 
         $notifications = $query->latest()
-            ->paginate($request->per_page ?? 20);
+            ->paginate($request->integer('per_page', 20));
 
         return response()->json([
             'success' => true,
             'data' => [
-                'notifications' => collect($notifications->items())->map(fn ($n) => [
-                    'id' => $n->id,
-                    'type' => class_basename($n->type),
-                    'title' => $n->data['title'] ?? 'Notification',
-                    'message' => $n->data['message'] ?? '',
-                    'data' => $n->data,
-                    'read_at' => $n->read_at?->toIso8601String(),
-                    'created_at' => $n->created_at->toIso8601String(),
-                ]),
+                'notifications' => collect($notifications->items())->map(fn ($n) => $this->formatNotification($n)),
                 'pagination' => [
                     'current_page' => $notifications->currentPage(),
                     'last_page' => $notifications->lastPage(),
@@ -51,10 +42,7 @@ class NotificationController extends Controller
      */
     public function unreadCount(Request $request): JsonResponse
     {
-        $count = Notification::where('notifiable_id', $request->user()->id)
-            ->where('notifiable_type', get_class($request->user()))
-            ->whereNull('read_at')
-            ->count();
+        $count = $request->user()->unreadNotifications()->count();
 
         return response()->json([
             'success' => true,
@@ -69,9 +57,9 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, string $notification): JsonResponse
     {
-        $notif = Notification::where('id', $notification)
-            ->where('notifiable_id', $request->user()->id)
-            ->where('notifiable_type', get_class($request->user()))
+        $notif = $request->user()
+            ->notifications()
+            ->where('id', $notification)
             ->first();
 
         if (! $notif) {
@@ -81,7 +69,7 @@ class NotificationController extends Controller
             ], 404);
         }
 
-        $notif->update(['read_at' => now()]);
+        $notif->markAsRead();
 
         return response()->json([
             'success' => true,
@@ -94,14 +82,32 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request): JsonResponse
     {
-        Notification::where('notifiable_id', $request->user()->id)
-            ->where('notifiable_type', get_class($request->user()))
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+        $request->user()->unreadNotifications->markAsRead();
 
         return response()->json([
             'success' => true,
             'message' => 'All notifications marked as read.',
         ]);
+    }
+
+    /**
+     * Format a notification for the API response.
+     */
+    private function formatNotification(DatabaseNotification $notification): array
+    {
+        $data = $notification->data;
+
+        return [
+            'id' => $notification->id,
+            'type' => $data['type'] ?? class_basename($notification->type),
+            'title' => $data['title'] ?? 'Notification',
+            'message' => $data['message'] ?? '',
+            'icon' => $data['icon'] ?? null,
+            'color' => $data['color'] ?? null,
+            'href' => $data['href'] ?? null,
+            'data' => $data,
+            'read_at' => $notification->read_at?->toIso8601String(),
+            'created_at' => $notification->created_at->toIso8601String(),
+        ];
     }
 }
