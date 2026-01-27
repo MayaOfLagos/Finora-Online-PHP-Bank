@@ -137,7 +137,7 @@ Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware(['auth', 'verified.email.otp', 'verified.pin'])->group(function () {
+Route::middleware(['auth', 'verified.email.otp', 'verified.pin', 'user.only'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Cards routes

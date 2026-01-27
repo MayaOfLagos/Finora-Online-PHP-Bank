@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'verified.email.otp' => \App\Http\Middleware\EnsureEmailOtpVerified::class,
             'verified.pin' => \App\Http\Middleware\EnsurePinVerified::class,
+            'user.only' => \App\Http\Middleware\RestrictAdminFromUserDashboard::class,
         ]);
 
         $middleware->statefulApi();
