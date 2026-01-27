@@ -55,7 +55,6 @@ class TransferController extends Controller
             ->get();
 
         $beneficiaries = $user->beneficiaries()
-            ->where('is_active', true)
             ->with(['beneficiaryUser:id,name,email', 'beneficiaryAccount:id,account_number,account_type_id,currency', 'beneficiaryAccount.accountType:id,name'])
             ->orderBy('is_favorite', 'desc')
             ->orderBy('last_used_at', 'desc')
