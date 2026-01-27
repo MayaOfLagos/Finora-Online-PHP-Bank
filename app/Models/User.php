@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
@@ -53,6 +54,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'two_factor_enabled',
         'two_factor_secret',
         'profile_photo_path',
+        'role',
         'can_transfer',
         'can_withdraw',
         'can_deposit',
@@ -102,6 +104,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     protected function casts(): array
     {
         return [
+            'role' => UserRole::class,
             'email_verified_at' => 'datetime',
             'email_otp_verified_at' => 'datetime',
             'pin_verified_at' => 'datetime',
@@ -146,9 +149,34 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // For now, all active verified users can access the admin panel
-        // You can add role-based access control here
-        return $this->is_active && $this->hasVerifiedEmail();
+        // Only staff, admin, and super_admin can access the admin panel
+        return $this->is_active 
+            && $this->hasVerifiedEmail() 
+            && $this->role?->canAccessAdmin();
+    }
+
+    /**
+     * Check if user is a super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRole::SuperAdmin;
+    }
+
+    /**
+     * Check if user is an admin or higher.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role?->isAdminOrHigher() ?? false;
+    }
+
+    /**
+     * Check if user is staff or higher.
+     */
+    public function isStaff(): bool
+    {
+        return $this->role?->canAccessAdmin() ?? false;
     }
 
     /**
