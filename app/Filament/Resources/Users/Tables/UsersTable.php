@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
-use App\Enums\UserRole;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
 use App\Mail\AdminNotificationMail;
@@ -23,7 +22,6 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Mail;
@@ -43,12 +41,6 @@ class UsersTable
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
-                TextColumn::make('role')
-                    ->label('Role')
-                    ->badge()
-                    ->formatStateUsing(fn ($state) => $state?->label() ?? 'User')
-                    ->color(fn ($state) => $state?->color() ?? 'gray')
-                    ->sortable(),
                 TextColumn::make('phone_number')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -68,10 +60,6 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('role')
-                    ->label('Role')
-                    ->options(UserRole::options())
-                    ->native(false),
                 TrashedFilter::make(),
             ])
             ->recordUrl(fn (User $record): string => UserResource::getUrl('view', ['record' => $record]))
