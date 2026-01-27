@@ -368,6 +368,11 @@ const handleMarkAllRead = () => {
                         </Link>
                     </div>
 
+                    <!-- Page Title (Desktop) -->
+                    <h1 class="hidden mx-4 text-lg font-semibold text-gray-900 lg:block dark:text-white">
+                        {{ title }}
+                    </h1>
+
                     <!-- Search Bar (Desktop) -->
                     <div class="items-center flex-1 hidden max-w-md lg:flex">
                         <IconField class="w-full">
@@ -418,11 +423,6 @@ const handleMarkAllRead = () => {
                             </div>
                         </Popover>
                     </div>
-
-                    <!-- Page Title (Desktop) - Now centered/right -->
-                    <h1 class="hidden mx-4 text-lg font-semibold text-gray-900 lg:block dark:text-white">
-                        {{ title }}
-                    </h1>
 
                     <!-- Right Section - Actions -->
                     <div class="flex items-center gap-1 sm:gap-2">

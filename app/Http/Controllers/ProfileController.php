@@ -63,6 +63,43 @@ class ProfileController extends Controller
             ],
             'activeTab' => $activeTab,
             'loginHistory' => $loginHistory,
+            // Settings data (moved from SettingsController)
+            'preferences' => [
+                'theme' => 'system',
+                'language' => 'en',
+                'currency_display' => 'symbol',
+                'date_format' => 'M d, Y',
+                'time_format' => '12h',
+                'timezone' => 'UTC',
+            ],
+            'notifications' => [
+                'email_transactions' => true,
+                'email_security' => true,
+                'email_marketing' => false,
+                'push_transactions' => true,
+                'push_security' => true,
+                'sms_transactions' => false,
+                'sms_security' => true,
+            ],
+            'availableLanguages' => [
+                ['code' => 'en', 'name' => 'English'],
+                ['code' => 'es', 'name' => 'Spanish'],
+                ['code' => 'fr', 'name' => 'French'],
+                ['code' => 'de', 'name' => 'German'],
+                ['code' => 'pt', 'name' => 'Portuguese'],
+            ],
+            'availableTimezones' => [
+                ['code' => 'UTC', 'name' => 'UTC (Coordinated Universal Time)'],
+                ['code' => 'America/New_York', 'name' => 'Eastern Time (ET)'],
+                ['code' => 'America/Chicago', 'name' => 'Central Time (CT)'],
+                ['code' => 'America/Denver', 'name' => 'Mountain Time (MT)'],
+                ['code' => 'America/Los_Angeles', 'name' => 'Pacific Time (PT)'],
+                ['code' => 'Europe/London', 'name' => 'London (GMT)'],
+                ['code' => 'Europe/Paris', 'name' => 'Paris (CET)'],
+                ['code' => 'Asia/Tokyo', 'name' => 'Tokyo (JST)'],
+                ['code' => 'Asia/Singapore', 'name' => 'Singapore (SGT)'],
+                ['code' => 'Africa/Lagos', 'name' => 'Lagos (WAT)'],
+            ],
         ]);
     }
 

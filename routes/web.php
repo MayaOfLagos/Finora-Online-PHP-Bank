@@ -263,8 +263,10 @@ Route::middleware(['auth', 'verified.email.otp', 'verified.pin', 'user.only'])->
     Route::put('/profile/pin', [ProfileController::class, 'updatePin'])->name('profile.pin.update');
     Route::post('/profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
 
-    // Settings routes
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    // Settings routes (Settings is now a tab in Profile, redirect for backwards compatibility)
+    Route::get('/settings', function () {
+        return redirect('/profile?tab=settings');
+    })->name('settings.index');
     Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences');
     Route::put('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications');
     Route::get('/settings/export-data', [SettingsController::class, 'exportData'])->name('settings.export-data');
