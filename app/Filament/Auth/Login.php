@@ -11,7 +11,7 @@ use Livewire\Attributes\Locked;
 
 class Login extends BaseLogin
 {
-    protected static string $view = 'filament.pages.auth.login';
+    protected string $view = 'filament.pages.auth.login';
 
     #[Locked]
     public ?string $recaptchaToken = null;
