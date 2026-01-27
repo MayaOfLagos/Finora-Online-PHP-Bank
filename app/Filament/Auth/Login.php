@@ -7,13 +7,11 @@ use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Support\Htmlable;
-use Livewire\Attributes\Locked;
 
 class Login extends BaseLogin
 {
     protected string $view = 'filament.pages.auth.login';
 
-    #[Locked]
     public ?string $recaptchaToken = null;
 
     public function authenticate(): ?LoginResponse
