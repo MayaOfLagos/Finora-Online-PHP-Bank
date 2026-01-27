@@ -1,5 +1,5 @@
 @php
-    $recaptchaConfig = $recaptchaConfig ?? $this->getRecaptchaConfig();
+    $recaptchaConfig = $this->getRecaptchaConfig();
     $enabled = $recaptchaConfig['enabled'] ?? false;
     $siteKey = $recaptchaConfig['siteKey'] ?? '';
     $version = $recaptchaConfig['version'] ?? 'v2';
@@ -81,10 +81,9 @@
             </div>
         @endif
 
-        <x-filament-panels::form.actions
-            :actions="$this->getCachedFormActions()"
-            :full-width="$this->hasFullWidthFormActions()"
-        />
+        <x-filament::button type="submit" class="w-full">
+            Sign in
+        </x-filament::button>
     </x-filament-panels::form>
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, scopes: $this->getRenderHookScopes()) }}
