@@ -8,8 +8,8 @@ use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\View as FormView;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\Locked;
 
@@ -18,11 +18,11 @@ class Login extends BaseLogin
     #[Locked]
     public ?string $recaptchaToken = null;
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
         $recaptchaConfig = $this->getRecaptchaConfig();
         
-        return $form
+        return $schema
             ->schema([
                 $this->getEmailFormComponent(),
                 $this->getPasswordFormComponent(),
