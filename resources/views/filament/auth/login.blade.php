@@ -80,10 +80,9 @@
             </div>
         @endif
 
-        <x-filament-panels::form.actions
-            :actions="$this->getCachedFormActions()"
-            :full-width="$this->hasFullWidthFormActions()"
-        />
+        <x-filament::button type="submit" class="w-full">
+            {{ __('filament-panels::pages/auth/login.form.actions.authenticate.label') }}
+        </x-filament::button>
     </x-filament-panels::form>
 
     {{-- Protected by reCAPTCHA notice --}}
