@@ -74,7 +74,7 @@ class ManageAdmins extends Page implements HasTable
                 ->color('primary')
                 ->modalWidth(Width::ExtraLarge)
                 ->modalHeading('Create New Administrator')
-                ->form([
+                ->schema([
                     Grid::make(2)->schema([
                         TextInput::make('first_name')
                             ->label('First Name')
@@ -243,7 +243,7 @@ class ManageAdmins extends Page implements HasTable
                             'role' => $record->role->value,
                             'is_active' => $record->is_active,
                         ])
-                        ->form([
+                        ->schema([
                             Grid::make(2)->schema([
                                 TextInput::make('first_name')
                                     ->label('First Name')
@@ -334,7 +334,7 @@ class ManageAdmins extends Page implements HasTable
                         ->color('warning')
                         ->modalHeading(fn ($record) => "Change Password: {$record->full_name}")
                         ->modalWidth(Width::Medium)
-                        ->form([
+                        ->schema([
                             TextInput::make('password')
                                 ->label('New Password')
                                 ->password()
