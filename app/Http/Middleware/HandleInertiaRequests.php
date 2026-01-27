@@ -50,12 +50,12 @@ class HandleInertiaRequests extends Middleware
                     'support_phone' => Setting::getValue('general', 'support_phone', '+1-800-FINORA'),
                 ],
                 'branding' => [
-                    'logo_light' => Setting::getValue('branding', 'logo_light', ''),
-                    'logo_dark' => Setting::getValue('branding', 'logo_dark', ''),
-                    'favicon' => Setting::getValue('branding', 'favicon', ''),
-                    'copyright_text' => Setting::getValue('branding', 'copyright_text', 'Finora Bank'),
-                    'copyright_year' => Setting::getValue('branding', 'copyright_year', date('Y')),
-                    'footer_extra_text' => Setting::getValue('branding', 'footer_extra_text', 'Member FDIC | Equal Housing Lender'),
+                    'logo_light' => Setting::getValue('branding', 'site_logo', ''),
+                    'logo_dark' => Setting::getValue('branding', 'site_logo_dark', ''),
+                    'favicon' => Setting::getValue('branding', 'site_favicon', ''),
+                    'copyright_text' => Setting::getValue('branding', 'site_copyright_text', 'Finora Bank'),
+                    'copyright_year' => Setting::getValue('branding', 'site_copyright_year', date('Y')),
+                    'footer_extra_text' => Setting::getValue('branding', 'site_footer_text', 'Member FDIC | Equal Housing Lender'),
                 ],
             ],
             'flash' => [

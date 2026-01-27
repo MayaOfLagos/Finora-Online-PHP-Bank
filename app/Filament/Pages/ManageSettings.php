@@ -71,6 +71,9 @@ class ManageSettings extends Page
             'site_logo' => Setting::getValue('branding', 'site_logo', ''),
             'site_logo_dark' => Setting::getValue('branding', 'site_logo_dark', ''),
             'site_favicon' => Setting::getValue('branding', 'site_favicon', ''),
+            'site_copyright_text' => Setting::getValue('branding', 'site_copyright_text', 'Finora Bank'),
+            'site_copyright_year' => Setting::getValue('branding', 'site_copyright_year', date('Y')),
+            'site_footer_text' => Setting::getValue('branding', 'site_footer_text', ''),
             'primary_color' => Setting::getValue('branding', 'primary_color', '#3b82f6'),
             'secondary_color' => Setting::getValue('branding', 'secondary_color', '#1e40af'),
 
@@ -485,6 +488,28 @@ class ManageSettings extends Page
                             ->maxSize(512)
                             ->helperText('Recommended: 64x64px, PNG or ICO'),
                     ]),
+                ]),
+
+            Section::make('Copyright & Footer')
+                ->description('Configure footer information')
+                ->icon('heroicon-o-document')
+                ->collapsible()
+                ->schema([
+                    Grid::make(2)->schema([
+                        TextInput::make('site_copyright_text')
+                            ->label('Copyright Text')
+                            ->placeholder('Finora Bank')
+                            ->helperText('Text displayed in footer copyright'),
+                        TextInput::make('site_copyright_year')
+                            ->label('Copyright Year')
+                            ->placeholder((string)date('Y'))
+                            ->helperText('Year to display in copyright'),
+                    ]),
+                    Textarea::make('site_footer_text')
+                        ->label('Additional Footer Text')
+                        ->rows(2)
+                        ->placeholder('Member FDIC | Equal Housing Lender')
+                        ->helperText('Additional text displayed in footer'),
                 ]),
 
             Section::make('Brand Colors')
@@ -2119,6 +2144,9 @@ class ManageSettings extends Page
         Setting::setValue('branding', 'site_logo', $data['site_logo'] ?? '', 'string');
         Setting::setValue('branding', 'site_logo_dark', $data['site_logo_dark'] ?? '', 'string');
         Setting::setValue('branding', 'site_favicon', $data['site_favicon'] ?? '', 'string');
+        Setting::setValue('branding', 'site_copyright_text', $data['site_copyright_text'] ?? 'Finora Bank', 'string');
+        Setting::setValue('branding', 'site_copyright_year', $data['site_copyright_year'] ?? date('Y'), 'string');
+        Setting::setValue('branding', 'site_footer_text', $data['site_footer_text'] ?? '', 'string');
         Setting::setValue('branding', 'primary_color', $data['primary_color'] ?? '#3b82f6', 'string');
         Setting::setValue('branding', 'secondary_color', $data['secondary_color'] ?? '#1e40af', 'string');
 
