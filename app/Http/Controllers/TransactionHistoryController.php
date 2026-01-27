@@ -27,7 +27,7 @@ class TransactionHistoryController extends Controller
         // Build query
         $query = TransactionHistory::query()
             ->where('user_id', $user->id)
-            ->with(['bankAccount:id,uuid,account_number,account_name,currency'])
+            ->with(['bankAccount:id,uuid,account_number,account_type_id,currency', 'bankAccount.accountType:id,name'])
             ->orderBy('created_at', 'desc');
 
         // Apply filters
@@ -77,15 +77,20 @@ class TransactionHistoryController extends Controller
                 'bank_account' => $transaction->bankAccount ? [
                     'uuid' => $transaction->bankAccount->uuid,
                     'account_number' => $transaction->bankAccount->account_number,
-                    'account_name' => $transaction->bankAccount->account_name,
+                    'account_name' => $transaction->bankAccount->accountType?->name ?? 'Account',
                 ] : null,
             ];
         });
 
         // Get user's accounts for filter dropdown
         $accounts = $user->bankAccounts()
-            ->select('uuid', 'account_number', 'account_name')
-            ->get();
+            ->with('accountType:id,name')
+            ->get()
+            ->map(fn ($account) => [
+                'uuid' => $account->uuid,
+                'account_number' => $account->account_number,
+                'account_name' => $account->accountType?->name ?? 'Account',
+            ]);
 
         // Get transaction statistics
         $stats = [
