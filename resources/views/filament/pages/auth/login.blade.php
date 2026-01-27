@@ -16,11 +16,11 @@
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, scopes: $this->getRenderHookScopes()) }}
 
-    <x-filament-panels::form id="form" wire:submit="authenticate">
+    <form wire:submit="authenticate" class="space-y-6">
         {{ $this->form }}
 
         @if ($enabled && $siteKey)
-            <div class="recaptcha-container my-4" wire:ignore>
+            <div class="recaptcha-container" wire:ignore>
                 @if ($version === 'v2')
                     {{-- reCAPTCHA v2 Widget --}}
                     <div class="flex justify-center">
@@ -54,7 +54,7 @@
                     {{-- reCAPTCHA v3 (invisible) --}}
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
-                            const form = document.getElementById('form');
+                            const form = document.querySelector('form');
                             if (form) {
                                 form.addEventListener('submit', function(e) {
                                     e.preventDefault();
@@ -84,7 +84,7 @@
         <x-filament::button type="submit" class="w-full">
             Sign in
         </x-filament::button>
-    </x-filament-panels::form>
+    </form>
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, scopes: $this->getRenderHookScopes()) }}
 </x-filament-panels::page.simple>
