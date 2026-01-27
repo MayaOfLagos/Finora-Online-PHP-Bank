@@ -5,34 +5,16 @@ namespace App\Filament\Auth;
 use App\Services\ReCaptchaService;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\View as FormView;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\Locked;
 
 class Login extends BaseLogin
 {
+    protected static string $view = 'filament.pages.auth.login';
+
     #[Locked]
     public ?string $recaptchaToken = null;
-
-    public function form(Schema $schema): Schema
-    {
-        $recaptchaConfig = $this->getRecaptchaConfig();
-        
-        return $schema
-            ->schema([
-                $this->getEmailFormComponent(),
-                $this->getPasswordFormComponent(),
-                $this->getRememberFormComponent(),
-                // Add reCAPTCHA component if enabled
-                FormView::make('filament.components.recaptcha')
-                    ->viewData(['config' => $recaptchaConfig])
-                    ->visible($recaptchaConfig['enabled']),
-            ]);
-    }
 
     public function authenticate(): ?LoginResponse
     {
