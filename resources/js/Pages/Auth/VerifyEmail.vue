@@ -1,10 +1,11 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import AppLogo from '@/Components/Common/AppLogo.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
 const props = defineProps({
@@ -43,7 +44,7 @@ const verificationLinkSent = computed(
 </script>
 
 <template>
-    <Head title="Email Verification" />
+    <SeoHead title="Email Verification" />
     
     <Toast />
     

@@ -8,9 +8,9 @@ defineProps({
 });
 
 const page = usePage();
-const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
-const siteLogo = computed(() => page.props.settings?.branding?.site_logo);
-const siteLogoDark = computed(() => page.props.settings?.branding?.site_logo_dark);
+const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
+const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
+const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 </script>
 
 <template>

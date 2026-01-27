@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import InputOtp from 'primevue/inputotp';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import AppLogo from '@/Components/Common/AppLogo.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
 const props = defineProps({
@@ -14,9 +15,9 @@ const props = defineProps({
 
 const page = usePage();
 const toast = useToast();
-const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
-const siteLogo = computed(() => page.props.settings?.branding?.site_logo);
-const siteLogoDark = computed(() => page.props.settings?.branding?.site_logo_dark);
+const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
+const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
+const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
 // Dark mode toggle
 const isDarkMode = ref(false);
@@ -149,7 +150,7 @@ const logout = () => {
 </script>
 
 <template>
-    <Head :title="'Verify Email - ' + siteName" />
+    <SeoHead :title="'Verify Email'" />
     
     <Toast />
     

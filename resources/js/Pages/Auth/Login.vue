@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -9,7 +9,7 @@ import Checkbox from 'primevue/checkbox';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Toast from 'primevue/toast';
-import AppLogo from '@/Components/Common/AppLogo.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 
@@ -24,9 +24,9 @@ const props = defineProps({
 
 const page = usePage();
 const toast = useToast();
-const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
-const siteLogo = computed(() => page.props.settings?.branding?.site_logo);
-const siteLogoDark = computed(() => page.props.settings?.branding?.site_logo_dark);
+const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
+const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
+const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
 // Dark mode toggle
 const isDarkMode = ref(false);
@@ -110,7 +110,7 @@ const goToRegister = () => {
 </script>
 
 <template>
-    <Head :title="'Sign In - ' + siteName" />
+    <SeoHead :title="'Sign In'" />
     
     <Toast />
     

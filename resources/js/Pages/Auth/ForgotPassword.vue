@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Link, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -8,6 +8,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Toast from 'primevue/toast';
 import AppLogo from '@/Components/Common/AppLogo.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 
@@ -80,7 +81,7 @@ const submit = async () => {
 </script>
 
 <template>
-    <Head title="Forgot Password" />
+    <SeoHead title="Forgot Password" />
 
     <Toast />
 

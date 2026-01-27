@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import MainHeader from '@/Components/Landing/Header/MainHeader.vue';
 import MainFooter from '@/Components/Landing/Footer/MainFooter.vue';
 import MobileStickyFooter from '@/Components/Landing/Footer/MobileStickyFooter.vue';
@@ -11,6 +12,9 @@ const props = defineProps({
         required: true,
     },
 });
+
+const pageData = usePage();
+const siteName = computed(() => pageData.props.settings?.general?.site_name || pageData.props.settings?.general?.app_name || 'Finora Bank');
 
 const primaryCta = computed(() => props.page.primaryCta ?? {
     label: 'Open an account',
@@ -82,7 +86,7 @@ const getIcon = (title) => {
 
 <template>
     <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 text-gray-900">
-        <Head :title="page.title" />
+        <SeoHead :title="page.title" :description="page.summary" />
 
         <MainHeader />
 
@@ -189,7 +193,7 @@ const getIcon = (title) => {
                             Ready to get started?
                         </h2>
                         <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                            Join thousands of customers who trust Finora Bank for their financial needs.
+                            Join thousands of customers who trust {{ siteName }} for their financial needs.
                         </p>
                         <div class="flex flex-wrap gap-4 justify-center">
                             <Link

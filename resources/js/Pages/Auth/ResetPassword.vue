@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -9,12 +9,16 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Toast from 'primevue/toast';
 import AppLogo from '@/Components/Common/AppLogo.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
 const props = defineProps({
     email: String,
     token: String,
 });
+
+const page = usePage();
+const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
 
 const toast = useToast();
 const form = useForm({
@@ -73,7 +77,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Reset Password" />
+    <SeoHead title="Reset Password" />
 
     <Toast />
 
@@ -97,7 +101,7 @@ const submit = () => {
                 <div class="mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Create New Password</h2>
                     <p class="text-gray-600 text-sm">
-                        Enter a strong password to secure your Finora Bank account.
+                        Enter a strong password to secure your {{ siteName }} account.
                     </p>
                 </div>
 

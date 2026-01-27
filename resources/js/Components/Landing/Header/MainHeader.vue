@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
+import AppLogo from '@/Components/Common/AppLogo.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
 const page = usePage();
@@ -91,24 +92,7 @@ onUnmounted(() => {
             >
                 <!-- Logo -->
                 <Link href="/" class="flex items-center space-x-3 group">
-                    <div 
-                        class="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-xl transition-all duration-300 backdrop-blur-xl"
-                        :class="isScrolled 
-                            ? 'bg-primary-600 shadow-lg shadow-primary-600/30' 
-                            : 'bg-primary-600 shadow-lg shadow-primary-600/20'"
-                    >
-                        <span class="text-lg lg:text-xl font-bold text-white">F</span>
-                    </div>
-                    <div class="hidden sm:block">
-                        <span 
-                            class="text-lg lg:text-xl font-bold tracking-tight transition-colors duration-300"
-                            :class="isScrolled ? 'text-gray-900' : 'text-gray-900'"
-                        >Finora</span>
-                        <span 
-                            class="text-lg lg:text-xl font-light transition-colors duration-300"
-                            :class="isScrolled ? 'text-primary-600' : 'text-primary-600'"
-                        >Bank</span>
-                    </div>
+                    <AppLogo size="sm" />
                 </Link>
 
                 <!-- Desktop Navigation Links -->

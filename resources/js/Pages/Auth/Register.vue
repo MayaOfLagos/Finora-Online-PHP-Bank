@@ -5,10 +5,19 @@
  * 4-Step Wizard: Personal → Contact → Account → Security
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Skeleton from 'primevue/skeleton';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
+
+const page = usePage();
+const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
+const siteTagline = computed(() => page.props.settings?.general?.app_tagline || 'Secure Banking Platform');
+const siteInitial = computed(() => siteName.value.charAt(0) || 'F');
+const logoLight = computed(() => page.props.settings?.branding?.logo_light);
+const logoDark = computed(() => page.props.settings?.branding?.logo_dark);
+const copyrightText = computed(() => page.props.settings?.branding?.copyright_text || siteName.value);
 
 const props = defineProps({
     countries: {
@@ -43,15 +52,21 @@ const isProcessing = ref(false);
 const currentStep = ref(0);
 
 // Animated quotes for side panel
-const quotes = [
-    { text: "Banking made simple, secure, and smart.", author: "Finora Bank" },
-    { text: "Your financial future starts here.", author: "Join 10,000+ users" },
-    { text: "Experience the next generation of banking.", author: "Digital First" },
-    { text: "Where security meets convenience.", author: "Trusted Worldwide" },
-];
+const quotes = ref([]);
 const currentQuoteIndex = ref(0);
 const quoteVisible = ref(true);
 let quoteInterval = null;
+
+const setQuotes = () => {
+    quotes.value = [
+        { text: 'Banking made simple, secure, and smart.', author: siteName.value },
+        { text: 'Your financial future starts here.', author: siteName.value },
+        { text: 'Experience the next generation of banking.', author: siteName.value },
+        { text: 'Where security meets convenience.', author: siteTagline.value },
+    ];
+};
+
+watch(siteName, () => setQuotes(), { immediate: true });
 
 onMounted(() => {
     // Simulate initial load
@@ -62,7 +77,8 @@ onMounted(() => {
     quoteInterval = setInterval(() => {
         quoteVisible.value = false;
         setTimeout(() => {
-            currentQuoteIndex.value = (currentQuoteIndex.value + 1) % quotes.length;
+            const quoteCount = quotes.value.length || 1;
+            currentQuoteIndex.value = (currentQuoteIndex.value + 1) % quoteCount;
             quoteVisible.value = true;
         }, 500);
     }, 5000);
@@ -72,7 +88,7 @@ onUnmounted(() => {
     if (quoteInterval) clearInterval(quoteInterval);
 });
 
-const currentQuote = computed(() => quotes[currentQuoteIndex.value]);
+const currentQuote = computed(() => quotes.value[currentQuoteIndex.value] || { text: '', author: '' });
 
 // Form data
 const formData = ref({
@@ -319,7 +335,7 @@ const submitForm = async () => {
                 toast.add({
                     severity: 'success',
                     summary: 'Registration Successful',
-                    detail: 'Welcome to Finora Bank!',
+                    detail: `Welcome to ${siteName.value}!`,
                     life: 5000
                 });
             },
@@ -388,88 +404,102 @@ const getIconPath = (icon) => {
 </script>
 
 <template>
-    <Head title="Create Account" />
+    <SeoHead title="Create Account" :description="siteTagline" />
     
     <!-- Animated Gradient Background -->
     <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950">
         <div class="flex min-h-screen">
             
-            <!-- Left Side - Branding Panel (Hidden on mobile) -->
-            <div class="hidden lg:flex lg:w-2/5 xl:w-5/12 p-8 relative overflow-hidden">
-                <div class="relative h-full w-full rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 shadow-2xl flex flex-col justify-center overflow-hidden">
+            <!-- Left Side - Branding Panel with BG Image (Hidden on mobile) -->
+            <div class="hidden lg:block lg:w-2/5 xl:w-5/12 p-3">
+                <div class="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl">
+                    <!-- Background Image -->
+                    <div 
+                        class="absolute inset-0 bg-cover bg-center"
+                        style="background-image: url('/images/register-bg.jpg');"
+                    ></div>
                     
-                    <!-- Animated background shapes -->
+                    <!-- Gradient Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary-900/90 via-primary-800/85 to-indigo-900/90"></div>
+                    
+                    <!-- Animated Shapes -->
                     <div class="absolute inset-0 overflow-hidden">
-                        <div class="absolute -top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-                        <div class="absolute top-1/2 -right-16 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-                        <div class="absolute bottom-0 left-1/3 w-72 h-72 bg-pink-300/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+                        <div class="floating-shape shape-1"></div>
+                        <div class="floating-shape shape-2"></div>
+                        <div class="floating-shape shape-3"></div>
                     </div>
                     
                     <!-- Content -->
-                    <div class="relative z-10 text-center">
+                    <div class="relative z-10 flex flex-col items-center justify-center h-full p-10 text-center">
                         <!-- Logo -->
-                        <div class="flex justify-center mb-8">
-                            <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl">
-                                <span class="text-4xl font-bold text-white">F</span>
+                        <div class="mb-8">
+                            <img
+                                v-if="logoLight"
+                                :src="logoLight"
+                                :alt="siteName"
+                                class="h-16 w-auto drop-shadow-xl"
+                            />
+                            <img
+                                v-else-if="logoDark"
+                                :src="logoDark"
+                                :alt="siteName"
+                                class="h-16 w-auto drop-shadow-xl"
+                            />
+                            <div v-else class="flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 shadow-xl">
+                                <span class="text-4xl font-bold text-white">{{ siteInitial }}</span>
                             </div>
                         </div>
                         
-                        <h1 class="text-5xl font-bold text-white mb-3">Finora Bank</h1>
-                        <p class="text-xl text-white/90 mb-12">Secure Banking Platform</p>
+                        <!-- Title -->
+                        <h1 class="mb-2 text-4xl font-bold text-white xl:text-5xl">
+                            {{ siteName }}
+                        </h1>
+                        <p class="text-lg text-white/80">
+                            {{ siteTagline }}
+                        </p>
                         
-                        <!-- Animated Quote -->
-                        <div class="min-h-[140px] flex items-center justify-center mb-8">
+                        <!-- Animated Quote Section -->
+                        <div class="mt-12 mb-8 min-h-[120px] flex items-center justify-center">
                             <div 
-                                class="transition-all duration-500 ease-in-out"
+                                class="quote-container transition-all duration-500"
                                 :class="quoteVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'"
                             >
-                                <div class="relative max-w-md">
-                                    <svg class="absolute -top-4 -left-2 w-8 h-8 text-white/20" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                                    <p class="text-2xl font-light text-white italic px-8 leading-relaxed">
+                                <div class="relative">
+                                    <i class="pi pi-quote-left absolute -top-4 -left-2 text-3xl text-white/20"></i>
+                                    <p class="text-xl xl:text-2xl font-light text-white italic px-6">
                                         {{ currentQuote.text }}
                                     </p>
-                                    <svg class="absolute -bottom-4 -right-2 w-8 h-8 text-white/20 transform rotate-180" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                                    <i class="pi pi-quote-right absolute -bottom-4 -right-2 text-3xl text-white/20"></i>
                                 </div>
-                                <p class="mt-6 text-white/70 font-medium">— {{ currentQuote.author }}</p>
+                                <p class="mt-4 text-sm text-white/60 font-medium">
+                                    — {{ currentQuote.author }}
+                                </p>
                             </div>
                         </div>
                         
                         <!-- Quote Indicators -->
-                        <div class="flex justify-center gap-2 mb-12">
+                        <div class="flex gap-2 mb-8">
                             <span 
                                 v-for="(_, index) in quotes" 
                                 :key="index"
-                                class="h-2 rounded-full transition-all duration-300 cursor-pointer hover:bg-white/60"
-                                :class="currentQuoteIndex === index ? 'bg-white w-8' : 'bg-white/40 w-2'"
-                                @click="currentQuoteIndex = index; quoteVisible = false; setTimeout(() => quoteVisible = true, 50)"
+                                class="w-2 h-2 rounded-full transition-all duration-300"
+                                :class="currentQuoteIndex === index ? 'bg-white w-6' : 'bg-white/40'"
                             ></span>
                         </div>
                         
                         <!-- Features -->
-                        <div class="space-y-4 max-w-sm mx-auto">
-                            <div class="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                                <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
+                        <div class="space-y-3 text-left w-full max-w-xs">
+                            <div class="flex items-center gap-3 text-white/90 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                                <div class="w-8 h-8 flex items-center justify-center bg-green-500/20 rounded-lg">
+                                    <i class="pi pi-shield text-green-400"></i>
                                 </div>
-                                <span class="text-white/95 font-medium">Bank-grade Security</span>
+                                <span class="text-sm">Bank-grade Security</span>
                             </div>
-                            <div class="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                                <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
+                            <div class="flex items-center gap-3 text-white/90 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                                <div class="w-8 h-8 flex items-center justify-center bg-blue-500/20 rounded-lg">
+                                    <i class="pi pi-bolt text-blue-400"></i>
                                 </div>
-                                <span class="text-white/95 font-medium">Instant Transfers</span>
-                            </div>
-                            <div class="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                                <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-white/95 font-medium">Global Access</span>
+                                <span class="text-sm">Instant Transfers</span>
                             </div>
                         </div>
                     </div>
@@ -477,21 +507,33 @@ const getIconPath = (icon) => {
             </div>
             
             <!-- Right Side - Form Panel -->
-            <div class="flex-1 flex flex-col lg:w-3/5 xl:w-7/12 p-4 md:p-8">
+            <div class="flex flex-col flex-1 lg:w-3/5 xl:w-7/12">
                 
-                <!-- Mobile Header -->
-                <div class="lg:hidden mb-6 text-center p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <!-- Mobile Header (Only visible on mobile) -->
+                <div class="lg:hidden py-5 px-6 text-center bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
                     <div class="flex items-center justify-center gap-3 mb-2">
-                        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                            <span class="text-xl font-bold text-white">F</span>
+                        <img
+                            v-if="logoLight"
+                            :src="logoLight"
+                            :alt="siteName"
+                            class="h-10 w-auto"
+                        />
+                        <img
+                            v-else-if="logoDark"
+                            :src="logoDark"
+                            :alt="siteName"
+                            class="h-10 w-auto"
+                        />
+                        <div v-else class="flex items-center justify-center w-10 h-10 bg-primary-600 rounded-xl">
+                            <span class="text-xl font-bold text-white">{{ siteInitial }}</span>
                         </div>
-                        <span class="text-xl font-bold text-gray-900 dark:text-white">Finora Bank</span>
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">{{ siteName }}</span>
                     </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Secure Banking Platform</p>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">{{ siteTagline }}</p>
                 </div>
                 
                 <!-- Form Container -->
-                <div class="flex-1 flex items-center justify-center">
+                <div class="flex-1 flex items-center justify-center p-4 md:p-8 lg:p-10">
                     <div class="w-full max-w-2xl">
                         
                         <!-- Loading Skeleton -->
@@ -820,7 +862,7 @@ const getIconPath = (icon) => {
                                             <!-- Postal Code -->
                                             <div>
                                                 <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                    Postal Code <span class="text-sm text-gray-500">(Optional)</span>
+                                                    Postal Code
                                                 </label>
                                                 <input
                                                     v-model="formData.postal_code"
@@ -1202,10 +1244,10 @@ const getIconPath = (icon) => {
                                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                Creating Account...
+                                                Registering...
                                             </span>
                                             <span v-else class="flex items-center gap-2">
-                                                Create Account
+                                                Register
                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                     <path :d="getIconPath('check')" />
                                                 </svg>
@@ -1228,7 +1270,7 @@ const getIconPath = (icon) => {
                             <!-- Footer -->
                             <div class="mt-8 text-center">
                                 <p class="text-xs text-gray-500 dark:text-gray-500">
-                                    © {{ new Date().getFullYear() }} Finora Bank. All Rights Reserved.
+                                    © {{ new Date().getFullYear() }} {{ copyrightText }}. All Rights Reserved.
                                 </p>
                             </div>
                         </div>
@@ -1262,7 +1304,7 @@ const getIconPath = (icon) => {
                     
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">1. Account Terms</h4>
                     <p class="text-gray-700 dark:text-gray-300 mb-4">
-                        By opening an account with Finora Bank, you agree to maintain accurate and complete information about yourself. 
+                        By opening an account with {{ siteName }}, you agree to maintain accurate and complete information about yourself. 
                         You must be at least 18 years of age to open an account.
                     </p>
                     

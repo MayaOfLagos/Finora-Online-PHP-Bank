@@ -4,8 +4,9 @@
  * Layout for authentication pages (Login, Register, etc.)
  */
 import { computed, onMounted } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import AppLogo from '@/Components/Common/AppLogo.vue';
+import SeoHead from '@/Components/Common/SeoHead.vue';
 import { useDarkMode } from '@/Composables/useDarkMode';
 
 const props = defineProps({
@@ -19,6 +20,11 @@ const props = defineProps({
     },
 });
 
+const page = usePage();
+const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
+const siteTagline = computed(() => page.props.settings?.general?.app_tagline || 'Banking Made Simple');
+const siteInitial = computed(() => siteName.value.charAt(0));
+const copyrightText = computed(() => page.props.settings?.branding?.copyright_text || siteName.value);
 const { initDarkMode } = useDarkMode();
 
 onMounted(() => {
@@ -28,7 +34,7 @@ onMounted(() => {
 
 <template>
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-        <Head :title="title" />
+        <SeoHead :title="title" :description="subtitle || siteTagline" />
 
         <!-- Background Pattern -->
         <div class="fixed inset-0 -z-10 overflow-hidden">
@@ -55,19 +61,19 @@ onMounted(() => {
                 <div class="relative">
                     <Link href="/" class="inline-flex items-center gap-3">
                         <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                            <span class="text-white font-bold text-xl">F</span>
+                            <span class="text-white font-bold text-xl">{{ siteInitial }}</span>
                         </div>
-                        <span class="text-white text-2xl font-bold">Finora Bank</span>
+                        <span class="text-white text-2xl font-bold">{{ siteName }}</span>
                     </Link>
                 </div>
 
                 <!-- Hero Content -->
                 <div class="relative">
                     <h1 class="text-4xl font-bold text-white mb-4">
-                        Banking Made Simple
+                        {{ siteTagline }}
                     </h1>
                     <p class="text-white/80 text-lg max-w-md">
-                        Experience seamless banking with Finora. Transfer funds, manage accounts, and track your finances all in one place.
+                        Experience seamless banking with {{ siteName }}. Transfer funds, manage accounts, and track your finances all in one place.
                     </p>
 
                     <!-- Features List -->
@@ -95,7 +101,7 @@ onMounted(() => {
 
                 <!-- Footer -->
                 <div class="relative text-white/60 text-sm">
-                    © {{ new Date().getFullYear() }} Finora Bank. All rights reserved.
+                    © {{ new Date().getFullYear() }} {{ copyrightText }}. All rights reserved.
                 </div>
             </div>
 
