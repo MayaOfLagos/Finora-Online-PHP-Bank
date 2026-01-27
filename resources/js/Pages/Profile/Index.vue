@@ -101,9 +101,6 @@ const newPinForm = useForm({
     pin_confirmation: '',
 });
 
-// Two Factor state
-const twoFactorEnabled = ref(props.user.two_factor_enabled);
-
 // Settings forms (moved from Settings page)
 const preferencesForm = useForm({
     theme: props.preferences?.theme || 'system',
@@ -211,21 +208,6 @@ const submitNewPin = () => {
                 severity: 'success',
                 summary: 'PIN Set',
                 detail: 'Your transaction PIN has been set successfully.',
-                life: 3000,
-            });
-        },
-    });
-};
-
-const toggleTwoFactor = () => {
-    router.post('/profile/two-factor', {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            twoFactorEnabled.value = !twoFactorEnabled.value;
-            toast.add({
-                severity: 'success',
-                summary: 'Two-Factor Authentication',
-                detail: twoFactorEnabled.value ? 'Two-factor authentication enabled.' : 'Two-factor authentication disabled.',
                 life: 3000,
             });
         },
@@ -723,29 +705,6 @@ const handleImageError = (event) => {
                                         </template>
                                     </Card>
                                 </div>
-
-                                <Card>
-                                    <template #title>
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-shield text-indigo-500"></i>
-                                            <span>Two-Factor Authentication</span>
-                                        </div>
-                                    </template>
-                                    <template #content>
-                                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                            <div>
-                                                <p class="font-medium text-gray-900 dark:text-white">Email OTP Verification</p>
-                                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                                    Receive a verification code via email for sensitive actions.
-                                                </p>
-                                            </div>
-                                            <ToggleSwitch 
-                                                v-model="twoFactorEnabled"
-                                                @change="toggleTwoFactor"
-                                            />
-                                        </div>
-                                    </template>
-                                </Card>
 
                                 <Card>
                                     <template #title>

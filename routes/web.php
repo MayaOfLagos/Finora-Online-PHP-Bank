@@ -261,7 +261,6 @@ Route::middleware(['auth', 'verified.email.otp', 'verified.pin', 'user.only'])->
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/pin', [ProfileController::class, 'setPin'])->name('profile.pin.set');
     Route::put('/profile/pin', [ProfileController::class, 'updatePin'])->name('profile.pin.update');
-    Route::post('/profile/two-factor', [ProfileController::class, 'toggleTwoFactor'])->name('profile.two-factor');
 
     // Settings routes (Settings is now a tab in Profile, redirect for backwards compatibility)
     Route::get('/settings', function () {

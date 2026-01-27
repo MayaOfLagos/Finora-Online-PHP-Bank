@@ -234,22 +234,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Toggle two-factor authentication
-     */
-    public function toggleTwoFactor(Request $request)
-    {
-        $user = Auth::user();
-        
-        $user->update([
-            'two_factor_enabled' => !$user->two_factor_enabled,
-        ]);
-
-        $status = $user->two_factor_enabled ? 'enabled' : 'disabled';
-
-        return back()->with('success', "Two-factor authentication {$status} successfully.");
-    }
-
-    /**
      * Get device info from request
      */
     private function getDeviceInfo(Request $request): string
