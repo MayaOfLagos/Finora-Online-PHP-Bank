@@ -20,6 +20,11 @@ class RestrictAdminFromUserDashboard
     {
         $user = $request->user();
 
+        // Allow access if admin is impersonating a user
+        if (session()->has('impersonator_id')) {
+            return $next($request);
+        }
+
         // If user is admin or super_admin, redirect to admin panel
         if ($user && $user->role?->isAdminOrHigher()) {
             return redirect('/admin');

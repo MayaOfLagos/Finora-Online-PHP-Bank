@@ -15,6 +15,7 @@ import Popover from 'primevue/popover';
 import Button from 'primevue/button';
 
 import AppLogo from '@/Components/Common/AppLogo.vue';
+import ImpersonationBanner from '@/Components/Common/ImpersonationBanner.vue';
 import Sidebar from '@/Components/Navigation/Sidebar.vue';
 import BottomNav from '@/Components/Navigation/BottomNav.vue';
 import UserMenu from '@/Components/Navigation/UserMenu.vue';
@@ -33,6 +34,7 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const notifications = computed(() => page.props.notifications ?? []);
+const isImpersonating = computed(() => page.props.auth?.isImpersonating ?? false);
 
 // Initialize dark mode
 const { initDarkMode, isDark } = useDarkMode();
@@ -175,6 +177,9 @@ const handleMarkAllRead = () => {
 <template>
     <div class="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
         <Head :title="title" />
+
+        <!-- Impersonation Banner -->
+        <ImpersonationBanner />
 
         <!-- Toast notifications -->
         <Toast position="top-right" />
@@ -340,11 +345,15 @@ const handleMarkAllRead = () => {
         <div
             :class="[
                 'transition-all duration-300',
-                sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+                sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64',
+                isImpersonating ? 'pt-12 sm:pt-10' : ''
             ]"
         >
             <!-- Top Header -->
-            <header class="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <header 
+                class="sticky z-30 bg-white border-b border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700" 
+                :class="isImpersonating ? 'top-12 sm:top-10' : 'top-0'"
+            >
                 <div class="flex items-center justify-between h-16 px-4 sm:px-6">
                     <!-- Mobile Logo & Menu Toggle -->
                     <div class="flex items-center gap-3 lg:hidden">
