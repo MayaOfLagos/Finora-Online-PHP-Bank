@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\ReCaptchaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -16,8 +17,11 @@ class PasswordResetLinkController extends Controller
      */
     public function create(): Response
     {
+        $recaptchaService = app(ReCaptchaService::class);
+        
         return Inertia::render('Auth/ForgotPassword', [
             'status' => session('status'),
+            'recaptcha' => $recaptchaService->getConfig(forAdmin: false),
         ]);
     }
 
@@ -26,6 +30,22 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Verify reCAPTCHA first
+        $recaptchaService = app(ReCaptchaService::class);
+        
+        if ($recaptchaService->isEnforcedForUser()) {
+            $recaptchaResult = $recaptchaService->verify(
+                $request->input('recaptcha_token'),
+                $request->ip()
+            );
+            
+            if (!$recaptchaResult['success']) {
+                return back()->withErrors([
+                    'recaptcha_token' => $recaptchaResult['message'] ?? 'Security verification failed. Please try again.',
+                ]);
+            }
+        }
+        
         $request->validate([
             'email' => 'required|email',
         ]);

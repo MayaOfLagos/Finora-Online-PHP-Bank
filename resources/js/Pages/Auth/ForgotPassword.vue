@@ -6,21 +6,49 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Toast from 'primevue/toast';import AppLogo from '@/Components/Common/AppLogo.vue';
+import Toast from 'primevue/toast';
+import AppLogo from '@/Components/Common/AppLogo.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
+import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
+
 const props = defineProps({
     status: String,
+    recaptcha: {
+        type: Object,
+        default: () => ({ enabled: false, siteKey: '', version: 'v2' }),
+    },
 });
 
 const toast = useToast();
+const recaptchaRef = ref(null);
+
 const form = useForm({
     email: '',
+    recaptcha_token: '',
 });
 
 const isSubmitting = ref(false);
 
-const submit = () => {
+const submit = async () => {
     isSubmitting.value = true;
+    
+    // Get reCAPTCHA token if enabled
+    if (props.recaptcha?.enabled && recaptchaRef.value) {
+        try {
+            const token = await recaptchaRef.value.getToken();
+            form.recaptcha_token = token;
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Verification Failed',
+                detail: 'Please complete the security verification.',
+                life: 3000,
+            });
+            isSubmitting.value = false;
+            return;
+        }
+    }
+    
     form.post(route('password.email'), {
         onSuccess: () => {
             toast.add({
@@ -30,16 +58,22 @@ const submit = () => {
                 life: 4000,
             });
         },
-        onError: () => {
+        onError: (errors) => {
+            // Reset reCAPTCHA on error
+            if (props.recaptcha?.enabled && props.recaptcha?.version === 'v2' && recaptchaRef.value) {
+                recaptchaRef.value.reset();
+            }
+            
             toast.add({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Failed to send reset link. Please try again.',
+                detail: errors.recaptcha_token || errors.email || 'Failed to send reset link. Please try again.',
                 life: 4000,
             });
         },
         onFinish: () => {
             isSubmitting.value = false;
+            form.recaptcha_token = '';
         },
     });
 };
@@ -91,7 +125,26 @@ const submit = () => {
                             @keyup.enter="submit"
                         />
                     </IconField>
+                    <small v-if="form.errors.email" class="text-red-500 mt-1 block">
+                        {{ form.errors.email }}
+                    </small>
                 </div>
+
+                <!-- reCAPTCHA -->
+                <div v-if="recaptcha?.enabled" class="flex justify-center mb-4">
+                    <ReCaptcha
+                        ref="recaptchaRef"
+                        :site-key="recaptcha.siteKey"
+                        :version="recaptcha.version"
+                        theme="light"
+                        action="password_reset"
+                        @verify="(token) => form.recaptcha_token = token"
+                        @expire="() => form.recaptcha_token = ''"
+                    />
+                </div>
+                <small v-if="form.errors.recaptcha_token" class="text-red-500 text-sm text-center block mb-4">
+                    {{ form.errors.recaptcha_token }}
+                </small>
 
                 <!-- Submit Button -->
                 <Button

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Login;
 use App\Filament\Pages\Profile;
 use App\Models\Setting;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -30,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->profile(Profile::class)
             ->multiFactorAuthentication([
                 // App authentication (Google Authenticator, Authy, etc.)

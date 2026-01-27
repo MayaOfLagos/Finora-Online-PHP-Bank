@@ -17,6 +17,7 @@ import Divider from 'primevue/divider';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Dialog from 'primevue/dialog';
+import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 
 const props = defineProps({
     countries: {
@@ -34,7 +35,11 @@ const props = defineProps({
     errors: {
         type: Object,
         default: () => ({})
-    }
+    },
+    recaptcha: {
+        type: Object,
+        default: () => ({ enabled: false, siteKey: '', version: 'v2' }),
+    },
 });
 
 const toast = useToast();
@@ -100,6 +105,8 @@ const formData = ref({
 });
 
 const isProcessing = ref(false);
+const recaptchaRef = ref(null);
+const recaptchaToken = ref('');
 
 // Modal dialogs state
 const showTermsModal = ref(false);
@@ -227,7 +234,7 @@ const prevStep = () => {
     }
 };
 
-const submitForm = () => {
+const submitForm = async () => {
     if (!canProceed.value) {
         toast.add({
             severity: 'error',
@@ -240,7 +247,27 @@ const submitForm = () => {
     
     isProcessing.value = true;
     
-    router.post(route('register'), formData.value, {
+    // Get reCAPTCHA token if enabled
+    let captchaToken = '';
+    if (props.recaptcha?.enabled && recaptchaRef.value) {
+        try {
+            captchaToken = await recaptchaRef.value.getToken();
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Verification Failed',
+                detail: 'Please complete the security verification.',
+                life: 3000,
+            });
+            isProcessing.value = false;
+            return;
+        }
+    }
+    
+    router.post(route('register'), {
+        ...formData.value,
+        recaptcha_token: captchaToken,
+    }, {
         onSuccess: () => {
             toast.add({
                 severity: 'success',
@@ -250,10 +277,16 @@ const submitForm = () => {
             });
         },
         onError: (errors) => {
+            // Reset reCAPTCHA on error
+            if (props.recaptcha?.enabled && props.recaptcha?.version === 'v2' && recaptchaRef.value) {
+                recaptchaRef.value.reset();
+            }
+            
+            const errorMessage = errors.recaptcha_token || errors.email || errors.username || 'Please check the form for errors';
             toast.add({
                 severity: 'error',
                 summary: 'Registration Failed',
-                detail: errors.email || errors.username || 'Please check the form for errors',
+                detail: errorMessage,
                 life: 5000
             });
             
@@ -261,7 +294,7 @@ const submitForm = () => {
             if (errors.first_name || errors.last_name || errors.username) currentStep.value = 0;
             else if (errors.email || errors.phone || errors.address) currentStep.value = 1;
             else if (errors.account_type) currentStep.value = 2;
-            else if (errors.password || errors.transaction_pin) currentStep.value = 3;
+            else if (errors.password || errors.transaction_pin || errors.recaptcha_token) currentStep.value = 3;
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -893,6 +926,22 @@ watch(() => props.errors, (newErrors) => {
                                                 {{ stepErrors.agree_privacy }}
                                             </small>
                                         </div>
+                                        
+                                        <!-- reCAPTCHA -->
+                                        <div v-if="recaptcha?.enabled" class="flex justify-center mt-4">
+                                            <ReCaptcha
+                                                ref="recaptchaRef"
+                                                :site-key="recaptcha.siteKey"
+                                                :version="recaptcha.version"
+                                                theme="light"
+                                                action="register"
+                                                @verify="(token) => recaptchaToken = token"
+                                                @expire="() => recaptchaToken = ''"
+                                            />
+                                        </div>
+                                        <small v-if="errors.recaptcha_token" class="text-red-500 text-sm text-center block">
+                                            {{ errors.recaptcha_token }}
+                                        </small>
                                     </div>
                                 </div>
                                 

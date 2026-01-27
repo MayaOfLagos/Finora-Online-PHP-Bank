@@ -11,10 +11,15 @@ import InputIcon from 'primevue/inputicon';
 import Toast from 'primevue/toast';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
+import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 
 const props = defineProps({
     canResetPassword: Boolean,
     status: String,
+    recaptcha: {
+        type: Object,
+        default: () => ({ enabled: false, siteKey: '', version: 'v2' }),
+    },
 });
 
 const page = usePage();
@@ -50,25 +55,51 @@ const form = useForm({
     email: '',
     password: '',
     remember: false,
+    recaptcha_token: '',
 });
 
 const isLoading = ref(false);
+const recaptchaRef = ref(null);
 
-const submit = () => {
+const submit = async () => {
     isLoading.value = true;
     
+    // Get reCAPTCHA token if enabled
+    if (props.recaptcha?.enabled && recaptchaRef.value) {
+        try {
+            const token = await recaptchaRef.value.getToken();
+            form.recaptcha_token = token;
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Verification Failed',
+                detail: 'Please complete the security verification.',
+                life: 3000,
+            });
+            isLoading.value = false;
+            return;
+        }
+    }
+    
     form.post(route('login'), {
-        onError: () => {
+        onError: (errors) => {
+            // Reset reCAPTCHA on error
+            if (props.recaptcha?.enabled && props.recaptcha?.version === 'v2' && recaptchaRef.value) {
+                recaptchaRef.value.reset();
+            }
+            
+            const errorMessage = errors.recaptcha_token || errors.email || 'Invalid email or password. Please try again.';
             toast.add({
                 severity: 'error',
                 summary: 'Login Failed',
-                detail: 'Invalid email or password. Please try again.',
+                detail: errorMessage,
                 life: 3000,
             });
         },
         onFinish: () => {
             isLoading.value = false;
             form.reset('password');
+            form.recaptcha_token = '';
         },
     });
 };
@@ -213,6 +244,22 @@ const goToRegister = () => {
                                 Forgot password?
                             </Link>
                         </div>
+
+                        <!-- reCAPTCHA -->
+                        <div v-if="recaptcha?.enabled" class="flex justify-center">
+                            <ReCaptcha
+                                ref="recaptchaRef"
+                                :site-key="recaptcha.siteKey"
+                                :version="recaptcha.version"
+                                :theme="isDarkMode ? 'dark' : 'light'"
+                                action="login"
+                                @verify="(token) => form.recaptcha_token = token"
+                                @expire="() => form.recaptcha_token = ''"
+                            />
+                        </div>
+                        <small v-if="form.errors.recaptcha_token" class="text-red-500 text-sm text-center block">
+                            {{ form.errors.recaptcha_token }}
+                        </small>
 
                         <!-- Submit Button -->
                         <Button

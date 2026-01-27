@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AccountType;
 use App\Models\BankAccount;
 use App\Models\User;
+use App\Services\ReCaptchaService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        $recaptchaService = app(ReCaptchaService::class);
+        
         // Get account types for dropdown
         $accountTypes = AccountType::where('is_active', true)
             ->orderBy('name')
@@ -53,6 +56,7 @@ class RegisteredUserController extends Controller
             'countries' => $countries,
             'currencies' => $currencies,
             'accountTypes' => $accountTypes,
+            'recaptcha' => $recaptchaService->getConfig(forAdmin: false),
         ]);
     }
 
@@ -61,6 +65,22 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Verify reCAPTCHA first
+        $recaptchaService = app(ReCaptchaService::class);
+        
+        if ($recaptchaService->isEnforcedForUser()) {
+            $recaptchaResult = $recaptchaService->verify(
+                $request->input('recaptcha_token'),
+                $request->ip()
+            );
+            
+            if (!$recaptchaResult['success']) {
+                return back()->withErrors([
+                    'recaptcha_token' => $recaptchaResult['message'] ?? 'Security verification failed. Please try again.',
+                ]);
+            }
+        }
+        
         $validated = $request->validate([
             // Personal Info
             'first_name' => ['required', 'string', 'max:255'],
