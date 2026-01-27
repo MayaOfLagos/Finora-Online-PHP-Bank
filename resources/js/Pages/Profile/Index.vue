@@ -1083,3 +1083,13 @@ const handleImageError = (event) => {
         </Dialog>
     </DashboardLayout>
 </template>
+
+<style scoped>
+:deep(.p-password) {
+    width: 100%;
+}
+
+:deep(.p-password-input) {
+    width: 100%;
+}
+</style>
