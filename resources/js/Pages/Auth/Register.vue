@@ -511,7 +511,7 @@ const getIconPath = (icon) => {
                 
                 <!-- Mobile Header (Only visible on mobile) -->
                 <div class="lg:hidden py-5 px-6 text-center bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-                    <div class="flex items-center justify-center gap-3 mb-2">
+                    <div class="flex items-center justify-center">
                         <img
                             v-if="logoLight"
                             :src="logoLight"
@@ -527,9 +527,7 @@ const getIconPath = (icon) => {
                         <div v-else class="flex items-center justify-center w-10 h-10 bg-primary-600 rounded-xl">
                             <span class="text-xl font-bold text-white">{{ siteInitial }}</span>
                         </div>
-                        <span class="text-xl font-bold text-gray-900 dark:text-white">{{ siteName }}</span>
                     </div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm">{{ siteTagline }}</p>
                 </div>
                 
                 <!-- Form Container -->
