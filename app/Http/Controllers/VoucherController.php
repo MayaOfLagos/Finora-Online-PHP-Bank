@@ -29,8 +29,14 @@ class VoucherController extends Controller
             ->paginate(20);
 
         $bankAccounts = $user->bankAccounts()
-            ->select('id', 'account_number', 'account_name', 'currency')
-            ->get();
+            ->with('accountType:id,name')
+            ->get()
+            ->map(fn ($account) => [
+                'id' => $account->id,
+                'account_number' => $account->account_number,
+                'account_name' => $account->accountType?->name ?? 'Account',
+                'currency' => $account->currency,
+            ]);
 
         $stats = [
             'active' => $user->vouchers()->where('is_used', false)->where('status', 'active')->count(),
@@ -87,7 +93,7 @@ class VoucherController extends Controller
             return back()->withErrors(['voucher_code' => 'This voucher has reached its usage limit.']);
         }
 
-        $bankAccount = $user->bankAccounts()->findOrFail($validated['bank_account_id']);
+        $bankAccount = $user->bankAccounts()->with('accountType:id,name')->findOrFail($validated['bank_account_id']);
 
         // Add voucher amount to account
         $bankAccount->increment('balance', $voucher->amount);

@@ -56,7 +56,7 @@ class TransferController extends Controller
 
         $beneficiaries = $user->beneficiaries()
             ->where('is_active', true)
-            ->with(['beneficiaryUser:id,name,email', 'beneficiaryAccount:id,account_number,account_name,currency'])
+            ->with(['beneficiaryUser:id,name,email', 'beneficiaryAccount:id,account_number,account_type_id,currency', 'beneficiaryAccount.accountType:id,name'])
             ->orderBy('is_favorite', 'desc')
             ->orderBy('last_used_at', 'desc')
             ->get()
@@ -65,7 +65,7 @@ class TransferController extends Controller
                     'uuid' => $beneficiary->uuid,
                     'nickname' => $beneficiary->nickname,
                     'is_favorite' => $beneficiary->is_favorite,
-                    'beneficiary_name' => $beneficiary->beneficiaryUser?->name ?? $beneficiary->beneficiaryAccount?->account_name ?? 'Unknown',
+                    'beneficiary_name' => $beneficiary->beneficiaryUser?->name ?? $beneficiary->beneficiaryAccount?->accountType?->name ?? 'Unknown',
                     'account_number' => $beneficiary->beneficiaryAccount?->account_number,
                     'currency' => $beneficiary->beneficiaryAccount?->currency ?? 'USD',
                 ];

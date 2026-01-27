@@ -39,8 +39,14 @@ class RewardController extends Controller
         ];
 
         $bankAccounts = $user->bankAccounts()
-            ->select('id', 'account_number', 'account_name', 'currency')
-            ->get();
+            ->with('accountType:id,name')
+            ->get()
+            ->map(fn ($account) => [
+                'id' => $account->id,
+                'account_number' => $account->account_number,
+                'account_name' => $account->accountType?->name ?? 'Account',
+                'currency' => $account->currency,
+            ]);
 
         return Inertia::render('Reward/Index', [
             'rewards' => $rewards,

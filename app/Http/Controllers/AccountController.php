@@ -76,7 +76,6 @@ class AccountController extends Controller
 
         $validated = $request->validate([
             'account_type_id' => 'required|exists:account_types,id',
-            'account_name' => 'nullable|string|max:255',
             'currency' => 'required|string|size:3',
             'terms_accepted' => 'required|accepted',
             'pin' => 'required|string|size:6',
@@ -96,7 +95,6 @@ class AccountController extends Controller
         $account = $request->user()->bankAccounts()->create([
             'account_type_id' => $validated['account_type_id'],
             'account_number' => $accountNumber,
-            'account_name' => $validated['account_name'],
             'balance' => 0,
             'currency' => $validated['currency'],
             'status' => 'active',

@@ -24,7 +24,7 @@ class BeneficiaryController extends Controller
             ->where('user_id', $user->id)
             ->with([
                 'beneficiaryUser:id,name,email',
-                'beneficiaryAccount:id,uuid,account_number,account_name,currency',
+                'beneficiaryAccount:id,uuid,account_number,account_type_id,currency',
                 'beneficiaryAccount.accountType:id,name',
             ])
             ->orderBy('is_favorite', 'desc')
@@ -47,7 +47,7 @@ class BeneficiaryController extends Controller
                     'beneficiary_account' => $beneficiary->beneficiaryAccount ? [
                         'uuid' => $beneficiary->beneficiaryAccount->uuid,
                         'account_number' => $beneficiary->beneficiaryAccount->account_number,
-                        'account_name' => $beneficiary->beneficiaryAccount->account_name,
+                        'account_name' => $beneficiary->beneficiaryAccount->accountType?->name ?? 'Account',
                         'currency' => $beneficiary->beneficiaryAccount->currency,
                         'account_type' => $beneficiary->beneficiaryAccount->accountType?->name,
                     ] : null,

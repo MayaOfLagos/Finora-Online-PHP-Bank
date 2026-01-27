@@ -46,7 +46,7 @@ class VoucherRedeemedMail extends Mailable
                 'voucherCode' => $this->voucher->code,
                 'amount' => number_format($this->voucher->amount / 100, 2),
                 'currency' => $this->voucher->currency ?? 'USD',
-                'accountName' => $this->bankAccount->account_name,
+                'accountName' => $this->bankAccount->accountType?->name ?? 'Account',
                 'accountNumber' => '****' . substr($this->bankAccount->account_number, -4),
                 'redeemedAt' => now()->format('F j, Y \a\t g:i A'),
             ],

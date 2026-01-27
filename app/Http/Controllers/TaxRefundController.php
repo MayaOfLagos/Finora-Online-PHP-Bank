@@ -21,7 +21,7 @@ class TaxRefundController extends Controller
         $user = Auth::user();
 
         $refunds = TaxRefund::where('user_id', $user->id)
-            ->with('bankAccount:id,account_number,account_name,currency')
+            ->with(['bankAccount:id,account_number,account_type_id,currency', 'bankAccount.accountType:id,name'])
             ->latest()
             ->get()
             ->map(fn ($refund) => [
@@ -41,7 +41,7 @@ class TaxRefundController extends Controller
                 'rejection_reason' => $refund->rejection_reason,
                 'bank_account' => $refund->bankAccount ? [
                     'account_number' => '****' . substr($refund->bankAccount->account_number, -4),
-                    'account_name' => $refund->bankAccount->account_name,
+                    'account_name' => $refund->bankAccount->accountType?->name ?? 'Account',
                 ] : null,
             ]);
 
@@ -69,10 +69,11 @@ class TaxRefundController extends Controller
 
         $bankAccounts = $user->bankAccounts()
             ->where('is_active', true)
+            ->with('accountType:id,name')
             ->get()
             ->map(fn ($account) => [
                 'id' => $account->id,
-                'label' => $account->account_name . ' - ****' . substr($account->account_number, -4),
+                'label' => ($account->accountType?->name ?? 'Account') . ' - ****' . substr($account->account_number, -4),
                 'currency' => $account->currency,
             ]);
 
@@ -178,10 +179,11 @@ class TaxRefundController extends Controller
 
         $bankAccounts = $user->bankAccounts()
             ->where('is_active', true)
+            ->with('accountType:id,name')
             ->get()
             ->map(fn ($account) => [
                 'id' => $account->id,
-                'label' => $account->account_name . ' - ****' . substr($account->account_number, -4),
+                'label' => ($account->accountType?->name ?? 'Account') . ' - ****' . substr($account->account_number, -4),
                 'currency' => $account->currency,
             ]);
 

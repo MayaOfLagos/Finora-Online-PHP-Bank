@@ -130,6 +130,8 @@ class TransactionHistoryController extends Controller
     {
         $this->authorize('view', $transaction);
 
+        $transaction->load('bankAccount.accountType:id,name');
+
         return Inertia::render('Transactions/Show', [
             'transaction' => [
                 'uuid' => $transaction->uuid,
@@ -147,7 +149,7 @@ class TransactionHistoryController extends Controller
                 'bank_account' => $transaction->bankAccount ? [
                     'uuid' => $transaction->bankAccount->uuid,
                     'account_number' => $transaction->bankAccount->account_number,
-                    'account_name' => $transaction->bankAccount->account_name,
+                    'account_name' => $transaction->bankAccount->accountType?->name ?? 'Account',
                 ] : null,
             ],
         ]);
