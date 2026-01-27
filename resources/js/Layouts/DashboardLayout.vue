@@ -233,7 +233,7 @@ const handleMarkAllRead = () => {
                 <!-- Mobile Sidebar Header -->
                 <div class="relative flex items-center justify-between h-16 px-5 border-b border-white/20 dark:border-white/10">
                     <Link href="/dashboard" @click="closeMobileMenu">
-                        <AppLogo />
+                        <AppLogo :show-text="false" />
                     </Link>
                     <button
                         @click="closeMobileMenu"

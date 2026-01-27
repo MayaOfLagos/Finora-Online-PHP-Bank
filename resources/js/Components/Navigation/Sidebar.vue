@@ -59,7 +59,7 @@ const isExpanded = (itemName) => {
         <!-- Logo -->
         <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
             <Link href="/dashboard" class="flex items-center">
-                <AppLogo :show-text="!collapsed" />
+                <AppLogo :show-text="false" />
             </Link>
         </div>
 

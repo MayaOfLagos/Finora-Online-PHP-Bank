@@ -95,7 +95,7 @@ const submit = async () => {
             <!-- Logo Section -->
             <div class="text-center mb-8">
                 <Link href="/" class="inline-flex items-center justify-center">
-                    <AppLogo :show-text="true" size="lg" />
+                    <AppLogo :show-text="false" size="lg" />
                 </Link>
             </div>
 

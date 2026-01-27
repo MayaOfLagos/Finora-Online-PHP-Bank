@@ -50,7 +50,7 @@ const verificationLinkSent = computed(
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
         <div class="w-full max-w-md">
             <div class="text-center mb-8">
-                <AppLogo :show-text="true" size="lg" />
+                <AppLogo :show-text="false" size="lg" />
             </div>
             
             <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl">

@@ -104,7 +104,7 @@ onMounted(() => {
                 <!-- Mobile Logo -->
                 <div class="lg:hidden p-6">
                     <Link href="/">
-                        <AppLogo size="lg" />
+                        <AppLogo size="lg" :show-text="false" />
                     </Link>
                 </div>
 
