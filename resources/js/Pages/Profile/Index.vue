@@ -11,7 +11,6 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Textarea from 'primevue/textarea';
 import DatePicker from 'primevue/datepicker';
-import FileUpload from 'primevue/fileupload';
 import Avatar from 'primevue/avatar';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
@@ -156,9 +155,20 @@ const toggleTwoFactor = () => {
     });
 };
 
-const onAvatarUpload = (event) => {
-    const file = event.files[0];
+const onAvatarSelect = (event) => {
+    const file = event.target.files[0];
     if (file) {
+        // Validate file size (2MB max)
+        if (file.size > 2000000) {
+            toast.add({
+                severity: 'error',
+                summary: 'File Too Large',
+                detail: 'Please select an image smaller than 2MB.',
+                life: 5000,
+            });
+            return;
+        }
+        
         const formData = new FormData();
         formData.append('avatar', file);
         
@@ -172,8 +182,18 @@ const onAvatarUpload = (event) => {
                     life: 3000,
                 });
             },
+            onError: () => {
+                toast.add({
+                    severity: 'error',
+                    summary: 'Upload Failed',
+                    detail: 'Failed to upload profile photo. Please try again.',
+                    life: 5000,
+                });
+            },
         });
     }
+    // Reset input so the same file can be selected again
+    event.target.value = '';
 };
 
 const removeAvatar = () => {
@@ -225,23 +245,18 @@ const handleImageError = (event) => {
                             class="!w-24 !h-24 !text-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
                             shape="circle"
                         />
-                        <div class="absolute -bottom-1 -right-1">
-                            <FileUpload
-                                mode="basic"
+                        <!-- Camera Upload Button -->
+                        <label class="absolute -bottom-1 -right-1 cursor-pointer">
+                            <input
+                                type="file"
                                 accept="image/*"
-                                :maxFileSize="2000000"
-                                @select="onAvatarUpload"
-                                :auto="false"
-                                chooseLabel=""
-                                class="!p-0"
-                            >
-                                <template #chooseicon>
-                                    <button class="w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors">
-                                        <i class="pi pi-camera text-sm"></i>
-                                    </button>
-                                </template>
-                            </FileUpload>
-                        </div>
+                                class="hidden"
+                                @change="onAvatarSelect"
+                            />
+                            <span class="w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors">
+                                <i class="pi pi-camera text-sm"></i>
+                            </span>
+                        </label>
                     </div>
 
                     <!-- User Info -->
