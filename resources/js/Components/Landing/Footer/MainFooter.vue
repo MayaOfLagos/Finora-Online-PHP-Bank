@@ -239,8 +239,7 @@ const socialLinks = [
                         </div>
                     </div>
                     <p class="text-xs text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                        Finora Bank is a federally chartered savings bank. Deposits are insured by the FDIC up to the maximum amount allowed by law. 
-                        This is an educational demonstration project and not a real banking institution.
+                        Finora Bank is the fastest-growing bank in Lithuania. Licensed by the European Central Bank (ECB), offers flexible financing solutions  to small and medium enterprises, from loans and leasing, to factoring and state guarantees - helping ambitious companies grow.
                     </p>
                 </div>
             </div>

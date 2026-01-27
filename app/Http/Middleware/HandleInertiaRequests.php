@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -50,9 +51,9 @@ class HandleInertiaRequests extends Middleware
                     'support_phone' => Setting::getValue('general', 'support_phone', '+1-800-FINORA'),
                 ],
                 'branding' => [
-                    'logo_light' => Setting::getValue('branding', 'site_logo', ''),
-                    'logo_dark' => Setting::getValue('branding', 'site_logo_dark', ''),
-                    'favicon' => Setting::getValue('branding', 'site_favicon', ''),
+                    'logo_light' => $this->getStorageUrl(Setting::getValue('branding', 'site_logo', '')),
+                    'logo_dark' => $this->getStorageUrl(Setting::getValue('branding', 'site_logo_dark', '')),
+                    'favicon' => $this->getStorageUrl(Setting::getValue('branding', 'site_favicon', '')),
                     'copyright_text' => Setting::getValue('branding', 'site_copyright_text', 'Finora Bank'),
                     'copyright_year' => Setting::getValue('branding', 'site_copyright_year', date('Y')),
                     'footer_extra_text' => Setting::getValue('branding', 'site_footer_text', 'Member FDIC | Equal Housing Lender'),
@@ -67,4 +68,31 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
     }
+
+    /**
+     * Convert storage path to accessible URL
+     */
+    private function getStorageUrl(string $path): string
+    {
+        if (empty($path)) {
+            return '';
+        }
+
+        // If it's already a full URL, return as-is
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        // Convert to public URL
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                return Storage::disk('public')->url($path);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if file doesn't exist
+        }
+
+        return '';
+    }
 }
+
