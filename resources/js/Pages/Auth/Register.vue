@@ -252,6 +252,18 @@ const submitForm = async () => {
     if (props.recaptcha?.enabled && recaptchaRef.value) {
         try {
             captchaToken = await recaptchaRef.value.getToken();
+            
+            // For v2, token will be empty if user hasn't clicked the checkbox
+            if (props.recaptcha?.version === 'v2' && !captchaToken) {
+                toast.add({
+                    severity: 'error',
+                    summary: 'Verification Required',
+                    detail: 'Please complete the reCAPTCHA verification checkbox.',
+                    life: 4000,
+                });
+                isProcessing.value = false;
+                return;
+            }
         } catch (e) {
             toast.add({
                 severity: 'error',

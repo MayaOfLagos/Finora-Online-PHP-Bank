@@ -45,7 +45,7 @@ class AuthController extends Controller
         ]);
 
         // Create a default checking account for the new user
-        $checkingType = AccountType::where('slug', 'checking')->first();
+        $checkingType = AccountType::where('code', 'CHK')->first();
 
         if ($checkingType) {
             BankAccount::create([

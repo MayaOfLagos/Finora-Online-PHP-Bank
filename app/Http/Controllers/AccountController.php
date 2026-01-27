@@ -32,7 +32,7 @@ class AccountController extends Controller
 
         $accountTypes = AccountType::where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'code', 'description']);
 
         $currencies = config('finora.currencies', [
             ['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$'],
