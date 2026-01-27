@@ -23,6 +23,8 @@ import Badge from 'primevue/badge';
 import Message from 'primevue/message';
 import Select from 'primevue/select';
 import Dialog from 'primevue/dialog';
+import Card from 'primevue/card';
+import InputNumber from 'primevue/inputnumber';
 
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import PinInput from '@/Components/Forms/PinInput.vue';
@@ -110,6 +112,8 @@ const preferencesForm = useForm({
     date_format: props.preferences?.date_format || 'M d, Y',
     time_format: props.preferences?.time_format || '12h',
     timezone: props.preferences?.timezone || 'UTC',
+    lockscreen_enabled: props.preferences?.lockscreen_enabled ?? false,
+    lockscreen_timeout: props.preferences?.lockscreen_timeout ?? 5,
 });
 
 const notificationsForm = useForm({
@@ -443,6 +447,40 @@ const handleImageError = (event) => {
                     <TabPanels class="p-6">
                         <!-- Personal Info Tab -->
                         <TabPanel value="0">
+                            <!-- Account Information (Read-only) -->
+                            <div class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <i class="pi pi-info-circle text-indigo-600 dark:text-indigo-400"></i>
+                                    Account Information
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Username</p>
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ user.username }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email Address</p>
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ user.email }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Account Status</p>
+                                        <Badge :value="user.is_verified ? 'Verified' : 'Unverified'" :severity="user.is_verified ? 'success' : 'warn'" />
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">KYC Level</p>
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-white">Level {{ user.kyc_level }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Member Since</p>
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ user.created_at }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email Verified</p>
+                                        <Badge :value="user.email_verified_at ? 'Yes' : 'No'" :severity="user.email_verified_at ? 'success' : 'danger'" />
+                                    </div>
+                                </div>
+                            </div>
+
                             <form @submit.prevent="submitProfile" class="space-y-6">
                                 <!-- Name Fields -->
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -559,166 +597,184 @@ const handleImageError = (event) => {
 
                         <!-- Security Tab -->
                         <TabPanel value="1">
-                            <div class="space-y-8">
-                                <!-- Password Section -->
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Change Password</h3>
-                                    <form @submit.prevent="submitPassword" class="space-y-4 max-w-md">
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
-                                            <Password 
-                                                v-model="passwordForm.current_password"
-                                                :feedback="false"
-                                                toggleMask
-                                                :class="{ 'p-invalid': passwordForm.errors.current_password }"
-                                            />
-                                            <small v-if="passwordForm.errors.current_password" class="text-red-500">{{ passwordForm.errors.current_password }}</small>
-                                        </div>
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
-                                            <Password 
-                                                v-model="passwordForm.password"
-                                                toggleMask
-                                                :class="{ 'p-invalid': passwordForm.errors.password }"
-                                            />
-                                            <small v-if="passwordForm.errors.password" class="text-red-500">{{ passwordForm.errors.password }}</small>
-                                        </div>
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
-                                            <Password 
-                                                v-model="passwordForm.password_confirmation"
-                                                :feedback="false"
-                                                toggleMask
-                                            />
-                                        </div>
-                                        <Button 
-                                            type="submit" 
-                                            label="Update Password" 
-                                            icon="pi pi-lock"
-                                            :loading="passwordForm.processing"
-                                        />
-                                    </form>
-                                </div>
-
-                                <Divider />
-
-                                <!-- Transaction PIN Section -->
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Transaction PIN</h3>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                        Your 4-digit PIN is used to authorize transactions.
-                                    </p>
-
-                                    <!-- Set PIN (if no PIN exists) -->
-                                    <form v-if="!user.has_transaction_pin" @submit.prevent="submitNewPin" class="space-y-4 max-w-md">
-                                        <Message severity="warn" :closable="false">
-                                            You haven't set a transaction PIN yet. Please set one to authorize transactions.
-                                        </Message>
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">New PIN (4 digits)</label>
-                                            <PinInput
-                                                v-model="newPinForm.pin"
-                                                :length="4"
-                                                masked
-                                            />
-                                            <small v-if="newPinForm.errors.pin" class="text-red-500">{{ newPinForm.errors.pin }}</small>
-                                        </div>
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm PIN</label>
-                                            <PinInput
-                                                v-model="newPinForm.pin_confirmation"
-                                                :length="4"
-                                                masked
-                                            />
-                                        </div>
-                                        <Button 
-                                            type="submit" 
-                                            label="Set PIN" 
-                                            icon="pi pi-key"
-                                            :loading="newPinForm.processing"
-                                        />
-                                    </form>
-
-                                    <!-- Change PIN (if PIN exists) -->
-                                    <form v-else @submit.prevent="submitPin" class="space-y-4 max-w-md">
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Current PIN</label>
-                                            <PinInput
-                                                v-model="pinForm.current_pin"
-                                                :length="4"
-                                                masked
-                                            />
-                                            <small v-if="pinForm.errors.current_pin" class="text-red-500">{{ pinForm.errors.current_pin }}</small>
-                                        </div>
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">New PIN</label>
-                                            <PinInput
-                                                v-model="pinForm.pin"
-                                                :length="4"
-                                                masked
-                                            />
-                                            <small v-if="pinForm.errors.pin" class="text-red-500">{{ pinForm.errors.pin }}</small>
-                                        </div>
-                                        <div class="flex flex-col gap-2">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New PIN</label>
-                                            <PinInput
-                                                v-model="pinForm.pin_confirmation"
-                                                :length="4"
-                                                masked
-                                            />
-                                        </div>
-                                        <Button 
-                                            type="submit" 
-                                            label="Change PIN" 
-                                            icon="pi pi-key"
-                                            :loading="pinForm.processing"
-                                        />
-                                    </form>
-                                </div>
-
-                                <Divider />
-
-                                <!-- Two-Factor Authentication -->
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Two-Factor Authentication</h3>
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg max-w-md">
-                                        <div>
-                                            <p class="font-medium text-gray-900 dark:text-white">Email OTP Verification</p>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                                Receive a verification code via email for sensitive actions.
-                                            </p>
-                                        </div>
-                                        <ToggleSwitch 
-                                            v-model="twoFactorEnabled"
-                                            @change="toggleTwoFactor"
-                                        />
-                                    </div>
-                                </div>
-
-                                <Divider />
-
-                                <!-- Login History -->
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Login Activity</h3>
-                                    <div class="space-y-3">
-                                        <div 
-                                            v-for="session in loginHistory" 
-                                            :key="session.ip"
-                                            class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                                        >
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
-                                                    <i class="pi pi-desktop text-indigo-600 dark:text-indigo-400"></i>
-                                                </div>
-                                                <div>
-                                                    <p class="font-medium text-gray-900 dark:text-white">{{ session.device }}</p>
-                                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ session.ip }} · {{ session.location }}</p>
-                                                </div>
+                            <div class="space-y-6">
+                                <div class="grid gap-6 lg:grid-cols-2">
+                                    <Card class="h-full">
+                                        <template #title>
+                                            <div class="flex items-center gap-2">
+                                                <i class="pi pi-lock text-indigo-500"></i>
+                                                <span>Change Password</span>
                                             </div>
-                                            <Badge v-if="session.is_current" value="Current" severity="success" />
-                                        </div>
-                                    </div>
+                                        </template>
+                                        <template #content>
+                                            <form @submit.prevent="submitPassword" class="space-y-4">
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+                                                    <Password 
+                                                        v-model="passwordForm.current_password"
+                                                        :feedback="false"
+                                                        toggleMask
+                                                        :class="{ 'p-invalid': passwordForm.errors.current_password }"
+                                                    />
+                                                    <small v-if="passwordForm.errors.current_password" class="text-red-500">{{ passwordForm.errors.current_password }}</small>
+                                                </div>
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+                                                    <Password 
+                                                        v-model="passwordForm.password"
+                                                        toggleMask
+                                                        :class="{ 'p-invalid': passwordForm.errors.password }"
+                                                    />
+                                                    <small v-if="passwordForm.errors.password" class="text-red-500">{{ passwordForm.errors.password }}</small>
+                                                </div>
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
+                                                    <Password 
+                                                        v-model="passwordForm.password_confirmation"
+                                                        :feedback="false"
+                                                        toggleMask
+                                                    />
+                                                </div>
+                                                <Button 
+                                                    type="submit" 
+                                                    label="Update Password" 
+                                                    icon="pi pi-check"
+                                                    :loading="passwordForm.processing"
+                                                />
+                                            </form>
+                                        </template>
+                                    </Card>
+
+                                    <Card class="h-full">
+                                        <template #title>
+                                            <div class="flex items-center gap-2">
+                                                <i class="pi pi-key text-indigo-500"></i>
+                                                <span>Transaction PIN</span>
+                                            </div>
+                                        </template>
+                                        <template #content>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                                Your 4-digit PIN is used to authorize transactions.
+                                            </p>
+
+                                            <form v-if="!user.has_transaction_pin" @submit.prevent="submitNewPin" class="space-y-4">
+                                                <Message severity="warn" :closable="false">
+                                                    You haven't set a transaction PIN yet. Please set one to authorize transactions.
+                                                </Message>
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">New PIN (4 digits)</label>
+                                                    <PinInput
+                                                        v-model="newPinForm.pin"
+                                                        :length="4"
+                                                        masked
+                                                    />
+                                                    <small v-if="newPinForm.errors.pin" class="text-red-500">{{ newPinForm.errors.pin }}</small>
+                                                </div>
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm PIN</label>
+                                                    <PinInput
+                                                        v-model="newPinForm.pin_confirmation"
+                                                        :length="4"
+                                                        masked
+                                                    />
+                                                </div>
+                                                <Button 
+                                                    type="submit" 
+                                                    label="Set PIN" 
+                                                    icon="pi pi-check"
+                                                    :loading="newPinForm.processing"
+                                                />
+                                            </form>
+
+                                            <form v-else @submit.prevent="submitPin" class="space-y-4">
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Current PIN</label>
+                                                    <PinInput
+                                                        v-model="pinForm.current_pin"
+                                                        :length="4"
+                                                        masked
+                                                    />
+                                                    <small v-if="pinForm.errors.current_pin" class="text-red-500">{{ pinForm.errors.current_pin }}</small>
+                                                </div>
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">New PIN</label>
+                                                    <PinInput
+                                                        v-model="pinForm.pin"
+                                                        :length="4"
+                                                        masked
+                                                    />
+                                                    <small v-if="pinForm.errors.pin" class="text-red-500">{{ pinForm.errors.pin }}</small>
+                                                </div>
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New PIN</label>
+                                                    <PinInput
+                                                        v-model="pinForm.pin_confirmation"
+                                                        :length="4"
+                                                        masked
+                                                    />
+                                                </div>
+                                                <Button 
+                                                    type="submit" 
+                                                    label="Change PIN" 
+                                                    icon="pi pi-check"
+                                                    :loading="pinForm.processing"
+                                                />
+                                            </form>
+                                        </template>
+                                    </Card>
                                 </div>
+
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-shield text-indigo-500"></i>
+                                            <span>Two-Factor Authentication</span>
+                                        </div>
+                                    </template>
+                                    <template #content>
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                            <div>
+                                                <p class="font-medium text-gray-900 dark:text-white">Email OTP Verification</p>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                                    Receive a verification code via email for sensitive actions.
+                                                </p>
+                                            </div>
+                                            <ToggleSwitch 
+                                                v-model="twoFactorEnabled"
+                                                @change="toggleTwoFactor"
+                                            />
+                                        </div>
+                                    </template>
+                                </Card>
+
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-history text-indigo-500"></i>
+                                            <span>Recent Login Activity</span>
+                                        </div>
+                                    </template>
+                                    <template #content>
+                                        <div class="space-y-3">
+                                            <div 
+                                                v-for="session in loginHistory" 
+                                                :key="session.ip"
+                                                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                                            >
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                                                        <i class="pi pi-desktop text-indigo-600 dark:text-indigo-400"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="font-medium text-gray-900 dark:text-white">{{ session.device }}</p>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ session.ip }} · {{ session.location }}</p>
+                                                    </div>
+                                                </div>
+                                                <Badge v-if="session.is_current" value="Current" severity="success" />
+                                            </div>
+                                        </div>
+                                    </template>
+                                </Card>
                             </div>
                         </TabPanel>
 
@@ -911,6 +967,55 @@ const handleImageError = (event) => {
                                                 label="Save Notification Settings" 
                                                 icon="pi pi-check"
                                                 :loading="notificationsForm.processing"
+                                            />
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <Divider />
+
+                                <!-- Lockscreen & Session Security -->
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                                        <i class="pi pi-shield mr-2"></i>
+                                        Lockscreen & Session Security
+                                    </h3>
+
+                                    <form @submit.prevent="submitPreferences" class="space-y-6">
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                            <div class="flex-1">
+                                                <p class="font-medium text-gray-900 dark:text-white">Enable Lockscreen</p>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">Automatically lock your account after a period of inactivity</p>
+                                            </div>
+                                            <ToggleSwitch v-model="preferencesForm.lockscreen_enabled" />
+                                        </div>
+
+                                        <div v-if="preferencesForm.lockscreen_enabled" class="flex flex-col gap-2">
+                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Lockscreen Timeout (minutes)</label>
+                                            <InputNumber 
+                                                v-model="preferencesForm.lockscreen_timeout"
+                                                :min="1"
+                                                :max="60"
+                                                showButtons
+                                                buttonLayout="horizontal"
+                                                class="w-48"
+                                            >
+                                                <template #incrementbuttonicon>
+                                                    <i class="pi pi-plus" />
+                                                </template>
+                                                <template #decrementbuttonicon>
+                                                    <i class="pi pi-minus" />
+                                                </template>
+                                            </InputNumber>
+                                            <small class="text-gray-500 dark:text-gray-400">After {{ preferencesForm.lockscreen_timeout }} minutes of inactivity, you'll need to re-enter your PIN</small>
+                                        </div>
+
+                                        <div class="flex justify-end">
+                                            <Button 
+                                                type="submit" 
+                                                label="Save Security Settings" 
+                                                icon="pi pi-check"
+                                                :loading="preferencesForm.processing"
                                             />
                                         </div>
                                     </form>

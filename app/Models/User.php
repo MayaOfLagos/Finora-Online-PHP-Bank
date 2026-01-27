@@ -54,6 +54,24 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'two_factor_enabled',
         'two_factor_secret',
         'profile_photo_path',
+        // Preferences
+        'theme',
+        'language',
+        'currency_display',
+        'date_format',
+        'time_format',
+        'timezone',
+        // Notification preferences
+        'notify_email_transactions',
+        'notify_email_security',
+        'notify_email_marketing',
+        'notify_push_transactions',
+        'notify_push_security',
+        'notify_sms_transactions',
+        'notify_sms_security',
+        // Lockscreen
+        'lockscreen_enabled',
+        'lockscreen_timeout',
         'role',
         'can_transfer',
         'can_withdraw',
@@ -79,6 +97,24 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         // Login tracking
         'last_login_at',
         'last_login_ip',
+        // User preferences
+        'theme',
+        'language',
+        'currency_display',
+        'date_format',
+        'time_format',
+        'timezone',
+        // Notification preferences
+        'notify_email_transactions',
+        'notify_email_security',
+        'notify_email_marketing',
+        'notify_push_transactions',
+        'notify_push_security',
+        'notify_sms_transactions',
+        'notify_sms_security',
+        // Lockscreen settings
+        'lockscreen_enabled',
+        'lockscreen_timeout',
     ];
 
     protected $hidden = [
@@ -128,6 +164,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'can_create_beneficiary' => 'boolean',
             'skip_transfer_otp' => 'boolean',
             'has_email_authentication' => 'boolean',
+            'notify_email_transactions' => 'boolean',
+            'notify_email_security' => 'boolean',
+            'notify_email_marketing' => 'boolean',
+            'notify_push_transactions' => 'boolean',
+            'notify_push_security' => 'boolean',
+            'notify_sms_transactions' => 'boolean',
+            'notify_sms_security' => 'boolean',
+            'lockscreen_enabled' => 'boolean',
+            'lockscreen_timeout' => 'integer',
         ];
     }
 

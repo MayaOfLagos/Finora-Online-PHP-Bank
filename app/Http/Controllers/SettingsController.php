@@ -15,25 +15,27 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
 
-        // Get user preferences (could be stored in a separate table or JSON column)
+        // User preferences pulled from columns
         $preferences = [
-            'theme' => 'system', // light, dark, system
-            'language' => 'en',
-            'currency_display' => 'symbol', // symbol, code, name
-            'date_format' => 'M d, Y',
-            'time_format' => '12h', // 12h, 24h
-            'timezone' => 'UTC',
+            'theme' => $user->theme ?? 'system',
+            'language' => $user->language ?? 'en',
+            'currency_display' => $user->currency_display ?? 'symbol',
+            'date_format' => $user->date_format ?? 'M d, Y',
+            'time_format' => $user->time_format ?? '12h',
+            'timezone' => $user->timezone ?? 'UTC',
+            'lockscreen_enabled' => $user->lockscreen_enabled ?? false,
+            'lockscreen_timeout' => $user->lockscreen_timeout ?? 5,
         ];
 
         // Notification preferences
         $notifications = [
-            'email_transactions' => true,
-            'email_security' => true,
-            'email_marketing' => false,
-            'push_transactions' => true,
-            'push_security' => true,
-            'sms_transactions' => false,
-            'sms_security' => true,
+            'email_transactions' => $user->notify_email_transactions ?? true,
+            'email_security' => $user->notify_email_security ?? true,
+            'email_marketing' => $user->notify_email_marketing ?? false,
+            'push_transactions' => $user->notify_push_transactions ?? true,
+            'push_security' => $user->notify_push_security ?? true,
+            'sms_transactions' => $user->notify_sms_transactions ?? false,
+            'sms_security' => $user->notify_sms_security ?? true,
         ];
 
         // Available options
@@ -78,10 +80,22 @@ class SettingsController extends Controller
             'date_format' => ['required', 'string'],
             'time_format' => ['required', 'in:12h,24h'],
             'timezone' => ['required', 'string'],
+            'lockscreen_enabled' => ['nullable', 'boolean'],
+            'lockscreen_timeout' => ['nullable', 'integer', 'min:1', 'max:60'],
         ]);
 
-        // TODO: Store preferences in database
-        // For now, just return success
+        $user = Auth::user();
+
+        $user->update([
+            'theme' => $validated['theme'],
+            'language' => $validated['language'],
+            'currency_display' => $validated['currency_display'],
+            'date_format' => $validated['date_format'],
+            'time_format' => $validated['time_format'],
+            'timezone' => $validated['timezone'],
+            'lockscreen_enabled' => $validated['lockscreen_enabled'] ?? false,
+            'lockscreen_timeout' => $validated['lockscreen_timeout'] ?? 5,
+        ]);
 
         return back()->with('success', 'Preferences updated successfully.');
     }
@@ -101,8 +115,17 @@ class SettingsController extends Controller
             'sms_security' => ['boolean'],
         ]);
 
-        // TODO: Store notification preferences in database
-        // For now, just return success
+        $user = Auth::user();
+
+        $user->update([
+            'notify_email_transactions' => $validated['email_transactions'] ?? false,
+            'notify_email_security' => $validated['email_security'] ?? false,
+            'notify_email_marketing' => $validated['email_marketing'] ?? false,
+            'notify_push_transactions' => $validated['push_transactions'] ?? false,
+            'notify_push_security' => $validated['push_security'] ?? false,
+            'notify_sms_transactions' => $validated['sms_transactions'] ?? false,
+            'notify_sms_security' => $validated['sms_security'] ?? false,
+        ]);
 
         return back()->with('success', 'Notification settings updated successfully.');
     }
