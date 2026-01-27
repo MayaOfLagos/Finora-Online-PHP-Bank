@@ -182,7 +182,14 @@ const handleMarkAllRead = () => {
         <ImpersonationBanner />
 
         <!-- Toast notifications -->
-        <Toast position="top-right" />
+        <Toast 
+            position="top-right"
+            :pt="{
+                root: { class: 'w-full md:w-auto max-w-[calc(100vw-1rem)] md:max-w-sm' },
+                message: { class: 'flex-1 max-w-full break-words' }
+            }"
+            class="mobile-toast"
+        />
         <ConfirmDialog />
 
         <!-- Desktop Sidebar -->
@@ -486,5 +493,58 @@ const handleMarkAllRead = () => {
 
 .dark .mobile-sidebar-glass {
     background: rgba(30, 30, 40, 0.85);
+}
+
+/* Mobile Toast Responsiveness */
+.mobile-toast :deep(.p-toast) {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+    max-width: calc(100vw - 2rem);
+}
+
+.mobile-toast :deep(.p-toast-message) {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.mobile-toast :deep(.p-toast-message-content) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    word-break: break-word;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.mobile-toast :deep(.p-toast-icon-close) {
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+}
+
+/* Ensure toast doesn't hide content on mobile */
+@media (max-width: 768px) {
+    .mobile-toast :deep(.p-toast) {
+        left: 0.5rem;
+        right: 0.5rem;
+        max-width: none;
+    }
+    
+    .mobile-toast :deep(.p-toast-message) {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .mobile-toast :deep(.p-toast) {
+        top: 1.5rem;
+        right: 1.5rem;
+    }
+    
+    .mobile-toast :deep(.p-toast-message-content) {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
 }
 </style>

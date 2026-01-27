@@ -263,16 +263,23 @@ watch(() => props.theme, () => {
 .recaptcha-container {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    overflow: visible;
 }
 
 .recaptcha-widget {
     transform-origin: left top;
+    display: flex;
+    justify-content: center;
 }
 
 /* Make reCAPTCHA responsive on mobile */
-@media (max-width: 350px) {
+@media (max-width: 400px) {
     .recaptcha-widget {
-        transform: scale(0.9);
+        transform: scale(0.95);
+        margin-left: -8px;
     }
 }
 

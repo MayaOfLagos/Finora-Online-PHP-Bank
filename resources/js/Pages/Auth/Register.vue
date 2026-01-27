@@ -247,71 +247,91 @@ const submitForm = async () => {
     
     isProcessing.value = true;
     
-    // Get reCAPTCHA token if enabled
-    let captchaToken = '';
-    if (props.recaptcha?.enabled && recaptchaRef.value) {
-        try {
-            captchaToken = await recaptchaRef.value.getToken();
-            
-            // For v2, token will be empty if user hasn't clicked the checkbox
-            if (props.recaptcha?.version === 'v2' && !captchaToken) {
+    try {
+        // Get reCAPTCHA token if enabled
+        let captchaToken = '';
+        if (props.recaptcha?.enabled && recaptchaRef.value) {
+            try {
+                // Ensure we wait for the token with a timeout
+                const tokenPromise = Promise.resolve(recaptchaRef.value.getToken());
+                captchaToken = await Promise.race([
+                    tokenPromise,
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('reCAPTCHA timeout')), 10000)
+                    )
+                ]);
+                
+                // For v2, token will be empty if user hasn't clicked the checkbox
+                if (props.recaptcha?.version === 'v2' && !captchaToken) {
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Verification Required',
+                        detail: 'Please complete the reCAPTCHA verification checkbox.',
+                        life: 4000,
+                    });
+                    isProcessing.value = false;
+                    return;
+                }
+            } catch (captchaError) {
+                console.error('reCAPTCHA error:', captchaError);
                 toast.add({
                     severity: 'error',
-                    summary: 'Verification Required',
-                    detail: 'Please complete the reCAPTCHA verification checkbox.',
-                    life: 4000,
+                    summary: 'Verification Failed',
+                    detail: captchaError.message || 'Please complete the security verification.',
+                    life: 3000,
                 });
                 isProcessing.value = false;
                 return;
             }
-        } catch (e) {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: 'Please complete the security verification.',
-                life: 3000,
-            });
-            isProcessing.value = false;
-            return;
         }
-    }
-    
-    router.post(route('register'), {
-        ...formData.value,
-        recaptcha_token: captchaToken,
-    }, {
-        onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Registration Successful',
-                detail: 'Welcome to Finora Bank!',
-                life: 5000
-            });
-        },
-        onError: (errors) => {
-            // Reset reCAPTCHA on error
-            if (props.recaptcha?.enabled && props.recaptcha?.version === 'v2' && recaptchaRef.value) {
-                recaptchaRef.value.reset();
+        
+        // Submit form with captcha token
+        router.post(route('register'), {
+            ...formData.value,
+            recaptcha_token: captchaToken,
+        }, {
+            onSuccess: () => {
+                toast.add({
+                    severity: 'success',
+                    summary: 'Registration Successful',
+                    detail: 'Welcome to Finora Bank!',
+                    life: 5000
+                });
+            },
+            onError: (errors) => {
+                // Reset reCAPTCHA on error
+                if (props.recaptcha?.enabled && props.recaptcha?.version === 'v2' && recaptchaRef.value) {
+                    recaptchaRef.value.reset();
+                }
+                
+                const errorMessage = errors.recaptcha_token || errors.email || errors.username || 'Please check the form for errors';
+                toast.add({
+                    severity: 'error',
+                    summary: 'Registration Failed',
+                    detail: errorMessage,
+                    life: 5000
+                });
+                
+                // Go to step with error
+                if (errors.first_name || errors.last_name || errors.username) currentStep.value = 0;
+                else if (errors.email || errors.phone || errors.address) currentStep.value = 1;
+                else if (errors.account_type) currentStep.value = 2;
+                else if (errors.password || errors.transaction_pin || errors.recaptcha_token) currentStep.value = 3;
+            },
+            onFinish: () => {
+                isProcessing.value = false;
             }
-            
-            const errorMessage = errors.recaptcha_token || errors.email || errors.username || 'Please check the form for errors';
-            toast.add({
-                severity: 'error',
-                summary: 'Registration Failed',
-                detail: errorMessage,
-                life: 5000
-            });
-            
-            // Go to step with error
-            if (errors.first_name || errors.last_name || errors.username) currentStep.value = 0;
-            else if (errors.email || errors.phone || errors.address) currentStep.value = 1;
-            else if (errors.account_type) currentStep.value = 2;
-            else if (errors.password || errors.transaction_pin || errors.recaptcha_token) currentStep.value = 3;
-        },
-        onFinish: () => {
-            isProcessing.value = false;
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Form submission error:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Submission Error',
+            detail: 'An unexpected error occurred. Please try again.',
+            life: 4000
+        });
+        isProcessing.value = false;
+    }
 };
 
 // Watch for server-side errors
