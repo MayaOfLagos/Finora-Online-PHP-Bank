@@ -5,14 +5,15 @@ namespace App\Filament\Auth;
 use App\Services\ReCaptchaService;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\View as FormView;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\Locked;
 
 class Login extends BaseLogin
 {
-    protected string $view = 'filament.auth.login';
-
     #[Locked]
     public ?string $recaptchaToken = null;
 
