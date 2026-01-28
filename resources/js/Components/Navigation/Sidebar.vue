@@ -4,7 +4,7 @@
  * Desktop sidebar navigation with sub-navigation support
  */
 import { computed, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import { NAV_ITEMS } from '@/Utils/constants';
 
@@ -21,6 +21,27 @@ const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const currentPath = computed(() => page.url);
 const kycStatus = computed(() => page.props.auth?.kyc_status || 'not_started');
+const kycRequired = computed(() => page.props.settings?.security?.kyc_required ?? true);
+
+// Check if user has verified KYC
+const isKycVerified = computed(() => kycStatus.value === 'approved');
+
+// Check if a navigation item should be locked (KYC required but not verified)
+const isItemLocked = (item) => {
+    if (!kycRequired.value) return false; // KYC not required globally
+    if (isKycVerified.value) return false; // User is verified
+    return item.requiresKyc === true;
+};
+
+// Handle navigation click - redirect to KYC if locked
+const handleNavClick = (e, item) => {
+    if (isItemLocked(item)) {
+        e.preventDefault();
+        router.visit('/kyc', {
+            data: { kyc_required: true }
+        });
+    }
+};
 
 // Track expanded menu items
 const expandedItems = ref(new Set());
@@ -105,12 +126,15 @@ const getKycTextColor = (status) => {
                                 'flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left',
                                 isParentActive(item) || isExpanded(item.name)
                                     ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200',
+                                isItemLocked(item) ? 'opacity-60' : ''
                             ]"
                             :title="collapsed ? item.name : ''"
                         >
                             <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
                             <span v-if="!collapsed" class="truncate flex-1">{{ item.name }}</span>
+                            <!-- Lock icon for KYC protected parent items -->
+                            <i v-if="!collapsed && isItemLocked(item)" class="pi pi-lock text-xs text-orange-500 mr-1"></i>
                             <i 
                                 v-if="!collapsed"
                                 :class="[
@@ -132,16 +156,20 @@ const getKycTextColor = (status) => {
                             <ul v-if="isExpanded(item.name) && !collapsed" class="mt-1 ml-4 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
                                 <li v-for="child in item.children" :key="child.name">
                                     <Link
-                                        :href="child.href"
+                                        :href="isItemLocked(child) ? '/kyc' : child.href"
+                                        @click="(e) => handleNavClick(e, child)"
                                         :class="[
                                             'flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm',
                                             isActive(child.href)
                                                 ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
-                                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200',
+                                            isItemLocked(child) ? 'opacity-60' : ''
                                         ]"
                                     >
                                         <i :class="[child.icon, 'text-base flex-shrink-0']"></i>
-                                        <span class="truncate">{{ child.name }}</span>
+                                        <span class="truncate flex-1">{{ child.name }}</span>
+                                        <!-- Lock icon for KYC protected items -->
+                                        <i v-if="isItemLocked(child)" class="pi pi-lock text-xs text-orange-500"></i>
                                     </Link>
                                 </li>
                             </ul>
@@ -151,19 +179,24 @@ const getKycTextColor = (status) => {
                     <!-- Single Menu Item -->
                     <Link
                         v-else
-                        :href="item.href"
+                        :href="isItemLocked(item) ? '/kyc' : item.href"
+                        @click="(e) => handleNavClick(e, item)"
                         :class="[
                             'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
                             isActive(item.href)
                                 ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200',
                             // Add KYC status color for KYC item
-                            item.badge === 'kyc' && kycStatus !== 'approved' ? getKycTextColor(kycStatus) : ''
+                            item.badge === 'kyc' && kycStatus !== 'approved' ? getKycTextColor(kycStatus) : '',
+                            // Opacity for locked items
+                            isItemLocked(item) ? 'opacity-60' : ''
                         ]"
                         :title="collapsed ? item.name : ''"
                     >
                         <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
                         <span v-if="!collapsed" class="truncate flex-1">{{ item.name }}</span>
+                        <!-- Lock icon for KYC protected items -->
+                        <i v-if="!collapsed && isItemLocked(item)" class="pi pi-lock text-xs text-orange-500"></i>
                         <!-- KYC Status Badge -->
                         <span 
                             v-if="!collapsed && item.badge === 'kyc' && kycStatus !== 'approved'" 

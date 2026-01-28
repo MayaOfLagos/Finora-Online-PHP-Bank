@@ -65,6 +65,9 @@ class HandleInertiaRequests extends Middleware
                     'support_email' => Setting::getValue('general', 'support_email', 'support@finorabank.com'),
                     'support_phone' => Setting::getValue('general', 'support_phone', '+1-800-FINORA'),
                 ],
+                'security' => [
+                    'kyc_required' => (bool) Setting::getValue('security', 'kyc_required', true),
+                ],
                 'branding' => [
                     'logo_light' => $this->getStorageUrl(Setting::getValue('branding', 'site_logo', '')),
                     'logo_dark' => $this->getStorageUrl(Setting::getValue('branding', 'site_logo_dark', '')),

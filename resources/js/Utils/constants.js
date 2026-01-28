@@ -155,81 +155,92 @@ export const NAV_ITEMS = [{
         children: [
             { name: 'My Accounts', href: '/accounts', icon: 'pi pi-wallet' },
             { name: 'Transaction History', href: '/transactions', icon: 'pi pi-history' },
-            { name: 'Beneficiaries', href: '/beneficiaries', icon: 'pi pi-users' },
+            { name: 'Beneficiaries', href: '/beneficiaries', icon: 'pi pi-users', requiresKyc: true },
         ]
     },
     {
         name: 'Transfers',
         href: '/transfers',
         icon: 'pi pi-send',
+        requiresKyc: true,
         children: [
-            { name: 'Wire Transfer', href: '/transfers/wire', icon: 'pi pi-globe' },
-            { name: 'Domestic Transfer', href: '/transfers/domestic', icon: 'pi pi-map-marker' },
-            { name: 'Internal Transfer', href: '/transfers/internal', icon: 'pi pi-arrow-right-arrow-left' },
+            { name: 'Wire Transfer', href: '/transfers/wire', icon: 'pi pi-globe', requiresKyc: true },
+            { name: 'Domestic Transfer', href: '/transfers/domestic', icon: 'pi pi-map-marker', requiresKyc: true },
+            { name: 'Internal Transfer', href: '/transfers/internal', icon: 'pi pi-arrow-right-arrow-left', requiresKyc: true },
         ]
     },
     {
         name: 'Deposits',
         href: '/deposits',
         icon: 'pi pi-download',
+        requiresKyc: true,
         children: [
-            { name: 'Mobile Deposit', href: '/deposits/mobile', icon: 'pi pi-mobile' },
-            { name: 'Check Deposit', href: '/deposits/check', icon: 'pi pi-file-check' },
-            { name: 'Crypto Deposit', href: '/deposits/crypto', icon: 'pi pi-bitcoin' },
+            { name: 'Mobile Deposit', href: '/deposits/mobile', icon: 'pi pi-mobile', requiresKyc: true },
+            { name: 'Check Deposit', href: '/deposits/check', icon: 'pi pi-file-check', requiresKyc: true },
+            { name: 'Crypto Deposit', href: '/deposits/crypto', icon: 'pi pi-bitcoin', requiresKyc: true },
         ]
     },
     {
         name: 'Withdrawals',
         href: '/withdrawals',
-        icon: 'pi pi-upload'
+        icon: 'pi pi-upload',
+        requiresKyc: true
     },
     {
         name: 'Loans',
         href: '/loans',
         icon: 'pi pi-building',
+        requiresKyc: true,
         children: [
-            { name: 'Loan Programs', href: '/loans', icon: 'pi pi-list' },
-            { name: 'My Applications', href: '/loans/applications', icon: 'pi pi-file' },
+            { name: 'Loan Programs', href: '/loans', icon: 'pi pi-list', requiresKyc: true },
+            { name: 'My Applications', href: '/loans/applications', icon: 'pi pi-file', requiresKyc: true },
         ]
     },
     {
         name: 'Cards',
         href: '/cards',
-        icon: 'pi pi-credit-card'
+        icon: 'pi pi-credit-card',
+        requiresKyc: true
     },
     {
         name: 'Grants',
         href: '/grants',
         icon: 'pi pi-gift',
+        requiresKyc: true,
         children: [
-            { name: 'Grant Programs', href: '/grants', icon: 'pi pi-list' },
-            { name: 'My Applications', href: '/grants/applications', icon: 'pi pi-file' },
+            { name: 'Grant Programs', href: '/grants', icon: 'pi pi-list', requiresKyc: true },
+            { name: 'My Applications', href: '/grants/applications', icon: 'pi pi-file', requiresKyc: true },
         ]
     },
     {
         name: 'Money Requests',
         href: '/money-requests',
-        icon: 'pi pi-money-bill'
+        icon: 'pi pi-money-bill',
+        requiresKyc: true
     },
     {
         name: 'Exchange Money',
         href: '/exchange',
-        icon: 'pi pi-sync'
+        icon: 'pi pi-sync',
+        requiresKyc: true
     },
     {
         name: 'Tax Refunds',
         href: '/tax-refunds',
-        icon: 'pi pi-percentage'
+        icon: 'pi pi-percentage',
+        requiresKyc: true
     },
     {
         name: 'Vouchers',
         href: '/vouchers',
-        icon: 'pi pi-ticket'
+        icon: 'pi pi-ticket',
+        requiresKyc: true
     },
     {
         name: 'Rewards',
         href: '/rewards',
-        icon: 'pi pi-star'
+        icon: 'pi pi-star',
+        requiresKyc: true
     },
     {
         name: 'KYC Verification',

@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified.email.otp' => \App\Http\Middleware\EnsureEmailOtpVerified::class,
             'verified.pin' => \App\Http\Middleware\EnsurePinVerified::class,
             'user.only' => \App\Http\Middleware\RestrictAdminFromUserDashboard::class,
+            'kyc.verified' => \App\Http\Middleware\EnsureKycVerified::class,
         ]);
 
         $middleware->statefulApi();
