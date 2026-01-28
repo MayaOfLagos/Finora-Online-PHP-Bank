@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TransactionHistories\Schemas;
 
+use App\Enums\TransactionType;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -105,14 +106,14 @@ class TransactionHistoryTable
             TextColumn::make('transaction_type')
                 ->label('Type')
                 ->badge()
-                ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state)))
-                ->color(fn (string $state): string => match ($state) {
-                    'wire_transfer' => 'info',
-                    'domestic_transfer' => 'primary',
-                    'internal_transfer' => 'success',
-                    'check_deposit' => 'warning',
-                    'mobile_deposit' => 'success',
-                    'crypto_deposit' => 'warning',
+                ->formatStateUsing(fn (TransactionType $state): string => ucwords(str_replace('_', ' ', $state->value)))
+                ->color(fn (TransactionType $state): string => match ($state) {
+                    TransactionType::WireTransfer => 'info',
+                    TransactionType::DomesticTransfer => 'primary',
+                    TransactionType::InternalTransfer => 'success',
+                    TransactionType::CheckDeposit => 'warning',
+                    TransactionType::MobileDeposit => 'success',
+                    TransactionType::CryptoDeposit => 'warning',
                     default => 'gray',
                 })
                 ->sortable()
