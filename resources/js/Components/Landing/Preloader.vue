@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 
 const isLoading = ref(true);
 const progress = ref(0);
+const faviconLoaded = ref(false);
 
 onMounted(() => {
     // Animate progress bar
@@ -22,6 +23,10 @@ onMounted(() => {
         isLoading.value = false;
     }, 3000);
 });
+
+const onFaviconLoad = () => {
+    faviconLoaded.value = true;
+};
 </script>
 
 <template>
@@ -46,7 +51,16 @@ onMounted(() => {
                 
                 <!-- Logo -->
                 <div class="relative flex items-center justify-center w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 shadow-2xl">
-                    <div class="text-center">
+                    <!-- Favicon (primary) -->
+                    <img 
+                        v-if="!faviconLoaded"
+                        src="/favicon.ico" 
+                        alt="Finora Logo"
+                        class="w-16 h-16 md:w-20 md:h-20"
+                        @load="onFaviconLoad"
+                    />
+                    <!-- Fallback Logo (shown if favicon fails or doesn't load) -->
+                    <div v-if="faviconLoaded || true" class="text-center">
                         <div class="text-3xl md:text-4xl font-bold text-white tracking-tight">F</div>
                         <div class="text-[8px] md:text-[10px] font-medium text-gold-400 tracking-[0.2em] uppercase">Finora</div>
                     </div>
@@ -71,7 +85,7 @@ onMounted(() => {
 
             <!-- Loading Text -->
             <p class="mt-4 text-xs text-white/40 animate-pulse">
-                Loading your secure banking experience...
+                Loading...
             </p>
         </div>
     </Transition>
