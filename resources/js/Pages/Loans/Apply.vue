@@ -33,6 +33,11 @@ const calculatedPayment = ref(null);
 
 // Calculate monthly payment
 const calculatePayment = () => {
+    // Clear any lingering error messages when user corrects input
+    if (form.errors.amount && form.amount) {
+        form.clearErrors('amount');
+    }
+
     // Validate amount is within range (both are in dollars from API)
     if (!form.amount || !form.term_months) {
         calculatedPayment.value = null;
