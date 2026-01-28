@@ -22,6 +22,7 @@ use App\Http\Controllers\DomesticTransferController;
 use App\Http\Controllers\ExchangeMoneyController;
 use App\Http\Controllers\GrantController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\KycController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanRepaymentController;
 use App\Http\Controllers\MobileDepositController;
@@ -284,6 +285,11 @@ Route::middleware(['auth', 'verified.email.otp', 'verified.pin', 'user.only'])->
     Route::get('/support/tickets/{uuid}', [SupportController::class, 'show'])->name('support.show');
     Route::post('/support/tickets/{uuid}/reply', [SupportController::class, 'reply'])->name('support.reply');
     Route::post('/support/tickets/{uuid}/close', [SupportController::class, 'close'])->name('support.close');
+
+    // KYC Verification
+    Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
+    Route::get('/kyc/submit/{template}', [KycController::class, 'create'])->name('kyc.create');
+    Route::post('/kyc/submit', [KycController::class, 'store'])->name('kyc.store');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

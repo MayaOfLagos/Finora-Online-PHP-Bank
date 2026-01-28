@@ -11,10 +11,25 @@ import { getInitials } from '@/Utils/formatters';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+const kycStatus = computed(() => page.props.auth?.kyc_status || 'not_started');
 
 const menu = ref();
 
-const menuItems = ref([
+// Get KYC status display info
+const getKycStatusInfo = () => {
+    switch (kycStatus.value) {
+        case 'approved':
+            return { label: 'Verified', color: 'text-green-600', icon: 'pi pi-check-circle' };
+        case 'pending':
+            return { label: 'Pending', color: 'text-yellow-600', icon: 'pi pi-clock' };
+        case 'rejected':
+            return { label: 'Action Required', color: 'text-red-600', icon: 'pi pi-exclamation-circle' };
+        default:
+            return { label: 'Not Verified', color: 'text-gray-500', icon: 'pi pi-id-card' };
+    }
+};
+
+const menuItems = computed(() => [
     {
         label: 'Profile',
         items: [
@@ -32,6 +47,32 @@ const menuItems = ref([
                 label: 'Security',
                 icon: 'pi pi-shield',
                 command: () => router.visit('/profile?tab=security'),
+            },
+        ],
+    },
+    {
+        separator: true,
+    },
+    {
+        label: 'Verification',
+        items: [
+            {
+                label: 'KYC Verification',
+                icon: getKycStatusInfo().icon,
+                class: getKycStatusInfo().color,
+                command: () => router.visit('/kyc'),
+                template: (item) => {
+                    const status = getKycStatusInfo();
+                    return `
+                        <a class="p-menuitem-link flex items-center justify-between" role="menuitem">
+                            <span class="flex items-center gap-2">
+                                <i class="${item.icon} ${status.color}"></i>
+                                <span>KYC Verification</span>
+                            </span>
+                            <span class="text-xs ${status.color} ml-2">${status.label}</span>
+                        </a>
+                    `;
+                },
             },
         ],
     },

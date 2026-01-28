@@ -35,6 +35,19 @@ class HandleInertiaRequests extends Middleware
         $isImpersonating = session()->has('impersonator_id');
         $impersonatorId = session('impersonator_id');
 
+        // Determine KYC status for user
+        $kycStatus = 'not_started';
+        if ($user) {
+            if ($user->is_verified) {
+                $kycStatus = 'approved';
+            } else {
+                $latestKyc = $user->kycVerifications()->latest()->first();
+                if ($latestKyc) {
+                    $kycStatus = $latestKyc->status->value;
+                }
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -42,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                 'currency' => $user?->getPrimaryCurrency() ?? 'USD',
                 'isImpersonating' => $isImpersonating,
                 'impersonatorId' => $impersonatorId,
+                'kyc_status' => $kycStatus,
             ],
             'settings' => [
                 'general' => [

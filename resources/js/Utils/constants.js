@@ -233,6 +233,12 @@ export const NAV_ITEMS = [
         icon: 'pi pi-star'
     },
     {
+        name: 'KYC Verification',
+        href: '/kyc',
+        icon: 'pi pi-id-card',
+        badge: 'kyc' // Special badge key for KYC status
+    },
+    {
         name: 'Support',
         href: '/support',
         icon: 'pi pi-comments'
@@ -314,6 +320,7 @@ export const MOBILE_NAV_ITEMS = [
             { name: 'Tax Refunds', href: '/tax-refunds', icon: 'pi pi-percentage' },
             { name: 'Vouchers', href: '/vouchers', icon: 'pi pi-ticket' },
             { name: 'Rewards', href: '/rewards', icon: 'pi pi-star' },
+            { name: 'KYC Verification', href: '/kyc', icon: 'pi pi-id-card', badge: 'kyc' },
         ]
     },
     {

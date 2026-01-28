@@ -20,6 +20,7 @@ const emit = defineEmits(['toggle']);
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const currentPath = computed(() => page.url);
+const kycStatus = computed(() => page.props.auth?.kyc_status || 'not_started');
 
 // Track expanded menu items
 const expandedItems = ref(new Set());
@@ -46,6 +47,34 @@ const toggleSubmenu = (itemName) => {
 
 const isExpanded = (itemName) => {
     return expandedItems.value.has(itemName) || isParentActive(NAV_ITEMS.find(item => item.name === itemName));
+};
+
+// Get KYC badge classes based on status
+const getKycBadgeClasses = (status) => {
+    switch (status) {
+        case 'approved':
+            return 'bg-green-500';
+        case 'pending':
+            return 'bg-yellow-500 animate-pulse';
+        case 'rejected':
+            return 'bg-red-500 animate-pulse';
+        default:
+            return 'bg-gray-400';
+    }
+};
+
+// Get KYC text color based on status
+const getKycTextColor = (status) => {
+    switch (status) {
+        case 'approved':
+            return 'text-green-600 dark:text-green-400';
+        case 'pending':
+            return 'text-yellow-600 dark:text-yellow-400';
+        case 'rejected':
+            return 'text-red-600 dark:text-red-400';
+        default:
+            return '';
+    }
 };
 </script>
 
@@ -127,12 +156,34 @@ const isExpanded = (itemName) => {
                             'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
                             isActive(item.href)
                                 ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200',
+                            // Add KYC status color for KYC item
+                            item.badge === 'kyc' && kycStatus !== 'approved' ? getKycTextColor(kycStatus) : ''
                         ]"
                         :title="collapsed ? item.name : ''"
                     >
                         <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
-                        <span v-if="!collapsed" class="truncate">{{ item.name }}</span>
+                        <span v-if="!collapsed" class="truncate flex-1">{{ item.name }}</span>
+                        <!-- KYC Status Badge -->
+                        <span 
+                            v-if="!collapsed && item.badge === 'kyc' && kycStatus !== 'approved'" 
+                            class="relative flex h-2.5 w-2.5"
+                        >
+                            <span 
+                                v-if="kycStatus === 'pending'"
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                                :class="getKycBadgeClasses(kycStatus)"
+                            ></span>
+                            <span 
+                                class="relative inline-flex rounded-full h-2.5 w-2.5"
+                                :class="getKycBadgeClasses(kycStatus)"
+                            ></span>
+                        </span>
+                        <!-- Verified checkmark for KYC -->
+                        <i 
+                            v-if="!collapsed && item.badge === 'kyc' && kycStatus === 'approved'" 
+                            class="pi pi-check-circle text-green-500 text-sm"
+                        ></i>
                     </Link>
                 </li>
             </ul>
