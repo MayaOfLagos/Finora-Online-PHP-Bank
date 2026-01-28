@@ -189,7 +189,7 @@ class UserDetailsTabs extends Widget
             ->where('status', 'approved')
             ->with('grantProgram')
             ->get();
-        
+
         $totalAmount = $approvedGrants->sum(fn ($grant) => $grant->grantProgram?->amount ?? 0);
 
         return [
@@ -338,6 +338,7 @@ class UserDetailsTabs extends Widget
                 ->body('The password confirmation does not match.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -347,6 +348,7 @@ class UserDetailsTabs extends Widget
                 ->body('Password must be at least 8 characters.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -409,14 +411,14 @@ class UserDetailsTabs extends Widget
      */
     public function toggleAccountLock(): void
     {
-        $newStatus = !$this->record->is_active;
-        
+        $newStatus = ! $this->record->is_active;
+
         $this->record->update([
             'is_active' => $newStatus,
         ]);
 
         // If locking, also force logout
-        if (!$newStatus) {
+        if (! $newStatus) {
             \Illuminate\Support\Facades\DB::table('sessions')
                 ->where('user_id', $this->record->id)
                 ->delete();
@@ -436,8 +438,8 @@ class UserDetailsTabs extends Widget
 
         Notification::make()
             ->title($newStatus ? 'Account Unlocked' : 'Account Locked')
-            ->body($newStatus 
-                ? "Account has been unlocked for {$this->record->email}" 
+            ->body($newStatus
+                ? "Account has been unlocked for {$this->record->email}"
                 : "Account has been locked for {$this->record->email}. User has been logged out.")
             ->success()
             ->send();
@@ -451,7 +453,7 @@ class UserDetailsTabs extends Widget
      */
     public function resetTwoFactor(): void
     {
-        $hadTwoFactor = !empty($this->record->two_factor_secret);
+        $hadTwoFactor = ! empty($this->record->two_factor_secret);
 
         $this->record->update([
             'two_factor_secret' => null,
@@ -479,5 +481,45 @@ class UserDetailsTabs extends Widget
 
         $this->dispatch('close-modal', id: 'two-factor');
         $this->dispatch('refresh');
+    }
+
+    // Tab and Label Methods
+    public function getTabLabels(): array
+    {
+        return [
+            'statistics' => 'Statistics',
+            'information' => 'Information',
+            'transactions' => 'Transactions',
+            'referrals' => 'Referrals',
+            'activity' => 'Activity Log',
+            'security' => 'Security',
+        ];
+    }
+
+    public function getStatCardLabels(): array
+    {
+        return [
+            'send_money' => 'Send Money',
+            'wire_transfers' => 'Wire Transfers',
+            'domestic_transfers' => 'Domestic Transfers',
+            'user_to_user' => 'User to User',
+            'total_deposits' => 'Total Deposits',
+            'total_balance' => 'Total Balance',
+            'total_transactions' => 'Total Transactions',
+            'pending_tickets' => 'Pending Tickets',
+            'loans' => 'Loans',
+        ];
+    }
+
+    public function getStatDescriptions(): array
+    {
+        return [
+            'completed' => 'completed',
+            'total' => 'total',
+            'approved' => 'approved',
+            'accounts' => 'accounts',
+            'support_tickets' => 'Support tickets',
+            'all_time' => 'All time',
+        ];
     }
 }

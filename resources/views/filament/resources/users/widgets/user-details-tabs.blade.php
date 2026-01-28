@@ -7,7 +7,7 @@
                 alpine-active="activeTab === 'statistics'"
                 x-on:click="activeTab = 'statistics'"
             >
-                Statistics
+                {{ $this->getTabLabels()['statistics'] }}
             </x-filament::tabs.item>
 
             {{-- Information Tab --}}
@@ -16,7 +16,7 @@
                 alpine-active="activeTab === 'information'"
                 x-on:click="activeTab = 'information'"
             >
-                Information
+                {{ $this->getTabLabels()['information'] }}
             </x-filament::tabs.item>
 
             {{-- Transactions Tab --}}
@@ -25,7 +25,7 @@
                 alpine-active="activeTab === 'transactions'"
                 x-on:click="activeTab = 'transactions'"
             >
-                Transactions
+                {{ $this->getTabLabels()['transactions'] }}
             </x-filament::tabs.item>
 
             {{-- Referrals Tab --}}
@@ -34,7 +34,7 @@
                 alpine-active="activeTab === 'referrals'"
                 x-on:click="activeTab = 'referrals'"
             >
-                Referrals
+                {{ $this->getTabLabels()['referrals'] }}
             </x-filament::tabs.item>
 
             {{-- Activity Log Tab --}}
@@ -43,7 +43,7 @@
                 alpine-active="activeTab === 'activity'"
                 x-on:click="activeTab = 'activity'"
             >
-                Activity Log
+                {{ $this->getTabLabels()['activity'] }}
             </x-filament::tabs.item>
 
             {{-- Security Tab --}}
@@ -52,7 +52,7 @@
                 alpine-active="activeTab === 'security'"
                 x-on:click="activeTab = 'security'"
             >
-                Security
+                {{ $this->getTabLabels()['security'] }}
             </x-filament::tabs.item>
         </x-filament::tabs>
 
@@ -65,11 +65,11 @@
                 <x-filament::section class="bg-gradient-to-br from-blue-50 to-blue-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Send Money</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['send_money'] }}</p>
                             <p class="text-2xl font-bold text-blue-600">
                                 ${{ number_format($this->totalTransfersStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->totalTransfersStats()['completed'] }} completed</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->totalTransfersStats()['completed'] }} {{ $this->getStatDescriptions()['completed'] }}</p>
                         </div>
                         <div class="p-3 bg-blue-500 rounded-full">
                             <x-heroicon-o-arrow-up-right class="w-6 h-6 text-white" />
@@ -81,11 +81,11 @@
                 <x-filament::section class="bg-gradient-to-br from-purple-50 to-purple-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Wire Transfers</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['wire_transfers'] }}</p>
                             <p class="text-2xl font-bold text-purple-600">
                                 ${{ number_format($this->wireTransfersStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->wireTransfersStats()['completed'] }} completed</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->wireTransfersStats()['completed'] }} {{ $this->getStatDescriptions()['completed'] }}</p>
                         </div>
                         <div class="p-3 bg-purple-500 rounded-full">
                             <x-heroicon-o-globe-alt class="w-6 h-6 text-white" />
@@ -97,11 +97,11 @@
                 <x-filament::section class="bg-gradient-to-br from-green-50 to-green-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Domestic Transfers</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['domestic_transfers'] }}</p>
                             <p class="text-2xl font-bold text-green-600">
                                 ${{ number_format($this->domesticTransfersStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->domesticTransfersStats()['completed'] }} completed</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->domesticTransfersStats()['completed'] }} {{ $this->getStatDescriptions()['completed'] }}</p>
                         </div>
                         <div class="p-3 bg-green-500 rounded-full">
                             <x-heroicon-o-home-modern class="w-6 h-6 text-white" />
@@ -113,11 +113,11 @@
                 <x-filament::section class="bg-gradient-to-br from-orange-50 to-orange-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">User to User</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['user_to_user'] }}</p>
                             <p class="text-2xl font-bold text-orange-600">
                                 ${{ number_format($this->internalTransfersStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->internalTransfersStats()['completed'] }} completed</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->internalTransfersStats()['completed'] }} {{ $this->getStatDescriptions()['completed'] }}</p>
                         </div>
                         <div class="p-3 bg-orange-500 rounded-full">
                             <x-heroicon-o-users class="w-6 h-6 text-white" />
@@ -129,11 +129,11 @@
                 <x-filament::section class="bg-gradient-to-br from-yellow-50 to-yellow-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Total Deposits</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['total_deposits'] }}</p>
                             <p class="text-2xl font-bold text-yellow-600">
                                 ${{ number_format($this->depositsStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->depositsStats()['check'] + $this->depositsStats()['mobile'] + $this->depositsStats()['crypto'] }} total</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->depositsStats()['check'] + $this->depositsStats()['mobile'] + $this->depositsStats()['crypto'] }} {{ $this->getStatDescriptions()['total'] }}</p>
                         </div>
                         <div class="p-3 bg-yellow-500 rounded-full">
                             <x-heroicon-o-arrow-down-tray class="w-6 h-6 text-white" />
@@ -145,11 +145,11 @@
                 <x-filament::section class="bg-gradient-to-br from-red-50 to-red-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Total Balance</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['total_balance'] }}</p>
                             <p class="text-2xl font-bold text-red-600">
                                 ${{ number_format($this->totalBalance(), 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $record->bankAccounts()->count() }} accounts</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $record->bankAccounts()->count() }} {{ $this->getStatDescriptions()['accounts'] }}</p>
                         </div>
                         <div class="p-3 bg-red-500 rounded-full">
                             <x-heroicon-o-wallet class="w-6 h-6 text-white" />
@@ -161,11 +161,11 @@
                 <x-filament::section class="bg-gradient-to-br from-indigo-50 to-indigo-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Total Transactions</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['total_transactions'] }}</p>
                             <p class="text-2xl font-bold text-indigo-600">
                                 {{ $this->totalTransactions() }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">All time</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->getStatDescriptions()['all_time'] }}</p>
                         </div>
                         <div class="p-3 bg-indigo-500 rounded-full">
                             <x-heroicon-o-arrow-path class="w-6 h-6 text-white" />
@@ -177,11 +177,11 @@
                 <x-filament::section class="bg-gradient-to-br from-teal-50 to-teal-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Pending Tickets</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['pending_tickets'] }}</p>
                             <p class="text-2xl font-bold text-teal-600">
                                 {{ $record->supportTickets()->where('status', 'pending')->count() }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">Support tickets</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->getStatDescriptions()['support_tickets'] }}</p>
                         </div>
                         <div class="p-3 bg-teal-500 rounded-full">
                             <x-heroicon-o-chat-bubble-left-right class="w-6 h-6 text-white" />
@@ -193,11 +193,11 @@
                 <x-filament::section class="bg-gradient-to-br from-cyan-50 to-cyan-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">Loans</p>
+                            <p class="text-sm font-medium text-gray-600">{{ $this->getStatCardLabels()['loans'] }}</p>
                             <p class="text-2xl font-bold text-cyan-600">
                                 ${{ number_format($this->loansStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->loansStats()['approved'] }} approved</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->loansStats()['approved'] }} {{ $this->getStatDescriptions()['approved'] }}</p>
                         </div>
                         <div class="p-3 bg-cyan-500 rounded-full">
                             <x-heroicon-o-document-currency-dollar class="w-6 h-6 text-white" />
@@ -213,7 +213,7 @@
                             <p class="text-2xl font-bold text-rose-600">
                                 ${{ number_format($this->grantsStats()['total_amount'], 2) }}
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $this->grantsStats()['approved'] }} approved</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $this->grantsStats()['approved'] }} {{ $this->getStatDescriptions()['approved'] }}</p>
                         </div>
                         <div class="p-3 bg-rose-500 rounded-full">
                             <x-heroicon-o-gift class="w-6 h-6 text-white" />
