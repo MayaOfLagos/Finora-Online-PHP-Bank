@@ -13,13 +13,17 @@ class AdminNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $subject;
+
     public function __construct(
         public User $user,
-        public string $subject,
+        string $subject,
         public string $message,
         public ?string $actionText = null,
         public ?string $actionUrl = null,
-    ) {}
+    ) {
+        $this->subject = $subject;
+    }
 
     public function envelope(): Envelope
     {
