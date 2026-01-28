@@ -16,6 +16,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    unreadCount: {
+        type: Number,
+        default: 0,
+    },
 });
 
 const emit = defineEmits(['mark-read', 'mark-all-read', 'clear']);
@@ -46,68 +50,8 @@ watch(mobileOpen, (isOpen) => {
     }
 });
 
-// Demo notifications (will be replaced with real data)
-const demoNotifications = [
-    {
-        id: 1,
-        type: 'transfer',
-        title: 'Transfer Completed',
-        message: 'Your wire transfer of $1,500.00 to John Doe has been completed.',
-        icon: 'pi-send',
-        color: 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
-        read: false,
-        created_at: new Date(Date.now() - 1800000).toISOString(),
-        href: '/transactions',
-    },
-    {
-        id: 2,
-        type: 'security',
-        title: 'New Login Detected',
-        message: 'A new login was detected from Chrome on Windows.',
-        icon: 'pi-shield',
-        color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
-        read: false,
-        created_at: new Date(Date.now() - 3600000).toISOString(),
-        href: '/dashboard',
-    },
-    {
-        id: 3,
-        type: 'deposit',
-        title: 'Deposit Pending',
-        message: 'Your check deposit of $2,500.00 is under review.',
-        icon: 'pi-download',
-        color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400',
-        read: false,
-        created_at: new Date(Date.now() - 7200000).toISOString(),
-        href: '/deposits',
-    },
-    {
-        id: 4,
-        type: 'card',
-        title: 'Card Shipped',
-        message: 'Your new Platinum card has been shipped.',
-        icon: 'pi-credit-card',
-        color: 'text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400',
-        read: true,
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        href: '/cards',
-    },
-    {
-        id: 5,
-        type: 'promo',
-        title: 'Special Offer',
-        message: 'Get 0% APR on balance transfers for 18 months!',
-        icon: 'pi-gift',
-        color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400',
-        read: true,
-        created_at: new Date(Date.now() - 172800000).toISOString(),
-        href: '/dashboard',
-    },
-];
-
-const allNotifications = computed(() =>
-    props.notifications.length > 0 ? props.notifications : demoNotifications
-);
+// Use real notifications from props
+const allNotifications = computed(() => props.notifications || []);
 
 const filteredNotifications = computed(() => {
     if (activeTab.value === 'unread') {
@@ -116,8 +60,9 @@ const filteredNotifications = computed(() => {
     return allNotifications.value;
 });
 
-const unreadCount = computed(() =>
-    allNotifications.value.filter(n => !n.read).length
+// Use prop if provided, otherwise calculate from notifications
+const unreadNotificationCount = computed(() =>
+    props.unreadCount > 0 ? props.unreadCount : allNotifications.value.filter(n => !n.read).length
 );
 
 const hasNotifications = computed(() => filteredNotifications.value.length > 0);
@@ -190,10 +135,10 @@ defineExpose({ toggle });
             <i class="text-xl pi pi-bell"></i>
             <!-- Unread Badge -->
             <span
-                v-if="unreadCount > 0"
+                v-if="unreadNotificationCount > 0"
                 class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse"
             >
-                {{ unreadCount > 9 ? '9+' : unreadCount }}
+                {{ unreadNotificationCount > 9 ? '9+' : unreadNotificationCount }}
             </span>
         </button>
 
@@ -214,12 +159,12 @@ defineExpose({ toggle });
                         Notifications
                     </h3>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {{ unreadCount }} unread message{{ unreadCount !== 1 ? 's' : '' }}
+                        {{ unreadNotificationCount }} unread message{{ unreadNotificationCount !== 1 ? 's' : '' }}
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
                     <Button
-                        v-if="unreadCount > 0"
+                        v-if="unreadNotificationCount > 0"
                         icon="pi pi-check-circle"
                         size="small"
                         text
@@ -254,8 +199,8 @@ defineExpose({ toggle });
                     @click="activeTab = 'unread'"
                 >
                     Unread
-                    <span v-if="unreadCount > 0" class="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                        {{ unreadCount }}
+                    <span v-if="unreadNotificationCount > 0" class="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                        {{ unreadNotificationCount }}
                     </span>
                 </button>
             </div>
@@ -384,7 +329,7 @@ defineExpose({ toggle });
                         </div>
                         <div class="flex items-center gap-2">
                             <button
-                                v-if="unreadCount > 0"
+                                v-if="unreadNotificationCount > 0"
                                 @click="markAllAsRead"
                                 class="p-2 text-indigo-600 dark:text-indigo-400 transition-all hover:bg-white/50 dark:hover:bg-white/10 rounded-xl active:scale-95"
                                 v-tooltip.left="'Mark all read'"
@@ -424,10 +369,10 @@ defineExpose({ toggle });
                         >
                             Unread
                             <span 
-                                v-if="unreadCount > 0" 
+                                v-if="unreadNotificationCount > 0" 
                                 class="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-red-500 rounded-full"
                             >
-                                {{ unreadCount }}
+                                {{ unreadNotificationCount }}
                             </span>
                         </button>
                     </div>

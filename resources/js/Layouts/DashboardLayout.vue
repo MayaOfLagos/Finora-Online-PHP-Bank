@@ -34,6 +34,7 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const notifications = computed(() => page.props.notifications ?? []);
+const unreadNotificationsCount = computed(() => page.props.unreadNotificationsCount ?? 0);
 const isImpersonating = computed(() => page.props.auth?.isImpersonating ?? false);
 
 // Initialize dark mode
@@ -447,6 +448,7 @@ const handleMarkAllRead = () => {
                         <!-- Notifications -->
                         <NotificationPanel
                             :notifications="notifications"
+                            :unread-count="unreadNotificationsCount"
                             @mark-read="handleMarkRead"
                             @mark-all-read="handleMarkAllRead"
                         />
