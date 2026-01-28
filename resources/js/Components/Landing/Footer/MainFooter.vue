@@ -1,7 +1,18 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 
+const page = usePage();
 const currentYear = new Date().getFullYear();
+
+// Get settings from page props with fallbacks
+const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
+const sitePhone = computed(() => page.props.settings?.general?.site_phone || '+1 (800) 555-0199');
+const siteEmail = computed(() => page.props.settings?.general?.site_email || 'info@finorabank.com');
+const siteAddress = computed(() => page.props.settings?.general?.site_address || '123 Financial District\nNew York, NY 10004');
+const footerDescription = computed(() => page.props.settings?.branding?.site_footer_text || 'Your trusted partner for modern banking. We\'re committed to providing secure, innovative financial solutions for individuals and businesses worldwide.');
+const copyrightText = computed(() => page.props.settings?.branding?.site_copyright_text || 'Finora Bank');
+const copyrightYear = computed(() => page.props.settings?.branding?.site_copyright_year || currentYear);
 
 const quickLinks = [
     { name: 'About Us', href: '/about' },
@@ -59,11 +70,11 @@ const socialLinks = [
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <span class="text-xl font-bold">Finora Bank</span>
+                        <span class="text-xl font-bold">{{ siteName }}</span>
                     </div>
                     
                     <p class="text-gray-400 text-sm mb-6 leading-relaxed">
-                        Your trusted partner for modern banking. We're committed to providing secure, innovative financial solutions for individuals and businesses worldwide.
+                        {{ footerDescription }}
                     </p>
 
                     <!-- Contact Info -->
@@ -72,20 +83,20 @@ const socialLinks = [
                             <svg class="w-4 h-4 mr-3 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
-                            1-800-FINORA (346672)
+                            {{ sitePhone }}
                         </div>
                         <div class="flex items-center text-sm text-gray-400">
                             <svg class="w-4 h-4 mr-3 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
-                            support@finorabank.com
+                            {{ siteEmail }}
                         </div>
                         <div class="flex items-start text-sm text-gray-400">
                             <svg class="w-4 h-4 mr-3 mt-0.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span>123 Financial District<br>New York, NY 10004</span>
+                            <span>{{ siteAddress }}</span>
                         </div>
                     </div>
                 </div>
@@ -200,7 +211,7 @@ const socialLinks = [
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <!-- Copyright -->
                     <div class="text-sm text-gray-500 text-center md:text-left">
-                        © {{ currentYear }} Finora Bank. All rights reserved.
+                        © {{ copyrightYear }} {{ copyrightText }}. All rights reserved.
                     </div>
 
                     <!-- Legal Links -->
