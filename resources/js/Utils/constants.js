@@ -143,8 +143,7 @@ export const TRANSACTION_ICONS = {
 };
 
 // Navigation items for dashboard (Desktop - More items separated)
-export const NAV_ITEMS = [
-    {
+export const NAV_ITEMS = [{
         name: 'Dashboard',
         href: '/dashboard',
         icon: 'pi pi-home'
@@ -246,8 +245,7 @@ export const NAV_ITEMS = [
 ];
 
 // Mobile Navigation items (More items grouped under submenu)
-export const MOBILE_NAV_ITEMS = [
-    {
+export const MOBILE_NAV_ITEMS = [{
         name: 'Dashboard',
         href: '/dashboard',
         icon: 'pi pi-home'
