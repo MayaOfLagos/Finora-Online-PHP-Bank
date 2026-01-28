@@ -1,9 +1,15 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const isLoading = ref(true);
 const progress = ref(0);
-const faviconLoaded = ref(false);
+const page = usePage();
+
+// Get favicon from settings, or use fallback
+const favicon = computed(() => {
+    return page.props.settings?.branding?.favicon || '/favicon.ico';
+});
 
 onMounted(() => {
     // Animate progress bar
@@ -23,10 +29,6 @@ onMounted(() => {
         isLoading.value = false;
     }, 3000);
 });
-
-const onFaviconLoad = () => {
-    faviconLoaded.value = true;
-};
 </script>
 
 <template>
@@ -51,29 +53,20 @@ const onFaviconLoad = () => {
                 
                 <!-- Logo -->
                 <div class="relative flex items-center justify-center w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 shadow-2xl">
-                    <!-- Favicon (primary) -->
+                    <!-- Favicon from Settings -->
                     <img 
-                        v-if="!faviconLoaded"
-                        src="/favicon.ico" 
+                        v-if="favicon"
+                        :src="favicon"
                         alt="Finora Logo"
-                        class="w-16 h-16 md:w-20 md:h-20"
-                        @load="onFaviconLoad"
+                        class="w-16 h-16 md:w-20 md:h-20 object-contain"
                     />
-                    <!-- Fallback Logo (shown if favicon fails or doesn't load) -->
-                    <div v-if="faviconLoaded || true" class="text-center">
+                    <!-- Fallback Logo (shown if no favicon) -->
+                    <div v-else class="text-center">
                         <div class="text-3xl md:text-4xl font-bold text-white tracking-tight">F</div>
                         <div class="text-[8px] md:text-[10px] font-medium text-gold-400 tracking-[0.2em] uppercase">Finora</div>
                     </div>
                 </div>
             </div>
-
-            <!-- Bank Name -->
-            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2 tracking-wide">
-                FINORA BANK
-            </h1>
-            <p class="text-sm text-white/60 mb-8 tracking-wider">
-                Trusted Banking Solutions
-            </p>
 
             <!-- Progress Bar -->
             <div class="w-48 md:w-64 h-1 bg-white/10 rounded-full overflow-hidden">
