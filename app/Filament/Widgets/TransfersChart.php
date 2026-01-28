@@ -6,7 +6,6 @@ use App\Models\DomesticTransfer;
 use App\Models\InternalTransfer;
 use App\Models\WireTransfer;
 use Carbon\Carbon;
-use Filament\Forms\Components\Select;
 use Filament\Widgets\ChartWidget;
 
 class TransfersChart extends ChartWidget
@@ -21,8 +20,6 @@ class TransfersChart extends ChartWidget
 
     public ?string $filter = 'month';
 
-    public ?string $chartType = 'bar';
-
     protected function getFilters(): ?array
     {
         return [
@@ -30,21 +27,6 @@ class TransfersChart extends ChartWidget
             'month' => 'Last 30 Days',
             'quarter' => 'Last 3 Months',
             'year' => 'This Year',
-        ];
-    }
-
-    protected function getFormSchema(): array
-    {
-        return [
-            Select::make('chartType')
-                ->label('Chart Type')
-                ->options([
-                    'bar' => 'Bar Chart',
-                    'line' => 'Line Chart',
-                    'pie' => 'Pie Chart',
-                ])
-                ->default('bar')
-                ->reactive(),
         ];
     }
 
@@ -147,7 +129,7 @@ class TransfersChart extends ChartWidget
 
     protected function getType(): string
     {
-        return $this->chartType ?? 'bar';
+        return 'bar';
     }
 
     protected function getOptions(): array
