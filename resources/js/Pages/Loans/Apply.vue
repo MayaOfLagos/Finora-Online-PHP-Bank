@@ -33,7 +33,14 @@ const calculatedPayment = ref(null);
 
 // Calculate monthly payment
 const calculatePayment = () => {
-    if (!form.amount || !form.term_months || form.amount < props.program.min_amount || form.amount > props.program.max_amount) {
+    // Validate amount is within range (both are in dollars from API)
+    if (!form.amount || !form.term_months) {
+        calculatedPayment.value = null;
+        return;
+    }
+
+    // form.amount is in dollars, compare directly with min/max from API (also in dollars)
+    if (form.amount < props.program.min_amount || form.amount > props.program.max_amount) {
         calculatedPayment.value = null;
         return;
     }
