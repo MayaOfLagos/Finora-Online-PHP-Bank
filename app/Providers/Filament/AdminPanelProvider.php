@@ -61,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 // Widgets are auto-discovered with sort order
             ])
+            ->authGuard('admin')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
