@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TransactionHistories\Schemas;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -133,13 +134,13 @@ class TransactionHistoryTable
                 ->toggleable(),
             TextColumn::make('status')
                 ->badge()
-                ->color(fn (string $state): string => match ($state) {
-                    'pending' => 'warning',
-                    'processing' => 'info',
-                    'completed' => 'success',
-                    'failed' => 'danger',
-                    'cancelled' => 'gray',
-                    'reversed' => 'danger',
+                ->color(fn (TransactionStatus $state): string => match ($state) {
+                    TransactionStatus::Pending => 'warning',
+                    TransactionStatus::Processing => 'info',
+                    TransactionStatus::Completed => 'success',
+                    TransactionStatus::Failed => 'danger',
+                    TransactionStatus::Cancelled => 'gray',
+                    TransactionStatus::Reversed => 'danger',
                     default => 'gray',
                 })
                 ->sortable(),
