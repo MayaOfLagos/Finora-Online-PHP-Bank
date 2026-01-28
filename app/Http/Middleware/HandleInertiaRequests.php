@@ -78,6 +78,9 @@ class HandleInertiaRequests extends Middleware
                     'app_tagline' => Setting::getValue('general', 'app_tagline', 'Banking Made Simple'),
                     'support_email' => Setting::getValue('general', 'support_email', 'support@finorabank.com'),
                     'support_phone' => Setting::getValue('general', 'support_phone', '+1-800-FINORA'),
+                    'site_email' => Setting::getValue('general', 'site_email', 'info@finorabank.com'),
+                    'site_phone' => Setting::getValue('general', 'site_phone', '+1 (800) 555-0199'),
+                    'site_address' => Setting::getValue('general', 'site_address', "123 Financial District\nNew York, NY 10004"),
                 ],
                 'security' => [
                     'kyc_required' => (bool) Setting::getValue('security', 'kyc_required', true),
@@ -89,6 +92,9 @@ class HandleInertiaRequests extends Middleware
                     'copyright_text' => Setting::getValue('branding', 'site_copyright_text', 'Finora Bank'),
                     'copyright_year' => Setting::getValue('branding', 'site_copyright_year', date('Y')),
                     'footer_extra_text' => Setting::getValue('branding', 'site_footer_text', 'Member FDIC | Equal Housing Lender'),
+                    'site_footer_text' => Setting::getValue('branding', 'site_footer_text', 'Your trusted partner for modern banking. We\'re committed to providing secure, innovative financial solutions for individuals and businesses worldwide.'),
+                    'site_copyright_text' => Setting::getValue('branding', 'site_copyright_text', 'Finora Bank'),
+                    'site_copyright_year' => Setting::getValue('branding', 'site_copyright_year', date('Y')),
                 ],
                 'seo' => [
                     'meta_title' => Setting::getValue('seo', 'meta_title', ''),

@@ -10,6 +10,11 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const toast = useToast();
 
+// Get settings from page props with fallbacks
+const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
+const logoLight = computed(() => page.props.settings?.branding?.logo_light || null);
+const logoDark = computed(() => page.props.settings?.branding?.logo_dark || null);
+
 const isScrolled = ref(false);
 const isMobileMenuOpen = ref(false);
 const isVisible = ref(true);
@@ -210,10 +215,20 @@ onUnmounted(() => {
             <!-- Mobile Menu Header -->
             <div class="flex items-center justify-between p-4 border-b border-gray-100/50">
                 <div class="flex items-center space-x-3">
-                    <div class="flex items-center justify-center w-10 h-10 bg-primary-600 rounded-xl shadow-lg shadow-primary-600/30">
-                        <span class="text-xl font-bold text-white">F</span>
-                    </div>
-                    <span class="text-xl font-bold text-gray-900">Finora<span class="font-light text-primary-600">Bank</span></span>
+                    <!-- Logo from settings (light mode) -->
+                    <img 
+                        v-if="logoLight"
+                        :src="logoLight"
+                        :alt="siteName"
+                        class="h-10 w-auto object-contain"
+                    />
+                    <!-- Fallback logo if no logo from settings -->
+                    <template v-else>
+                        <div class="flex items-center justify-center w-10 h-10 bg-primary-600 rounded-xl shadow-lg shadow-primary-600/30">
+                            <span class="text-xl font-bold text-white">F</span>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900">Finora<span class="font-light text-primary-600">Bank</span></span>
+                    </template>
                 </div>
                 <button 
                     @click="closeMobileMenu"

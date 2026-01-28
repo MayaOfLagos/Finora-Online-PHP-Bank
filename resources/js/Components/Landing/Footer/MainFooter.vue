@@ -11,8 +11,10 @@ const sitePhone = computed(() => page.props.settings?.general?.site_phone || '+1
 const siteEmail = computed(() => page.props.settings?.general?.site_email || 'info@finorabank.com');
 const siteAddress = computed(() => page.props.settings?.general?.site_address || '123 Financial District\nNew York, NY 10004');
 const footerDescription = computed(() => page.props.settings?.branding?.site_footer_text || 'Your trusted partner for modern banking. We\'re committed to providing secure, innovative financial solutions for individuals and businesses worldwide.');
-const copyrightText = computed(() => page.props.settings?.branding?.site_copyright_text || 'Finora Bank');
-const copyrightYear = computed(() => page.props.settings?.branding?.site_copyright_year || currentYear);
+const copyrightText = computed(() => page.props.settings?.branding?.site_copyright_text || page.props.settings?.branding?.copyright_text || 'Finora Bank');
+const copyrightYear = computed(() => page.props.settings?.branding?.site_copyright_year || page.props.settings?.branding?.copyright_year || currentYear);
+const logoLight = computed(() => page.props.settings?.branding?.logo_light || null);
+const logoDark = computed(() => page.props.settings?.branding?.logo_dark || null);
 
 const quickLinks = [
     { name: 'About Us', href: '/about' },
@@ -65,12 +67,29 @@ const socialLinks = [
                 <div class="sm:col-span-2 lg:col-span-1">
                     <!-- Logo -->
                     <div class="flex items-center mb-6">
-                        <div class="w-10 h-10 bg-gradient-to-br from-gold-400 to-gold-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <span class="text-xl font-bold">{{ siteName }}</span>
+                        <!-- Logo from settings (dark mode for footer with dark bg) -->
+                        <img 
+                            v-if="logoDark"
+                            :src="logoDark"
+                            :alt="siteName"
+                            class="h-10 w-auto object-contain"
+                        />
+                        <!-- Fallback to light logo if dark not available -->
+                        <img 
+                            v-else-if="logoLight"
+                            :src="logoLight"
+                            :alt="siteName"
+                            class="h-10 w-auto object-contain"
+                        />
+                        <!-- Fallback if no logos from settings -->
+                        <template v-else>
+                            <div class="w-10 h-10 bg-gradient-to-br from-gold-400 to-gold-600 rounded-lg flex items-center justify-center mr-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-xl font-bold">{{ siteName }}</span>
+                        </template>
                     </div>
                     
                     <p class="text-gray-400 text-sm mb-6 leading-relaxed">

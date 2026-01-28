@@ -46,7 +46,7 @@ onMounted(() => {
             </div>
 
             <!-- Logo Container -->
-            <div class="relative mb-8">
+            <div class="relative mb-4">
                 <!-- Animated Ring -->
                 <div class="absolute -inset-4 rounded-full border-2 border-gold-400/30 animate-ping"></div>
                 <div class="absolute -inset-8 rounded-full border border-gold-400/20 animate-pulse"></div>
