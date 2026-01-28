@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TransferStatus;
 use App\Enums\TransferStep;
+use App\Mail\TransferCompletedMail;
 use App\Models\BankAccount;
 use App\Models\Setting;
 use App\Models\TransactionHistory;
@@ -531,6 +532,15 @@ class WireTransferController extends Controller
             ]);
 
             DB::commit();
+
+            // Send wire transfer submitted email to user
+            try {
+                Mail::to($user->email)->send(
+                    new TransferCompletedMail($wireTransfer, $user, 'wire', $wireTransfer->beneficiary_name)
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed to send wire transfer completed email: '.$e->getMessage());
+            }
 
             Log::info('Wire Transfer Completed Successfully', [
                 'wire_transfer_uuid' => $wireTransfer->uuid,

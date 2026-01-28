@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TransferStatus;
+use App\Mail\TransferCompletedMail;
 use App\Models\Bank;
 use App\Models\BankAccount;
 use App\Models\DomesticTransfer;
@@ -355,6 +356,15 @@ class DomesticTransferController extends Controller
             ]);
 
             DB::commit();
+
+            // Send domestic transfer submitted email to user
+            try {
+                Mail::to($user->email)->send(
+                    new TransferCompletedMail($domesticTransfer, $user, 'domestic', $domesticTransfer->beneficiary_name)
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed to send domestic transfer completed email: '.$e->getMessage());
+            }
 
             return back()->with([
                 'success' => 'Domestic transfer submitted successfully. It will be processed within 1-3 business days.',

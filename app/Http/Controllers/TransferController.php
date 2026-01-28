@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransferCompletedMail;
 use App\Mail\TransferOtpMail;
 use App\Models\BankAccount;
 use App\Models\InternalTransfer;
@@ -291,6 +292,27 @@ class TransferController extends Controller
             ]);
 
             DB::commit();
+
+            // Send transfer completed email to sender
+            try {
+                Mail::to($user->email)->send(
+                    new TransferCompletedMail($transfer, $user, 'internal', $toAccount->user->name)
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed to send internal transfer completed email: '.$e->getMessage());
+            }
+
+            // Send received notification email to receiver
+            try {
+                $receiver = $toAccount->user;
+                if ($receiver && $receiver->email) {
+                    Mail::to($receiver->email)->send(
+                        new TransferCompletedMail($transfer, $receiver, 'internal', $user->name)
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed to send internal transfer received email: '.$e->getMessage());
+            }
 
             return back()->with([
                 'success' => 'Transfer completed successfully',
