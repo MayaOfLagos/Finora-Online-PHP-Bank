@@ -277,6 +277,14 @@ class ManageSettings extends Page
 
             // Support
             'perm_support_tickets' => (bool) Setting::getValue('permissions', 'support_tickets', true),
+
+            // Live Chat Settings
+            'live_chat_enabled' => (bool) Setting::getValue('livechat', 'enabled', false),
+            'live_chat_provider' => Setting::getValue('livechat', 'provider', 'none'),
+            'live_chat_widget_id' => Setting::getValue('livechat', 'widget_id', ''),
+            'live_chat_show_on_public' => (bool) Setting::getValue('livechat', 'show_on_public', true),
+            'live_chat_show_on_auth' => (bool) Setting::getValue('livechat', 'show_on_auth', true),
+            'live_chat_show_on_dashboard' => (bool) Setting::getValue('livechat', 'show_on_dashboard', true),
         ];
     }
 
@@ -339,6 +347,10 @@ class ManageSettings extends Page
                         Tab::make('Permissions')
                             ->icon('heroicon-o-key')
                             ->schema($this->getPermissionsSchema()),
+
+                        Tab::make('Live Chat')
+                            ->icon('heroicon-o-chat-bubble-left-right')
+                            ->schema($this->getLiveChatSchema()),
 
                         Tab::make('System Info')
                             ->icon('heroicon-o-server')
@@ -502,7 +514,7 @@ class ManageSettings extends Page
                             ->helperText('Text displayed in footer copyright'),
                         TextInput::make('site_copyright_year')
                             ->label('Copyright Year')
-                            ->placeholder((string)date('Y'))
+                            ->placeholder((string) date('Y'))
                             ->helperText('Year to display in copyright'),
                     ]),
                     Textarea::make('site_footer_text')
@@ -1494,6 +1506,119 @@ class ManageSettings extends Page
         ];
     }
 
+    protected function getLiveChatSchema(): array
+    {
+        return [
+            Section::make('Live Chat Widget')
+                ->description('Configure live chat support for your customers. Select a provider and enter your widget ID.')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->collapsible()
+                ->schema([
+                    Toggle::make('live_chat_enabled')
+                        ->label('Enable Live Chat')
+                        ->helperText('Show live chat widget on your website')
+                        ->live(),
+
+                    Select::make('live_chat_provider')
+                        ->label('Chat Provider')
+                        ->options([
+                            'none' => 'None (Disabled)',
+                            'tawkto' => 'Tawk.to',
+                            'smartsupp' => 'Smartsupp',
+                            'jivochat' => 'JivoChat',
+                        ])
+                        ->default('none')
+                        ->live()
+                        ->helperText('Select your live chat provider')
+                        ->visible(fn (Get $get) => $get('live_chat_enabled')),
+
+                    TextInput::make('live_chat_widget_id')
+                        ->label(fn (Get $get) => match ($get('live_chat_provider')) {
+                            'tawkto' => 'Tawk.to Property ID',
+                            'smartsupp' => 'Smartsupp Key',
+                            'jivochat' => 'JivoChat Widget ID',
+                            default => 'Widget ID',
+                        })
+                        ->placeholder(fn (Get $get) => match ($get('live_chat_provider')) {
+                            'tawkto' => 'e.g., 64a1b2c3d4e5f6a7b8c9d0e1/1h2i3j4k5',
+                            'smartsupp' => 'e.g., abc123def456ghi789',
+                            'jivochat' => 'e.g., AbCdEfGhIj',
+                            default => 'Enter your widget ID',
+                        })
+                        ->helperText(fn (Get $get) => match ($get('live_chat_provider')) {
+                            'tawkto' => 'Find this in Tawk.to Dashboard → Administration → Channels → Chat Widget → Direct Chat Link. Format: PROPERTY_ID/WIDGET_ID',
+                            'smartsupp' => 'Find this in Smartsupp Dashboard → Settings → Chat box → Chat code. Copy the key value.',
+                            'jivochat' => 'Find this in JivoChat Admin Panel → Channels → Website → Widget code. Copy the widget_id value.',
+                            default => 'Enter the widget ID from your chat provider',
+                        })
+                        ->visible(fn (Get $get) => $get('live_chat_enabled') && $get('live_chat_provider') !== 'none'),
+
+                    Placeholder::make('provider_instructions')
+                        ->label('Setup Instructions')
+                        ->content(fn (Get $get) => match ($get('live_chat_provider')) {
+                            'tawkto' => new \Illuminate\Support\HtmlString('
+                                <div class="text-sm space-y-2">
+                                    <p><strong>Tawk.to Setup:</strong></p>
+                                    <ol class="list-decimal list-inside space-y-1 text-gray-600">
+                                        <li>Go to <a href="https://dashboard.tawk.to" target="_blank" class="text-primary-600 hover:underline">Tawk.to Dashboard</a></li>
+                                        <li>Navigate to Administration → Channels → Chat Widget</li>
+                                        <li>Copy the Direct Chat Link (e.g., https://tawk.to/chat/PROPERTY_ID/WIDGET_ID)</li>
+                                        <li>Enter PROPERTY_ID/WIDGET_ID above (the part after /chat/)</li>
+                                    </ol>
+                                </div>
+                            '),
+                            'smartsupp' => new \Illuminate\Support\HtmlString('
+                                <div class="text-sm space-y-2">
+                                    <p><strong>Smartsupp Setup:</strong></p>
+                                    <ol class="list-decimal list-inside space-y-1 text-gray-600">
+                                        <li>Go to <a href="https://app.smartsupp.com" target="_blank" class="text-primary-600 hover:underline">Smartsupp Dashboard</a></li>
+                                        <li>Navigate to Settings → Chat box → Chat code</li>
+                                        <li>Find <code>_smartsupp.key = "YOUR_KEY";</code> in the code</li>
+                                        <li>Copy YOUR_KEY and enter it above</li>
+                                    </ol>
+                                </div>
+                            '),
+                            'jivochat' => new \Illuminate\Support\HtmlString('
+                                <div class="text-sm space-y-2">
+                                    <p><strong>JivoChat Setup:</strong></p>
+                                    <ol class="list-decimal list-inside space-y-1 text-gray-600">
+                                        <li>Go to <a href="https://app.jivosite.com" target="_blank" class="text-primary-600 hover:underline">JivoChat Admin Panel</a></li>
+                                        <li>Navigate to Channels → Website widget</li>
+                                        <li>Find <code>widget_id: "YOUR_WIDGET_ID"</code> in the installation code</li>
+                                        <li>Copy YOUR_WIDGET_ID and enter it above</li>
+                                    </ol>
+                                </div>
+                            '),
+                            default => new \Illuminate\Support\HtmlString('<p class="text-gray-500">Select a chat provider to see setup instructions.</p>'),
+                        })
+                        ->visible(fn (Get $get) => $get('live_chat_enabled') && $get('live_chat_provider') !== 'none'),
+                ]),
+
+            Section::make('Display Settings')
+                ->description('Control where the chat widget appears')
+                ->icon('heroicon-o-eye')
+                ->collapsible()
+                ->collapsed()
+                ->visible(fn (Get $get) => $get('live_chat_enabled') && $get('live_chat_provider') !== 'none')
+                ->schema([
+                    Grid::make(3)->schema([
+                        Toggle::make('live_chat_show_on_public')
+                            ->label('Public Pages')
+                            ->helperText('Homepage, About, Contact, etc.')
+                            ->default(true),
+                        Toggle::make('live_chat_show_on_auth')
+                            ->label('Auth Pages')
+                            ->helperText('Login, Register, Password Reset')
+                            ->default(true),
+                        Toggle::make('live_chat_show_on_dashboard')
+                            ->label('Dashboard')
+                            ->helperText('User dashboard and all logged-in pages')
+                            ->default(true),
+                    ]),
+                ]),
+        ];
+    }
+
     protected function getMaintenanceSchema(): array
     {
         return [
@@ -2342,6 +2467,14 @@ class ManageSettings extends Page
 
         // Support
         Setting::setValue('permissions', 'support_tickets', $data['perm_support_tickets'] ?? true, 'boolean');
+
+        // Live Chat Settings
+        Setting::setValue('livechat', 'enabled', $data['live_chat_enabled'] ?? false, 'boolean');
+        Setting::setValue('livechat', 'provider', $data['live_chat_provider'] ?? 'none', 'string');
+        Setting::setValue('livechat', 'widget_id', $data['live_chat_widget_id'] ?? '', 'string');
+        Setting::setValue('livechat', 'show_on_public', $data['live_chat_show_on_public'] ?? true, 'boolean');
+        Setting::setValue('livechat', 'show_on_auth', $data['live_chat_show_on_auth'] ?? true, 'boolean');
+        Setting::setValue('livechat', 'show_on_dashboard', $data['live_chat_show_on_dashboard'] ?? true, 'boolean');
 
         Notification::make()
             ->title('Settings Saved')

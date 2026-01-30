@@ -111,6 +111,14 @@ class HandleInertiaRequests extends Middleware
                     'robots_txt' => Setting::getValue('seo', 'robots_txt', "User-agent: *\nAllow: /"),
                     'custom_head_code' => Setting::getValue('seo', 'custom_head_code', ''),
                 ],
+                'livechat' => [
+                    'enabled' => (bool) Setting::getValue('livechat', 'enabled', false),
+                    'provider' => Setting::getValue('livechat', 'provider', 'none'),
+                    'widget_id' => Setting::getValue('livechat', 'widget_id', ''),
+                    'show_on_public' => (bool) Setting::getValue('livechat', 'show_on_public', true),
+                    'show_on_auth' => (bool) Setting::getValue('livechat', 'show_on_auth', true),
+                    'show_on_dashboard' => (bool) Setting::getValue('livechat', 'show_on_dashboard', true),
+                ],
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

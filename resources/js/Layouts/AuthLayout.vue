@@ -7,6 +7,7 @@ import { computed, onMounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
+import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
 import { useDarkMode } from '@/Composables/useDarkMode';
 
 const props = defineProps({
@@ -138,5 +139,8 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+
+        <!-- Live Chat Widget -->
+        <LiveChatWidget context="auth" />
     </div>
 </template>

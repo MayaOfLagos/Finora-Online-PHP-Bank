@@ -5,6 +5,7 @@ import SeoHead from '@/Components/Common/SeoHead.vue';
 import MainHeader from '@/Components/Landing/Header/MainHeader.vue';
 import MainFooter from '@/Components/Landing/Footer/MainFooter.vue';
 import MobileStickyFooter from '@/Components/Landing/Footer/MobileStickyFooter.vue';
+import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
 
 const props = defineProps({
     page: {
@@ -219,5 +220,6 @@ const getIcon = (title) => {
 
         <MainFooter />
         <MobileStickyFooter />
+        <LiveChatWidget context="public" />
     </div>
 </template>

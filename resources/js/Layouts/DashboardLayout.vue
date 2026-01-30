@@ -16,6 +16,7 @@ import Button from 'primevue/button';
 
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import ImpersonationBanner from '@/Components/Common/ImpersonationBanner.vue';
+import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
 import Sidebar from '@/Components/Navigation/Sidebar.vue';
 import BottomNav from '@/Components/Navigation/BottomNav.vue';
 import UserMenu from '@/Components/Navigation/UserMenu.vue';
@@ -482,6 +483,9 @@ const handleMarkAllRead = () => {
 
         <!-- Mobile Bottom Navigation -->
         <BottomNav @open-menu="mobileMenuOpen = true" />
+
+        <!-- Live Chat Widget -->
+        <LiveChatWidget context="dashboard" />
     </div>
 </template>
 

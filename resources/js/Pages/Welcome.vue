@@ -15,6 +15,7 @@ import OnlineBankingSection from '@/Components/Landing/Sections/OnlineBankingSec
 import NewsSection from '@/Components/Landing/Sections/NewsSection.vue';
 import MainFooter from '@/Components/Landing/Footer/MainFooter.vue';
 import MobileStickyFooter from '@/Components/Landing/Footer/MobileStickyFooter.vue';
+import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
 
 defineProps({
     canLogin: Boolean,
@@ -100,6 +101,9 @@ onMounted(() => {
 
         <!-- Mobile Sticky Footer -->
         <MobileStickyFooter />
+
+        <!-- Live Chat Widget -->
+        <LiveChatWidget context="public" />
     </div>
 </template>
 

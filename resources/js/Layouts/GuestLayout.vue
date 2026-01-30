@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ProgressSpinner from 'primevue/progressspinner';
+import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
 
 defineProps({
     title: String,
@@ -64,6 +65,9 @@ const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
                 </slot>
             </div>
         </div>
+
+        <!-- Live Chat Widget -->
+        <LiveChatWidget context="public" />
     </div>
 </template>
 
