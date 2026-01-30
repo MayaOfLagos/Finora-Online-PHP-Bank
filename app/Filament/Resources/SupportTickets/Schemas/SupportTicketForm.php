@@ -6,8 +6,8 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
@@ -23,7 +23,7 @@ class SupportTicketForm
                     ->schema([
                         TextInput::make('ticket_number')
                             ->label('Ticket Number')
-                            ->default(fn (): string => 'TKT-' . strtoupper(substr(uniqid(), -8)))
+                            ->default(fn (): string => 'TKT-'.strtoupper(substr(uniqid(), -8)))
                             ->required()
                             ->maxLength(255)
                             ->suffixIcon('heroicon-o-ticket')
@@ -32,7 +32,7 @@ class SupportTicketForm
                         Select::make('user_id')
                             ->label('User')
                             ->relationship('user')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' (' . $record->email . ')')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name.' ('.$record->email.')')
                             ->searchable(['first_name', 'last_name', 'email'])
                             ->required()
                             ->preload(),
@@ -47,11 +47,12 @@ class SupportTicketForm
                             ->required()
                             ->maxLength(255)
                             ->columnSpanFull(),
-                        Textarea::make('message')
-                            ->label('Message/Description')
-                            ->rows(4)
+                        TextEntry::make('initial_message')
+                            ->label('Initial Message')
+                            ->state(fn ($record) => $record?->messages()->where('type', 'customer')->oldest()->first()?->message ?? 'No message')
                             ->columnSpanFull()
-                            ->helperText('Initial ticket message'),
+                            ->prose()
+                            ->markdown(),
                     ])
                     ->columns(2),
 
@@ -70,7 +71,7 @@ class SupportTicketForm
                         Select::make('assigned_to')
                             ->label('Assign To')
                             ->relationship('assignedAgent', 'first_name')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' (' . $record->email . ')')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name.' ('.$record->email.')')
                             ->searchable(['first_name', 'last_name', 'email'])
                             ->placeholder('Not assigned')
                             ->preload()
