@@ -9,7 +9,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
 import Dialog from 'primevue/dialog';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     tickets: Array,
@@ -53,20 +53,10 @@ const submitTicket = () => {
     form.post(route('support.store'), {
         onSuccess: () => {
             showNewTicketDialog.value = false;
-            toast.add({
-                severity: 'success',
-                summary: 'Ticket Created',
-                detail: 'Your support ticket has been submitted successfully.',
-                life: 5000,
-            });
+            toast.success('Your support ticket has been submitted successfully.', 'Ticket Created');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: Object.values(errors)[0] || 'Failed to create ticket.',
-                life: 5000,
-            });
+            toast.error(Object.values(errors)[0] || 'Failed to create ticket.', 'Error');
         },
     });
 };

@@ -5,7 +5,7 @@
  */
 import { ref, computed, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -179,42 +179,22 @@ const selectCryptocurrency = async (cryptoId) => {
         currentExchangeRate.value = data.cryptocurrency?.exchange_rate || selectedCryptoData.value?.exchange_rate;
         
         if (!currentExchangeRate.value) {
-            toast.add({
-                severity: 'warn',
-                summary: 'Exchange Rate Unavailable',
-                detail: 'Please contact support for current rates',
-                life: 4000
-            });
+            toast.warn('Please contact support for current rates', 'Exchange Rate Unavailable');
         }
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Unable to load wallet addresses',
-            life: 3000
-        });
+        toast.error('Unable to load wallet addresses', 'Error');
     }
 };
 
 const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
-        toast.add({
-            severity: 'success',
-            summary: 'Copied',
-            detail: 'Wallet address copied to clipboard',
-            life: 2000
-        });
+        toast.success('Wallet address copied to clipboard', 'Copied');
     });
 };
 
 const submitDeposit = () => {
     if (!isFormValid.value) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid Crypto Deposit',
-            detail: 'Please verify all deposit details',
-            life: 3000
-        });
+        toast.error('Please verify all deposit details', 'Invalid Crypto Deposit');
         return;
     }
 
@@ -225,20 +205,10 @@ const submitDeposit = () => {
         onSuccess: (page) => {
             depositComplete.value = true;
             currentStep.value = 5;
-            toast.add({
-                severity: 'success',
-                summary: 'Crypto Deposit Registered',
-                detail: 'Your transaction is pending verification',
-                life: 5000
-            });
+            toast.success('Your transaction is pending verification', 'Crypto Deposit Registered');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Deposit Failed',
-                detail: errors.transaction_hash || errors.usd_amount || 'Unable to register deposit',
-                life: 5000
-            });
+            toast.error(errors.transaction_hash || errors.usd_amount || 'Unable to register deposit', 'Deposit Failed');
         },
         onFinish: () => {
             isProcessing.value = false;

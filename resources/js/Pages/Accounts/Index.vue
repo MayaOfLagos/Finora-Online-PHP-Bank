@@ -5,7 +5,7 @@
  */
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import { useConfirm } from 'primevue/useconfirm';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -187,12 +187,7 @@ const handleUnfreeze = (account) => {
 
 const handlePinSubmit = () => {
     if (pin.value.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid PIN',
-            detail: 'Please enter your 6-digit transaction PIN',
-            life: 3000
-        });
+        toast.error('Please enter your 6-digit transaction PIN', 'Invalid PIN');
         return;
     }
 
@@ -204,20 +199,16 @@ const handlePinSubmit = () => {
     router.patch(endpoint, { pin: pin.value }, {
         onSuccess: () => {
             showPinModal.value = false;
-            toast.add({
-                severity: 'success',
-                summary: pinAction.value === 'freeze' ? 'Account Frozen' : 'Account Unfrozen',
-                detail: `Account has been ${pinAction.value === 'freeze' ? 'frozen' : 'unfrozen'} successfully`,
-                life: 3000
-            });
+            toast.success(
+                `Account has been ${pinAction.value === 'freeze' ? 'frozen' : 'unfrozen'} successfully`,
+                pinAction.value === 'freeze' ? 'Account Frozen' : 'Account Unfrozen'
+            );
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Action Failed',
-                detail: errors.pin || 'Invalid PIN or action could not be completed',
-                life: 3000
-            });
+            toast.error(
+                errors.pin || 'Invalid PIN or action could not be completed',
+                'Action Failed'
+            );
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -228,12 +219,7 @@ const handlePinSubmit = () => {
 const handleSetPrimary = (account) => {
     router.patch(route('accounts.set-primary', { account: account.uuid }), {}, {
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Primary Account Set',
-                detail: 'This account is now your primary account',
-                life: 3000
-            });
+            toast.success('This account is now your primary account', 'Primary Account Set');
         }
     });
 };
@@ -243,21 +229,14 @@ const handleDownloadStatement = (account) => {
         preserveScroll: true,
         onSuccess: (page) => {
             if (page.props.flash?.success) {
-                toast.add({
-                    severity: 'success',
-                    summary: 'Statement Sent',
-                    detail: page.props.flash.success,
-                    life: 5000
-                });
+                toast.success(page.props.flash.success, 'Statement Sent');
             }
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Statement Error',
-                detail: errors.statement || 'Unable to generate statement. Please try again.',
-                life: 5000
-            });
+            toast.error(
+                errors.statement || 'Unable to generate statement. Please try again.',
+                'Statement Error'
+            );
         }
     });
 };
@@ -272,12 +251,7 @@ const clearFilters = () => {
 // Create account
 const handleAccountCreated = () => {
     showCreateModal.value = false;
-    toast.add({
-        severity: 'success',
-        summary: 'Account Created',
-        detail: 'Your new account has been created successfully',
-        life: 3000
-    });
+    toast.success('Your new account has been created successfully', 'Account Created');
 };
 </script>
 

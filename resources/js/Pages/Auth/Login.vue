@@ -1,14 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
@@ -79,12 +78,7 @@ const submit = async () => {
             const token = await recaptchaRef.value.getToken();
             form.recaptcha_token = token;
         } catch (e) {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: 'Please complete the security verification.',
-                life: 3000,
-            });
+            toast.error('Please complete the security verification.', 'Verification Failed');
             isLoading.value = false;
             return;
         }
@@ -98,12 +92,7 @@ const submit = async () => {
             }
             
             const errorMessage = errors.recaptcha_token || errors.email || 'Invalid email or password. Please try again.';
-            toast.add({
-                severity: 'error',
-                summary: 'Login Failed',
-                detail: errorMessage,
-                life: 3000,
-            });
+            toast.error(errorMessage, 'Login Failed');
         },
         onFinish: () => {
             isLoading.value = false;
@@ -120,8 +109,6 @@ const goToRegister = () => {
 
 <template>
     <SeoHead :title="'Sign In'" />
-    
-    <Toast />
     
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
         

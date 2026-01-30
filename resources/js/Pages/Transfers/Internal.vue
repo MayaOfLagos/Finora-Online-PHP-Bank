@@ -5,7 +5,7 @@
  */
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router, Link, useForm } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -139,32 +139,17 @@ const verifyRecipient = async () => {
             // Check if recipient account matches the sender's selected account
             const selectedAccount = props.accounts.find(a => a.id === form.from_account_id);
             if (selectedAccount && selectedAccount.account_number === form.to_account_number) {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Invalid Recipient',
-                    detail: 'You cannot transfer to your own account',
-                    life: 3000
-                });
+                toast.error('You cannot transfer to your own account', 'Invalid Recipient');
                 return;
             }
 
             recipientVerified.value = true;
             recipientInfo.value = data.recipient;
         } else {
-            toast.add({
-                severity: 'error',
-                summary: 'Recipient Not Found',
-                detail: 'No account found with this account number',
-                life: 3000
-            });
+            toast.error('No account found with this account number', 'Recipient Not Found');
         }
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Verification Failed',
-            detail: 'Unable to verify recipient. Please try again.',
-            life: 3000
-        });
+        toast.error('Unable to verify recipient. Please try again.', 'Verification Failed');
     } finally {
         isVerifyingRecipient.value = false;
     }
@@ -182,12 +167,7 @@ const selectBeneficiary = (beneficiary) => {
         account_type: 'Savings' // Default, as we don't have this in beneficiary data
     };
     
-    toast.add({
-        severity: 'success',
-        summary: 'Beneficiary Selected',
-        detail: `Transferring to ${beneficiary.nickname || beneficiary.beneficiary_name}`,
-        life: 2000
-    });
+    toast.success(`Transferring to ${beneficiary.nickname || beneficiary.beneficiary_name}`, 'Beneficiary Selected');
 };
 
 // Watch for account number changes
@@ -226,12 +206,7 @@ const prevStep = () => {
 // PIN verification
 const handlePinSubmit = () => {
     if (form.pin.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid PIN',
-            detail: 'Please enter your 6-digit transaction PIN',
-            life: 3000
-        });
+        toast.error('Please enter your 6-digit transaction PIN', 'Invalid PIN');
         return;
     }
 
@@ -251,20 +226,10 @@ const handlePinSubmit = () => {
                 currentStep.value = 2;
                 showOtpModal.value = true;
                 const successMessage = page?.props?.flash?.success || 'A verification code has been sent to your email';
-                toast.add({
-                    severity: 'success',
-                    summary: 'OTP Sent',
-                    detail: successMessage,
-                    life: 5000
-                });
+                toast.success(successMessage, 'OTP Sent');
             },
             onError: (errors) => {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Verification Failed',
-                    detail: errors.pin || 'Invalid PIN. Please try again.',
-                    life: 3000
-                });
+                toast.error(errors.pin || 'Invalid PIN. Please try again.', 'Verification Failed');
             },
             onFinish: () => {
                 isProcessing.value = false;
@@ -285,20 +250,10 @@ const handlePinSubmit = () => {
                 transferComplete.value = true;
                 transferResult.value = page.props.transfer;
                 currentStep.value = 3;
-                toast.add({
-                    severity: 'success',
-                    summary: 'Transfer Successful',
-                    detail: 'Your transfer has been completed',
-                    life: 5000
-                });
+                toast.success('Your transfer has been completed', 'Transfer Successful');
             },
             onError: (errors) => {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Transfer Failed',
-                    detail: errors.pin || errors.general || 'Transfer could not be completed',
-                    life: 5000
-                });
+                toast.error(errors.pin || errors.general || 'Transfer could not be completed', 'Transfer Failed');
             },
             onFinish: () => {
                 isProcessing.value = false;
@@ -310,12 +265,7 @@ const handlePinSubmit = () => {
 // OTP verification and transfer
 const handleOtpSubmit = () => {
     if (form.otp.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid OTP',
-            detail: 'Please enter the 6-digit verification code',
-            life: 3000
-        });
+        toast.error('Please enter the 6-digit verification code', 'Invalid OTP');
         return;
     }
 
@@ -335,20 +285,10 @@ const handleOtpSubmit = () => {
             transferComplete.value = true;
             transferResult.value = page.props.transfer;
             currentStep.value = 3;
-            toast.add({
-                severity: 'success',
-                summary: 'Transfer Successful',
-                detail: 'Your transfer has been completed',
-                life: 5000
-            });
+            toast.success('Your transfer has been completed', 'Transfer Successful');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Transfer Failed',
-                detail: errors.otp || errors.general || 'Transfer could not be completed',
-                life: 5000
-            });
+            toast.error(errors.otp || errors.general || 'Transfer could not be completed', 'Transfer Failed');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -366,12 +306,7 @@ const resendOtp = () => {
         preserveScroll: true,
         onSuccess: (page) => {
             const successMessage = page?.props?.flash?.success || 'A new verification code has been sent';
-            toast.add({
-                severity: 'success',
-                summary: 'OTP Resent',
-                detail: successMessage,
-                life: 3000
-            });
+            toast.success(successMessage, 'OTP Resent');
         }
     });
 };

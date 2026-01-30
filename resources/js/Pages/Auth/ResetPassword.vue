@@ -1,13 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -66,20 +65,10 @@ const submit = () => {
     isSubmitting.value = true;
     form.post(route('password.store'), {
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Password Reset',
-                detail: 'Your password has been successfully reset. Redirecting to login...',
-                life: 3000,
-            });
+            toast.success('Your password has been successfully reset. Redirecting to login...', 'Password Reset');
         },
         onError: () => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to reset password. Please try again.',
-                life: 4000,
-            });
+            toast.error('Failed to reset password. Please try again.', 'Error');
         },
         onFinish: () => {
             isSubmitting.value = false;
@@ -90,8 +79,6 @@ const submit = () => {
 
 <template>
     <SeoHead title="Reset Password" />
-
-    <Toast />
 
     <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <!-- Animated Background Elements -->

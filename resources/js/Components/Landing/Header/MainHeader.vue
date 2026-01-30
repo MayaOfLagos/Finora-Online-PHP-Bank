@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
-import Toast from 'primevue/toast';
+import { useToast } from '@/Composables/useToast';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
@@ -54,12 +53,7 @@ const closeMobileMenu = () => {
 };
 
 const handleLogout = () => {
-    toast.add({
-        severity: 'info',
-        summary: 'Logging Out',
-        detail: 'You are being logged out. Goodbye!',
-        life: 2000,
-    });
+    toast.info('You are being logged out. Goodbye!', 'Logging Out');
     
     setTimeout(() => {
         router.post(route('logout'));
@@ -179,9 +173,6 @@ onUnmounted(() => {
             </div>
         </div>
     </header>
-
-    <!-- Toast Notification -->
-    <Toast />
 
     <!-- Mobile Menu Overlay -->
     <Transition

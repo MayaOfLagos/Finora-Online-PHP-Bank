@@ -5,7 +5,7 @@
  */
 import { ref, computed, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -159,12 +159,7 @@ const submitProfile = () => {
     profileForm.put('/profile', {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Profile Updated',
-                detail: 'Your profile has been updated successfully.',
-                life: 3000,
-            });
+            toast.success('Your profile has been updated successfully.', 'Profile Updated');
         },
     });
 };
@@ -174,12 +169,7 @@ const submitPassword = () => {
         preserveScroll: true,
         onSuccess: () => {
             passwordForm.reset();
-            toast.add({
-                severity: 'success',
-                summary: 'Password Updated',
-                detail: 'Your password has been changed successfully.',
-                life: 3000,
-            });
+            toast.success('Your password has been changed successfully.', 'Password Updated');
         },
     });
 };
@@ -189,12 +179,7 @@ const submitPin = () => {
         preserveScroll: true,
         onSuccess: () => {
             pinForm.reset();
-            toast.add({
-                severity: 'success',
-                summary: 'PIN Updated',
-                detail: 'Your transaction PIN has been changed successfully.',
-                life: 3000,
-            });
+            toast.success('Your transaction PIN has been changed successfully.', 'PIN Updated');
         },
     });
 };
@@ -204,12 +189,7 @@ const submitNewPin = () => {
         preserveScroll: true,
         onSuccess: () => {
             newPinForm.reset();
-            toast.add({
-                severity: 'success',
-                summary: 'PIN Set',
-                detail: 'Your transaction PIN has been set successfully.',
-                life: 3000,
-            });
+            toast.success('Your transaction PIN has been set successfully.', 'PIN Set');
         },
     });
 };
@@ -219,12 +199,7 @@ const onAvatarSelect = (event) => {
     if (file) {
         // Validate file size (2MB max)
         if (file.size > 2000000) {
-            toast.add({
-                severity: 'error',
-                summary: 'File Too Large',
-                detail: 'Please select an image smaller than 2MB.',
-                life: 5000,
-            });
+            toast.error('Please select an image smaller than 2MB.', 'File Too Large');
             return;
         }
         
@@ -234,20 +209,10 @@ const onAvatarSelect = (event) => {
         router.post('/profile/avatar', formData, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.add({
-                    severity: 'success',
-                    summary: 'Avatar Updated',
-                    detail: 'Your profile photo has been updated.',
-                    life: 3000,
-                });
+                toast.success('Your profile photo has been updated.', 'Avatar Updated');
             },
             onError: () => {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Upload Failed',
-                    detail: 'Failed to upload profile photo. Please try again.',
-                    life: 5000,
-                });
+                toast.error('Failed to upload profile photo. Please try again.', 'Upload Failed');
             },
         });
     }
@@ -259,12 +224,7 @@ const removeAvatar = () => {
     router.delete('/profile/avatar', {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Avatar Removed',
-                detail: 'Your profile photo has been removed.',
-                life: 3000,
-            });
+            toast.success('Your profile photo has been removed.', 'Avatar Removed');
         },
     });
 };
@@ -274,12 +234,7 @@ const submitPreferences = () => {
     preferencesForm.put('/settings/preferences', {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Preferences Saved',
-                detail: 'Your preferences have been updated.',
-                life: 3000,
-            });
+            toast.success('Your preferences have been updated.', 'Preferences Saved');
         },
     });
 };
@@ -288,12 +243,7 @@ const submitNotifications = () => {
     notificationsForm.put('/settings/notifications', {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Notifications Updated',
-                detail: 'Your notification preferences have been saved.',
-                life: 3000,
-            });
+            toast.success('Your notification preferences have been saved.', 'Notifications Updated');
         },
     });
 };
@@ -312,12 +262,7 @@ const deleteAccount = () => {
             showDeleteDialog.value = false;
         },
         onError: () => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to delete account. Please check your password and try again.',
-                life: 5000,
-            });
+            toast.error('Failed to delete account. Please check your password and try again.', 'Error');
         },
     });
 };

@@ -5,7 +5,7 @@
  */
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -111,12 +111,7 @@ const prevStep = () => {
 
 const submitDeposit = () => {
     if (!isFormValid.value) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid Deposit',
-            detail: 'Please verify all deposit details',
-            life: 3000
-        });
+        toast.error('Please verify all deposit details', 'Invalid Deposit');
         return;
     }
 
@@ -134,12 +129,7 @@ const submitDeposit = () => {
 
             if (!depositResult.value?.uuid) {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'error',
-                    summary: 'Deposit Missing',
-                    detail: 'Could not start payment because the deposit reference was not returned.',
-                    life: 5000
-                });
+                toast.error('Could not start payment because the deposit reference was not returned.', 'Deposit Missing');
                 return;
             }
 
@@ -179,22 +169,12 @@ const submitDeposit = () => {
                 // Unknown gateway - show error
                 isProcessing.value = false;
                 const gatewayLabel = props.enabledGateways.find(g => g.value === form.gateway)?.label || form.gateway;
-                toast.add({
-                    severity: 'error',
-                    summary: 'Gateway Not Configured',
-                    detail: `${gatewayLabel} integration is not yet implemented.`,
-                    life: 6000
-                });
+                toast.error(`${gatewayLabel} integration is not yet implemented.`, 'Gateway Not Configured');
             }
         },
         onError: (errors) => {
             isProcessing.value = false;
-            toast.add({
-                severity: 'error',
-                summary: 'Deposit Failed',
-                detail: errors.general || errors.gateway || errors.amount || 'Unable to initiate deposit',
-                life: 5000
-            });
+            toast.error(errors.general || errors.gateway || errors.amount || 'Unable to initiate deposit', 'Deposit Failed');
         }
     });
 };
@@ -205,12 +185,7 @@ const showManualDepositInstructions = (gateway) => {
     depositComplete.value = true;
     currentStep.value = 3;
 
-    toast.add({
-        severity: 'info',
-        summary: 'Manual Deposit Instructions',
-        detail: `Your deposit request has been created. Follow the instructions for ${gateway.label}`,
-        life: 8000
-    });
+    toast.info(`Your deposit request has been created. Follow the instructions for ${gateway.label}`, 'Manual Deposit Instructions');
 };
 
 const initializePaystack = (depositData) => {
@@ -249,12 +224,7 @@ const initializePaystack = (depositData) => {
                 // Check if payment was actually successful before showing cancelled message
                 setTimeout(() => {
                     if (paymentStatus.value !== 'success' && paymentStatus.value !== 'processing') {
-                        toast.add({
-                            severity: 'warn',
-                            summary: 'Payment Cancelled',
-                            detail: 'You cancelled the payment. Your deposit was saved as pending.',
-                            life: 5000
-                        });
+                        toast.warn('You cancelled the payment. Your deposit was saved as pending.', 'Payment Cancelled');
                     }
                 }, 500);
             },
@@ -269,22 +239,12 @@ const initializePaystack = (depositData) => {
             handler.openIframe();
         } catch (error) {
             isProcessing.value = false;
-            toast.add({
-                severity: 'error',
-                summary: 'Paystack Setup Failed',
-                detail: error.message || 'Could not initialize payment popup',
-                life: 5000
-            });
+            toast.error(error.message || 'Could not initialize payment popup', 'Paystack Setup Failed');
         }
     };
     script.onerror = () => {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Payment Gateway Error',
-            detail: 'Failed to load Paystack. Please try again.',
-            life: 5000
-        });
+        toast.error('Failed to load Paystack. Please try again.', 'Payment Gateway Error');
     };
     document.body.appendChild(script);
 };
@@ -294,12 +254,7 @@ const initializeStripe = async (depositData) => {
     
     if (!publishableKey) {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Stripe Configuration Error',
-            detail: 'Stripe Publishable Key is missing. Contact support.',
-            life: 5000
-        });
+        toast.error('Stripe Publishable Key is missing. Contact support.', 'Stripe Configuration Error');
         return;
     }
 
@@ -313,12 +268,7 @@ const initializeStripe = async (depositData) => {
             };
             script.onerror = () => {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'error',
-                    summary: 'Payment Gateway Error',
-                    detail: 'Failed to load Stripe. Please try again.',
-                    life: 5000
-                });
+                toast.error('Failed to load Stripe. Please try again.', 'Payment Gateway Error');
             };
             document.body.appendChild(script);
         } else {
@@ -326,12 +276,7 @@ const initializeStripe = async (depositData) => {
         }
     } catch (error) {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Stripe Error',
-            detail: 'An error occurred while initializing Stripe.',
-            life: 5000
-        });
+        toast.error('An error occurred while initializing Stripe.', 'Stripe Error');
     }
 };
 
@@ -462,12 +407,7 @@ const loadStripeElements = async (publishableKey, depositData) => {
         cancelButton.onclick = () => {
             closeStripeModal();
             isProcessing.value = false;
-            toast.add({
-                severity: 'warn',
-                summary: 'Payment Cancelled',
-                detail: 'You cancelled the card payment. Your deposit was saved as pending.',
-                life: 5000
-            });
+            toast.warn('You cancelled the card payment. Your deposit was saved as pending.', 'Payment Cancelled');
         };
 
         // Close on overlay click
@@ -479,12 +419,7 @@ const loadStripeElements = async (publishableKey, depositData) => {
 
     } catch (error) {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Payment Error',
-            detail: error.message || 'Failed to initialize Stripe payment.',
-            life: 5000
-        });
+        toast.error(error.message || 'Failed to initialize Stripe payment.', 'Payment Error');
     }
 };
 
@@ -499,12 +434,7 @@ const initializePayPal = (depositData) => {
     
     if (!clientId) {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'PayPal Configuration Error',
-            detail: 'PayPal Client ID is missing. Contact support.',
-            life: 5000
-        });
+        toast.error('PayPal Client ID is missing. Contact support.', 'PayPal Configuration Error');
         return;
     }
 
@@ -522,12 +452,7 @@ const initializePayPal = (depositData) => {
     };
     script.onerror = () => {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Payment Gateway Error',
-            detail: 'Failed to load PayPal. Please try again.',
-            life: 5000
-        });
+        toast.error('Failed to load PayPal. Please try again.', 'Payment Gateway Error');
     };
     document.body.appendChild(script);
 };
@@ -576,22 +501,12 @@ const renderPayPalButtons = (depositData) => {
         onCancel: function(data) {
             closePayPalModal();
             isProcessing.value = false;
-            toast.add({
-                severity: 'warn',
-                summary: 'Payment Cancelled',
-                detail: 'You cancelled the PayPal payment. Your deposit was saved as pending.',
-                life: 5000
-            });
+            toast.warn('You cancelled the PayPal payment. Your deposit was saved as pending.', 'Payment Cancelled');
         },
         onError: function(err) {
             closePayPalModal();
             isProcessing.value = false;
-            toast.add({
-                severity: 'error',
-                summary: 'PayPal Error',
-                detail: 'An error occurred during payment. Please try again.',
-                life: 5000
-            });
+            toast.error('An error occurred during payment. Please try again.', 'PayPal Error');
         }
     }).render('#paypal-button-container');
 };
@@ -630,12 +545,7 @@ const initializeFlutterwave = async (depositData) => {
             };
             script.onerror = () => {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'error',
-                    summary: 'Payment Gateway Error',
-                    detail: 'Failed to load Flutterwave. Please try again.',
-                    life: 5000
-                });
+                toast.error('Failed to load Flutterwave. Please try again.', 'Payment Gateway Error');
             };
             document.body.appendChild(script);
         } else {
@@ -643,12 +553,7 @@ const initializeFlutterwave = async (depositData) => {
         }
     } catch (error) {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Flutterwave Error',
-            detail: error.message || 'Failed to initialize Flutterwave payment.',
-            life: 5000
-        });
+        toast.error(error.message || 'Failed to initialize Flutterwave payment.', 'Flutterwave Error');
     }
 };
 
@@ -674,12 +579,7 @@ const renderFlutterwaveForm = (depositData, config) => {
             
             if (!transactionRef) {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'error',
-                    summary: 'Payment Reference Missing',
-                    detail: 'Transaction reference is missing. Please contact support.',
-                    life: 6000
-                });
+                toast.error('Transaction reference is missing. Please contact support.', 'Payment Reference Missing');
                 return;
             }
             
@@ -693,12 +593,7 @@ const renderFlutterwaveForm = (depositData, config) => {
             // Only show cancellation if payment wasn't already confirmed
             if (paymentStatus.value !== 'processing' && paymentStatus.value !== 'success') {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'warn',
-                    summary: 'Payment Cancelled',
-                    detail: 'You cancelled the Flutterwave payment. Your deposit was saved as pending.',
-                    life: 5000
-                });
+                toast.warn('You cancelled the Flutterwave payment. Your deposit was saved as pending.', 'Payment Cancelled');
             }
         }
     });
@@ -751,12 +646,7 @@ const initializeRazorpay = async (depositData) => {
             };
             script.onerror = () => {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'error',
-                    summary: 'Payment Gateway Error',
-                    detail: 'Failed to load Razorpay. Please try again.',
-                    life: 5000
-                });
+                toast.error('Failed to load Razorpay. Please try again.', 'Payment Gateway Error');
             };
             document.body.appendChild(script);
         } else {
@@ -764,12 +654,7 @@ const initializeRazorpay = async (depositData) => {
         }
     } catch (error) {
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Razorpay Error',
-            detail: error.message || 'Failed to initialize Razorpay payment.',
-            life: 5000
-        });
+        toast.error(error.message || 'Failed to initialize Razorpay payment.', 'Razorpay Error');
     }
 };
 
@@ -793,12 +678,7 @@ const openRazorpayCheckout = (depositData, config) => {
         modal: {
             ondismiss: function() {
                 isProcessing.value = false;
-                toast.add({
-                    severity: 'warn',
-                    summary: 'Payment Cancelled',
-                    detail: 'You cancelled the Razorpay payment. Your deposit was saved as pending.',
-                    life: 5000
-                });
+                toast.warn('You cancelled the Razorpay payment. Your deposit was saved as pending.', 'Payment Cancelled');
             }
         },
         theme: {
@@ -816,12 +696,7 @@ const confirmPayment = (reference) => {
     if (!depositResult.value?.uuid) {
         paymentStatus.value = 'error';
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Confirmation Failed',
-            detail: 'Payment reference is missing. Please contact support with your Paystack receipt.',
-            life: 6000
-        });
+        toast.error('Payment reference is missing. Please contact support with your Paystack receipt.', 'Confirmation Failed');
         return;
     }
 
@@ -847,34 +722,19 @@ const confirmPayment = (reference) => {
             depositResult.value = response.data?.deposit ?? depositResult.value;
             currentStep.value = 3;
             isProcessing.value = false;
-            toast.add({
-                severity: 'success',
-                summary: 'Payment Successful',
-                detail: 'Your deposit has been completed',
-                life: 5000
-            });
+            toast.success('Your deposit has been completed', 'Payment Successful');
         }).catch(error => {
             paymentStatus.value = 'error';
             isProcessing.value = false;
             
             const errorMsg = error.response?.data?.message || 'Payment received but confirmation failed. Please contact support.';
             
-            toast.add({
-                severity: 'error',
-                summary: 'Confirmation Failed',
-                detail: errorMsg,
-                life: 6000
-            });
+            toast.error(errorMsg, 'Confirmation Failed');
         });
     } catch (error) {
         paymentStatus.value = 'error';
         isProcessing.value = false;
-        toast.add({
-            severity: 'error',
-            summary: 'Confirmation Failed',
-            detail: 'Could not confirm payment due to a routing error. Please contact support.',
-            life: 6000
-        });
+        toast.error('Could not confirm payment due to a routing error. Please contact support.', 'Confirmation Failed');
     }
 };
 

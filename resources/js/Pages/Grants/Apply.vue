@@ -8,8 +8,7 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import FileUpload from 'primevue/fileupload';
 import Message from 'primevue/message';
-import Toast from 'primevue/toast';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     program: {
@@ -40,7 +39,7 @@ const handleUpload = (event) => {
         });
         form.value.documents.push(file);
     });
-    toast.add({ severity: 'info', summary: 'File Uploaded', detail: `${files.length} file(s) uploaded`, life: 3000 });
+    toast.info(`${files.length} file(s) uploaded`, 'File Uploaded');
 };
 
 const removeFile = (index) => {
@@ -67,12 +66,12 @@ const goToPreviousStep = () => {
 const goToNextStep = () => {
     if (currentStep.value === 1) {
         if (!form.value.cover_letter.trim()) {
-            toast.add({ severity: 'warn', summary: 'Missing Information', detail: 'Please fill in your cover letter', life: 3000 });
+            toast.warn('Please fill in your cover letter', 'Missing Information');
             return;
         }
     } else if (currentStep.value === 2) {
         if (form.value.documents.length === 0) {
-            toast.add({ severity: 'warn', summary: 'Missing Documents', detail: 'Please upload at least one required document', life: 3000 });
+            toast.warn('Please upload at least one required document', 'Missing Documents');
             return;
         }
     }
@@ -81,13 +80,13 @@ const goToNextStep = () => {
 
 const submitApplication = () => {
     if (!form.value.cover_letter.trim()) {
-        toast.add({ severity: 'warn', summary: 'Missing Information', detail: 'Please fill in your cover letter', life: 3000 });
+        toast.warn('Please fill in your cover letter', 'Missing Information');
         currentStep.value = 1;
         return;
     }
 
     if (form.value.documents.length === 0) {
-        toast.add({ severity: 'warn', summary: 'Missing Documents', detail: 'Please upload at least one required document', life: 3000 });
+        toast.warn('Please upload at least one required document', 'Missing Documents');
         currentStep.value = 2;
         return;
     }
@@ -105,13 +104,13 @@ const submitApplication = () => {
 
     router.post('/grants/apply', formData, {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Success', detail: 'Application submitted successfully', life: 3000 });
+            toast.success('Application submitted successfully', 'Success');
             setTimeout(() => {
                 router.visit('/grants/applications');
             }, 1500);
         },
         onError: (errors) => {
-            toast.add({ severity: 'error', summary: 'Error', detail: Object.values(errors)[0] || 'Failed to submit application', life: 3000 });
+            toast.error(Object.values(errors)[0] || 'Failed to submit application', 'Error');
             isSubmitting.value = false;
         },
     });
@@ -120,8 +119,6 @@ const submitApplication = () => {
 
 <template>
     <DashboardLayout title="Apply for Grant">
-        <Toast />
-        
         <div class="space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">

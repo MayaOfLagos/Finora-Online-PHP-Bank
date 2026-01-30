@@ -6,7 +6,7 @@
  */
 import { ref, computed, watch } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -180,22 +180,12 @@ const initiateTransfer = () => {
                 currentStep.value = 2;
                 showVerificationModal.value = true;
                 verificationStep.value = 'pin';
-                toast.add({
-                    severity: 'info',
-                    summary: 'Verification Required',
-                    detail: 'Please complete the verification steps',
-                    life: 3000
-                });
+                toast.info('Please complete the verification steps', 'Verification Required');
             }
         },
         onError: (errors) => {
             formErrors.value = errors;
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: errors.general || 'Failed to initiate transfer',
-                life: 5000
-            });
+            toast.error(errors.general || 'Failed to initiate transfer', 'Error');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -205,12 +195,7 @@ const initiateTransfer = () => {
 
 const handlePinSubmit = (pin) => {
     if (pin.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid PIN',
-            detail: 'Please enter your 6-digit PIN',
-            life: 3000
-        });
+        toast.error('Please enter your 6-digit PIN', 'Invalid PIN');
         return;
     }
 
@@ -229,30 +214,15 @@ const handlePinSubmit = (pin) => {
                 transferComplete.value = true;
                 currentStep.value = 3;
                 showVerificationModal.value = false;
-                toast.add({
-                    severity: 'success',
-                    summary: 'Transfer Submitted',
-                    detail: 'Your domestic transfer has been submitted for processing',
-                    life: 5000
-                });
+                toast.success('Your domestic transfer has been submitted for processing', 'Transfer Submitted');
             } else if (flash?.nextStep === 'otp') {
                 verificationStep.value = 'otp';
                 requestOtp();
-                toast.add({
-                    severity: 'success',
-                    summary: 'PIN Verified',
-                    detail: 'Please verify with OTP',
-                    life: 2000
-                });
+                toast.success('Please verify with OTP', 'PIN Verified');
             }
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.pin || 'Invalid PIN',
-                life: 3000
-            });
+            toast.error(errors.pin || 'Invalid PIN', 'Verification Failed');
             pinValue.value = '';
         },
         onFinish: () => {
@@ -267,20 +237,10 @@ const requestOtp = () => {
     router.post(route('transfers.domestic.request-otp', { domesticTransfer: activeTransfer.value.uuid }), {}, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'OTP Sent',
-                detail: 'A verification code has been sent to your email',
-                life: 5000
-            });
+            toast.success('A verification code has been sent to your email', 'OTP Sent');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: errors.general || 'Failed to send OTP',
-                life: 3000
-            });
+            toast.error(errors.general || 'Failed to send OTP', 'Error');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -290,12 +250,7 @@ const requestOtp = () => {
 
 const handleOtpSubmit = (otp) => {
     if (otp.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid OTP',
-            detail: 'Please enter the 6-digit code',
-            life: 3000
-        });
+        toast.error('Please enter the 6-digit code', 'Invalid OTP');
         return;
     }
 
@@ -312,21 +267,11 @@ const handleOtpSubmit = (otp) => {
                 transferComplete.value = true;
                 currentStep.value = 3;
                 showVerificationModal.value = false;
-                toast.add({
-                    severity: 'success',
-                    summary: 'Transfer Submitted',
-                    detail: 'Your domestic transfer has been submitted for processing',
-                    life: 5000
-                });
+                toast.success('Your domestic transfer has been submitted for processing', 'Transfer Submitted');
             }
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.otp || 'Invalid OTP',
-                life: 3000
-            });
+            toast.error(errors.otp || 'Invalid OTP', 'Verification Failed');
             otpValue.value = '';
         },
         onFinish: () => {
@@ -355,12 +300,7 @@ const startNewTransfer = () => {
 // Watch for flash messages
 watch(() => page.props.flash, (flash) => {
     if (flash?.success && !showVerificationModal.value) {
-        toast.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: flash.success,
-            life: 3000
-        });
+        toast.success(flash.success, 'Success');
     }
 }, { immediate: true });
 </script>

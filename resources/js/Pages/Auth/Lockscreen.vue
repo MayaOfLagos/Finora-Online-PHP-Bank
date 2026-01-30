@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
-import Toast from 'primevue/toast';
 import Avatar from 'primevue/avatar';
 import Skeleton from 'primevue/skeleton';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -81,12 +80,7 @@ const backspace = () => {
 
 const unlock = () => {
     if (pinCode.value.length < 4) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Invalid PIN',
-            detail: 'PIN must be at least 4 digits.',
-            life: 3000,
-        });
+        toast.warn('PIN must be at least 4 digits.', 'Invalid PIN');
         return;
     }
 
@@ -96,20 +90,10 @@ const unlock = () => {
         pin: pinCode.value
     }, {
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Unlocked',
-                detail: 'Welcome back!',
-                life: 2000,
-            });
+            toast.success('Welcome back!', 'Unlocked');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Unlock Failed',
-                detail: errors.pin || 'Invalid PIN code. Please try again.',
-                life: 4000,
-            });
+            toast.error(errors.pin || 'Invalid PIN code. Please try again.', 'Unlock Failed');
             pinCode.value = '';
         },
         onFinish: () => {
@@ -132,8 +116,6 @@ const numberPad = [
 
 <template>
     <SeoHead :title="'Locked'" :no-index="true" />
-    
-    <Toast />
     
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 flex flex-col transition-colors duration-300">
         

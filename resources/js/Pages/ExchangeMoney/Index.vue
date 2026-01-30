@@ -10,7 +10,7 @@ import Tag from 'primevue/tag';
 import Message from 'primevue/message';
 import Divider from 'primevue/divider';
 import axios from 'axios';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     bankAccounts: { type: Array, default: () => [] },
@@ -42,7 +42,7 @@ const fetchRate = async () => {
         });
         rateResult.value = data;
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Rate unavailable', detail: error.response?.data?.message || 'Could not fetch rate.', life: 3000 });
+        toast.error(error.response?.data?.message || 'Could not fetch rate.', 'Rate unavailable');
     } finally {
         isFetchingRate.value = false;
     }
@@ -56,7 +56,7 @@ const submitExchange = () => {
         amount: Math.round((data.amount || 0) * 100), // Convert dollars to cents
     })).post('/exchange', {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Exchanged', detail: 'Currency converted.', life: 2500 }),
+        onSuccess: () => toast.success('Currency converted.', 'Exchanged'),
     });
 };
 </script>

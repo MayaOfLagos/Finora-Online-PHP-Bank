@@ -6,7 +6,7 @@
  */
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -252,23 +252,13 @@ const initiateTransfer = () => {
                 showVerificationModal.value = true;
                 verificationStep.value = 'pin';
                 
-                toast.add({
-                    severity: 'success',
-                    summary: 'Transfer Initiated',
-                    detail: flash.success,
-                    life: 3000
-                });
+                toast.success(flash.success, 'Transfer Initiated');
             }
         },
         onError: (errors) => {
             console.error('Wire Transfer Errors:', JSON.stringify(errors, null, 2));
             formErrors.value = errors;
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: errors.general || 'Failed to initiate transfer',
-                life: 5000
-            });
+            toast.error(errors.general || 'Failed to initiate transfer', 'Error');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -278,22 +268,12 @@ const initiateTransfer = () => {
 
 const handlePinSubmit = (pin) => {
     if (pin.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid PIN',
-            detail: 'Please enter your 6-digit PIN',
-            life: 3000
-        });
+        toast.error('Please enter your 6-digit PIN', 'Invalid PIN');
         return;
     }
 
     if (!activeTransfer.value?.uuid) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Transfer data not available',
-            life: 3000
-        });
+        toast.error('Transfer data not available', 'Error');
         return;
     }
 
@@ -314,20 +294,10 @@ const handlePinSubmit = (pin) => {
                 console.warn('No nextStep in response, staying on PIN step');
             }
             
-            toast.add({
-                severity: 'success',
-                summary: 'PIN Verified',
-                detail: 'Your PIN has been verified',
-                life: 2000
-            });
+            toast.success('Your PIN has been verified', 'PIN Verified');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.pin || 'Invalid PIN',
-                life: 3000
-            });
+            toast.error(errors.pin || 'Invalid PIN', 'Verification Failed');
             pinValue.value = '';
         },
         onFinish: () => {
@@ -338,12 +308,7 @@ const handlePinSubmit = (pin) => {
 
 const handleCodeSubmit = (code, codeType) => {
     if (!code) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid Code',
-            detail: `Please enter your ${codeType.toUpperCase()} code`,
-            life: 3000
-        });
+        toast.error(`Please enter your ${codeType.toUpperCase()} code`, 'Invalid Code');
         return;
     }
 
@@ -359,21 +324,11 @@ const handleCodeSubmit = (code, codeType) => {
             if (flash?.nextStep) {
                 moveToNextVerificationStep(flash.nextStep);
             }
-            toast.add({
-                severity: 'success',
-                summary: 'Code Verified',
-                detail: `${codeType.toUpperCase()} code has been verified`,
-                life: 2000
-            });
+            toast.success(`${codeType.toUpperCase()} code has been verified`, 'Code Verified');
             codeValue.value = '';
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.code || 'Invalid code',
-                life: 3000
-            });
+            toast.error(errors.code || 'Invalid code', 'Verification Failed');
             codeValue.value = '';
         },
         onFinish: () => {
@@ -389,20 +344,10 @@ const requestOtp = () => {
         preserveScroll: true,
         onSuccess: (page) => {
             const message = page.props.flash?.success || 'A verification code has been sent to your email';
-            toast.add({
-                severity: 'success',
-                summary: 'OTP Sent',
-                detail: message,
-                life: 5000
-            });
+            toast.success(message, 'OTP Sent');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: errors.general || 'Failed to send OTP',
-                life: 3000
-            });
+            toast.error(errors.general || 'Failed to send OTP', 'Error');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -412,12 +357,7 @@ const requestOtp = () => {
 
 const handleOtpSubmit = (otp) => {
     if (otp.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid OTP',
-            detail: 'Please enter the 6-digit code',
-            life: 3000
-        });
+        toast.error('Please enter the 6-digit code', 'Invalid OTP');
         return;
     }
 
@@ -433,21 +373,11 @@ const handleOtpSubmit = (otp) => {
                 transferResult.value = flash.transfer;
                 transferComplete.value = true;
                 showVerificationModal.value = false;
-                toast.add({
-                    severity: 'success',
-                    summary: 'Transfer Submitted',
-                    detail: 'Your wire transfer has been submitted for processing',
-                    life: 5000
-                });
+                toast.success('Your wire transfer has been submitted for processing', 'Transfer Submitted');
             }
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.otp || 'Invalid OTP',
-                life: 3000
-            });
+            toast.error(errors.otp || 'Invalid OTP', 'Verification Failed');
             otpValue.value = '';
         },
         onFinish: () => {
@@ -476,12 +406,7 @@ const moveToNextVerificationStep = (nextStep) => {
 
 const completeTransferWithoutOtp = () => {
     if (!activeTransfer.value?.uuid) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Transfer data not available',
-            life: 3000
-        });
+        toast.error('Transfer data not available', 'Error');
         return;
     }
 
@@ -500,20 +425,10 @@ const completeTransferWithoutOtp = () => {
             transferComplete.value = true;
             showVerificationModal.value = false;
             
-            toast.add({
-                severity: 'success',
-                summary: 'Transfer Complete',
-                detail: flash?.success || 'Your transfer has been submitted successfully',
-                life: 5000
-            });
+            toast.success(flash?.success || 'Your transfer has been submitted successfully', 'Transfer Complete');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Transfer Failed',
-                detail: errors.general || 'Failed to complete transfer',
-                life: 5000
-            });
+            toast.error(errors.general || 'Failed to complete transfer', 'Transfer Failed');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -546,12 +461,7 @@ const startNewTransfer = () => {
 // Watch for flash messages
 watch(() => page.props.flash, (flash) => {
     if (flash?.success && !showVerificationModal.value) {
-        toast.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: flash.success,
-            life: 3000
-        });
+        toast.success(flash.success, 'Success');
     }
 }, { immediate: true });
 </script>

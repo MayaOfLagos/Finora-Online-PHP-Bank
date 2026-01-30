@@ -11,7 +11,7 @@ import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 import Password from 'primevue/password';
 import Divider from 'primevue/divider';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     vouchers: { type: Object, default: () => ({ data: [] }) },
@@ -25,7 +25,7 @@ const toast = useToast();
 
 // Show flash success message
 if (flash.value?.success) {
-    toast.add({ severity: 'success', summary: 'Success', detail: flash.value.success, life: 4000 });
+    toast.success(flash.value.success, 'Success');
 }
 
 const form = useForm({
@@ -87,7 +87,7 @@ const submitWithPin = () => {
         onSuccess: () => {
             showPinModal.value = false;
             form.reset('voucher_code', 'pin');
-            toast.add({ severity: 'success', summary: 'Voucher Redeemed!', detail: 'Check your email for confirmation.', life: 4000 });
+            toast.success('Check your email for confirmation.', 'Voucher Redeemed!');
         },
         onError: (errors) => {
             if (errors.pin) {

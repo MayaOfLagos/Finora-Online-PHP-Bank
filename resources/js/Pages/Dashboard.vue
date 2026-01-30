@@ -5,13 +5,12 @@
  */
 import { computed, ref, onMounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import Button from 'primevue/button';
 import Carousel from 'primevue/carousel';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
-import Toast from 'primevue/toast';
 
 // Components
 import StatCard from '@/Components/Cards/StatCard.vue';
@@ -130,12 +129,7 @@ onMounted(() => {
         
         // If logged in within last 10 seconds, show welcome message
         if (secondsSinceLogin < 10) {
-            toast.add({
-                severity: 'success',
-                summary: 'Welcome Back!',
-                detail: `Good to see you, ${user.value?.first_name || user.value?.name?.split(' ')[0] || 'User'}! 👋`,
-                life: 4000,
-            });
+            toast.success(`Good to see you, ${user.value?.first_name || user.value?.name?.split(' ')[0] || 'User'}! 👋`, 'Welcome Back!');
         }
     }
 });
@@ -248,7 +242,6 @@ const viewCardDetails = (card) => {
 
 <template>
     <DashboardLayout title="Dashboard">
-        <Toast position="top-right" :pt="{ root: { style: 'z-index: 9999' } }" />
         
         <!-- Mobile Header with Extended Gradient Background -->
         <div class="lg:hidden -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-6">

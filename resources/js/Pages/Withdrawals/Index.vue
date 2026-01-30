@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import { useConfirm } from 'primevue/useconfirm';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -64,22 +64,12 @@ const openDialog = () => {
 
 const submitWithdrawal = () => {
     if (!form.bank_account_id || !form.amount) {
-        toast.add({
-            severity: 'error',
-            summary: 'Validation Error',
-            detail: 'Please select an account and enter amount',
-            life: 3000
-        });
+        toast.error('Please select an account and enter amount', 'Validation Error');
         return;
     }
 
     if (form.amount > (selectedAccount.value?.balance / 100)) {
-        toast.add({
-            severity: 'error',
-            summary: 'Insufficient Balance',
-            detail: 'Withdrawal amount exceeds available balance',
-            life: 3000
-        });
+        toast.error('Withdrawal amount exceeds available balance', 'Insufficient Balance');
         return;
     }
 
@@ -93,20 +83,10 @@ const submitWithdrawal = () => {
         onSuccess: () => {
             showDialog.value = false;
             form.reset();
-            toast.add({
-                severity: 'success',
-                summary: 'Withdrawal Requested',
-                detail: 'Your withdrawal request has been submitted for approval',
-                life: 5000
-            });
+            toast.success('Your withdrawal request has been submitted for approval', 'Withdrawal Requested');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Withdrawal Failed',
-                detail: errors.amount || errors.error || 'Unable to process withdrawal',
-                life: 5000
-            });
+            toast.error(errors.amount || errors.error || 'Unable to process withdrawal', 'Withdrawal Failed');
         },
         onFinish: () => {
             isProcessing.value = false;
@@ -126,20 +106,10 @@ const cancelWithdrawal = (withdrawal) => {
             router.post(route('withdrawals.cancel', withdrawal.id), {}, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.add({
-                        severity: 'success',
-                        summary: 'Withdrawal Cancelled',
-                        detail: 'Amount has been refunded to your account',
-                        life: 4000
-                    });
+                    toast.success('Amount has been refunded to your account', 'Withdrawal Cancelled');
                 },
                 onError: (errors) => {
-                    toast.add({
-                        severity: 'error',
-                        summary: 'Cancellation Failed',
-                        detail: errors.error || 'Unable to cancel withdrawal',
-                        life: 3000
-                    });
+                    toast.error(errors.error || 'Unable to cancel withdrawal', 'Cancellation Failed');
                 }
             });
         }

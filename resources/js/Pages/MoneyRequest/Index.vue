@@ -12,7 +12,7 @@ import Tag from 'primevue/tag';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Timeline from 'primevue/timeline';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     sentRequests: { type: Object, default: () => ({ data: [] }) },
@@ -65,7 +65,7 @@ const submitRequest = () => {
     })).post('/money-requests', {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Sent', detail: 'Money request sent.', life: 2500 });
+            toast.success('Money request sent.', 'Sent');
             form.reset('responder_email', 'amount', 'reason');
         },
     });
@@ -88,7 +88,7 @@ const handleAction = (id, action, payload = {}) => {
 
     inertiaRouter[method](endpoints[action], payload, {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Updated', detail: 'Request updated.', life: 2500 }),
+        onSuccess: () => toast.success('Request updated.', 'Updated'),
     });
 };
 

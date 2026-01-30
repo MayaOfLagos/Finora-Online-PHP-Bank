@@ -8,7 +8,7 @@ import Textarea from 'primevue/textarea';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import Dialog from 'primevue/dialog';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     ticket: Object,
@@ -63,12 +63,7 @@ onMounted(() => {
 
 const sendReply = () => {
     if (!form.message.trim()) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Empty Message',
-            detail: 'Please type a message before sending.',
-            life: 3000,
-        });
+        toast.warn('Please type a message before sending.', 'Empty Message');
         return;
     }
 
@@ -77,20 +72,10 @@ const sendReply = () => {
         onSuccess: () => {
             form.reset();
             scrollToBottom();
-            toast.add({
-                severity: 'success',
-                summary: 'Message Sent',
-                detail: 'Your reply has been sent successfully.',
-                life: 3000,
-            });
+            toast.success('Your reply has been sent successfully.', 'Message Sent');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: Object.values(errors)[0] || 'Failed to send message.',
-                life: 5000,
-            });
+            toast.error(Object.values(errors)[0] || 'Failed to send message.', 'Error');
         },
     });
 };
@@ -99,20 +84,10 @@ const closeTicket = () => {
     router.post(route('support.close', props.ticket.uuid), {}, {
         onSuccess: () => {
             showCloseDialog.value = false;
-            toast.add({
-                severity: 'success',
-                summary: 'Ticket Closed',
-                detail: 'Your ticket has been closed.',
-                life: 3000,
-            });
+            toast.success('Your ticket has been closed.', 'Ticket Closed');
         },
         onError: () => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to close ticket.',
-                life: 5000,
-            });
+            toast.error('Failed to close ticket.', 'Error');
         },
     });
 };

@@ -7,7 +7,7 @@ import InputText from 'primevue/inputtext';
 import FileUpload from 'primevue/fileupload';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     template: Object,
@@ -85,20 +85,10 @@ const submitForm = () => {
     form.post(route('kyc.store'), {
         forceFormData: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Your KYC verification has been submitted successfully.',
-                life: 5000,
-            });
+            toast.success('Your KYC verification has been submitted successfully.', 'Success');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: Object.values(errors)[0] || 'Failed to submit verification.',
-                life: 5000,
-            });
+            toast.error(Object.values(errors)[0] || 'Failed to submit verification.', 'Error');
         },
     });
 };

@@ -1,10 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import InputOtp from 'primevue/inputotp';
 import Button from 'primevue/button';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -100,21 +99,11 @@ const sendOtp = () => {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Code Sent',
-                detail: 'Verification code has been sent to your email.',
-                life: 4000,
-            });
+            toast.success('Verification code has been sent to your email.', 'Code Sent');
             startCountdown();
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: errors.otp || 'Failed to send OTP. Please try again.',
-                life: 4000,
-            });
+            toast.error(errors.otp || 'Failed to send OTP. Please try again.', 'Error');
         },
         onFinish: () => {
             isResending.value = false;
@@ -124,12 +113,7 @@ const sendOtp = () => {
 
 const submit = () => {
     if (otpCode.value.length !== 6) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Invalid Code',
-            detail: 'Please enter the complete 6-digit code.',
-            life: 3000,
-        });
+        toast.warn('Please enter the complete 6-digit code.', 'Invalid Code');
         return;
     }
 
@@ -139,12 +123,7 @@ const submit = () => {
         otp: otpCode.value
     }, {
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.otp || 'Invalid or expired code. Please try again.',
-                life: 4000,
-            });
+            toast.error(errors.otp || 'Invalid or expired code. Please try again.', 'Verification Failed');
             otpCode.value = '';
         },
         onFinish: () => {
@@ -160,8 +139,6 @@ const logout = () => {
 
 <template>
     <SeoHead :title="'Verify Email'" />
-    
-    <Toast />
     
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
         

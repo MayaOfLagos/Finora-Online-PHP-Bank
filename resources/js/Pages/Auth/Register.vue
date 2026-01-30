@@ -6,7 +6,7 @@
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Skeleton from 'primevue/skeleton';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -280,12 +280,7 @@ const prevStep = () => {
 
 const submitForm = async () => {
     if (!canProceed.value) {
-        toast.add({
-            severity: 'error',
-            summary: 'Validation Error',
-            detail: 'Please fill all required fields correctly',
-            life: 4000
-        });
+        toast.error('Please fill all required fields correctly', 'Validation Error');
         return;
     }
     
@@ -305,23 +300,13 @@ const submitForm = async () => {
                 ]);
                 
                 if (props.recaptcha?.version === 'v2' && !captchaToken) {
-                    toast.add({
-                        severity: 'error',
-                        summary: 'Verification Required',
-                        detail: 'Please complete the reCAPTCHA verification checkbox.',
-                        life: 4000,
-                    });
+                    toast.error('Please complete the reCAPTCHA verification checkbox.', 'Verification Required');
                     isProcessing.value = false;
                     return;
                 }
             } catch (captchaError) {
                 console.error('reCAPTCHA error:', captchaError);
-                toast.add({
-                    severity: 'error',
-                    summary: 'Verification Failed',
-                    detail: captchaError.message || 'Please complete the security verification.',
-                    life: 3000,
-                });
+                toast.error(captchaError.message || 'Please complete the security verification.', 'Verification Failed');
                 isProcessing.value = false;
                 return;
             }
@@ -332,12 +317,7 @@ const submitForm = async () => {
             recaptcha_token: captchaToken,
         }, {
             onSuccess: () => {
-                toast.add({
-                    severity: 'success',
-                    summary: 'Registration Successful',
-                    detail: `Welcome to ${siteName.value}!`,
-                    life: 5000
-                });
+                toast.success(`Welcome to ${siteName.value}!`, 'Registration Successful');
             },
             onError: (errors) => {
                 if (props.recaptcha?.enabled && props.recaptcha?.version === 'v2' && recaptchaRef.value) {
@@ -345,12 +325,7 @@ const submitForm = async () => {
                 }
                 
                 const errorMessage = errors.recaptcha_token || errors.email || errors.username || 'Please check the form for errors';
-                toast.add({
-                    severity: 'error',
-                    summary: 'Registration Failed',
-                    detail: errorMessage,
-                    life: 5000
-                });
+                toast.error(errorMessage, 'Registration Failed');
                 
                 if (errors.first_name || errors.last_name || errors.username) currentStep.value = 0;
                 else if (errors.email || errors.phone || errors.address) currentStep.value = 1;
@@ -363,12 +338,7 @@ const submitForm = async () => {
         });
     } catch (error) {
         console.error('Form submission error:', error);
-        toast.add({
-            severity: 'error',
-            summary: 'Submission Error',
-            detail: 'An unexpected error occurred. Please try again.',
-            life: 4000
-        });
+        toast.error('An unexpected error occurred. Please try again.', 'Submission Error');
         isProcessing.value = false;
     }
 };
@@ -377,12 +347,7 @@ const submitForm = async () => {
 watch(() => props.errors, (newErrors) => {
     if (Object.keys(newErrors).length > 0) {
         const firstError = Object.values(newErrors)[0];
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: firstError,
-            life: 4000
-        });
+        toast.error(firstError, 'Error');
     }
 }, { deep: true });
 

@@ -10,13 +10,42 @@ import { ZiggyVue } from 'ziggy-js';
 // PrimeVue
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
-import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import Tooltip from 'primevue/tooltip';
 import Ripple from 'primevue/ripple';
 
+// Vue Toastification
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
+
 // PrimeVue CSS
 import 'primeicons/primeicons.css';
+
+// Vue Toastification options
+const toastOptions = {
+    position: 'top-right',
+    timeout: 4000,
+    closeOnClick: true,
+    pauseOnFocusLoss: true,
+    pauseOnHover: true,
+    draggable: true,
+    draggablePercent: 0.6,
+    showCloseButtonOnHover: false,
+    hideProgressBar: false,
+    closeButton: 'button',
+    icon: true,
+    rtl: false,
+    transition: 'Vue-Toastification__slideBlurred',
+    maxToasts: 5,
+    newestOnTop: true,
+    filterBeforeCreate: (toast, toasts) => {
+        // Prevent duplicate toasts
+        if (toasts.filter(t => t.content === toast.content).length !== 0) {
+            return false;
+        }
+        return toast;
+    },
+};
 
 const appName =
     import.meta.env.VITE_APP_NAME || 'Finora Bank';
@@ -44,7 +73,7 @@ createInertiaApp({
                 },
                 ripple: true,
             })
-            .use(ToastService)
+            .use(Toast, toastOptions)
             .use(ConfirmationService)
             .directive('tooltip', Tooltip)
             .directive('ripple', Ripple)

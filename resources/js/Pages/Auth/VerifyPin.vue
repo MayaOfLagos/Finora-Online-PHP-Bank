@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -71,12 +70,7 @@ const backspace = () => {
 
 const submit = () => {
     if (pinCode.value.length < 4) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Invalid PIN',
-            detail: 'PIN must be at least 4 digits.',
-            life: 3000,
-        });
+        toast.warn('PIN must be at least 4 digits.', 'Invalid PIN');
         return;
     }
 
@@ -86,12 +80,7 @@ const submit = () => {
         pin: pinCode.value
     }, {
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: errors.pin || 'Invalid PIN code. Please try again.',
-                life: 4000,
-            });
+            toast.error(errors.pin || 'Invalid PIN code. Please try again.', 'Verification Failed');
             pinCode.value = '';
         },
         onFinish: () => {
@@ -102,12 +91,7 @@ const submit = () => {
 
 const cancel = () => {
     pinCode.value = '';
-    toast.add({
-        severity: 'info',
-        summary: 'Cancelled',
-        detail: 'PIN entry cancelled.',
-        life: 2000,
-    });
+    toast.info('PIN entry cancelled.', 'Cancelled');
 };
 
 const logout = () => {
@@ -124,8 +108,6 @@ const numberPad = [
 
 <template>
     <SeoHead :title="'Verify PIN'" />
-    
-    <Toast />
     
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
         

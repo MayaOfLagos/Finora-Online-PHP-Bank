@@ -5,7 +5,7 @@
  */
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -158,12 +158,7 @@ const removeBackImage = () => {
 
 const submitDeposit = () => {
     if (!isFormValid.value) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid Check Deposit',
-            detail: 'Please verify all check details and images',
-            life: 3000
-        });
+        toast.error('Please verify all check details and images', 'Invalid Check Deposit');
         return;
     }
 
@@ -181,20 +176,10 @@ const submitDeposit = () => {
                 holdUntilDate: holdUntilDate.value
             };
             currentStep.value = 4;
-            toast.add({
-                severity: 'success',
-                summary: 'Check Deposit Submitted',
-                detail: 'Your check will be processed and funds available after hold period',
-                life: 5000
-            });
+            toast.success('Your check will be processed and funds available after hold period', 'Check Deposit Submitted');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Deposit Failed',
-                detail: errors.check_front_image || errors.check_back_image || errors.amount || 'Unable to submit deposit',
-                life: 5000
-            });
+            toast.error(errors.check_front_image || errors.check_back_image || errors.amount || 'Unable to submit deposit', 'Deposit Failed');
         },
         onFinish: () => {
             isProcessing.value = false;

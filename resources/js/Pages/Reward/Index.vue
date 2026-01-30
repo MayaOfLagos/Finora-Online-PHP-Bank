@@ -12,7 +12,7 @@ import Dialog from 'primevue/dialog';
 import Password from 'primevue/password';
 import Divider from 'primevue/divider';
 import Message from 'primevue/message';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     rewards: { type: Object, default: () => ({ data: [] }) },
@@ -26,7 +26,7 @@ const toast = useToast();
 
 // Show flash success message
 if (flash.value?.success) {
-    toast.add({ severity: 'success', summary: 'Success', detail: flash.value.success, life: 4000 });
+    toast.success(flash.value.success, 'Success');
 }
 
 const form = useForm({

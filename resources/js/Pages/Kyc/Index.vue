@@ -8,7 +8,7 @@ import Tag from 'primevue/tag';
 import Message from 'primevue/message';
 import Timeline from 'primevue/timeline';
 import Dialog from 'primevue/dialog';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     verifications: Array,

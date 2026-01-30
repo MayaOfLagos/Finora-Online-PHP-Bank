@@ -1,12 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -50,12 +49,7 @@ const submit = async () => {
             const token = await recaptchaRef.value.getToken();
             form.recaptcha_token = token;
         } catch (e) {
-            toast.add({
-                severity: 'error',
-                summary: 'Verification Failed',
-                detail: 'Please complete the security verification.',
-                life: 3000,
-            });
+            toast.error('Please complete the security verification.', 'Verification Failed');
             isSubmitting.value = false;
             return;
         }
@@ -63,12 +57,7 @@ const submit = async () => {
     
     form.post(route('password.email'), {
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Email Sent',
-                detail: 'Check your email for password reset instructions',
-                life: 4000,
-            });
+            toast.success('Check your email for password reset instructions', 'Email Sent');
         },
         onError: (errors) => {
             // Reset reCAPTCHA on error
@@ -76,12 +65,7 @@ const submit = async () => {
                 recaptchaRef.value.reset();
             }
             
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: errors.recaptcha_token || errors.email || 'Failed to send reset link. Please try again.',
-                life: 4000,
-            });
+            toast.error(errors.recaptcha_token || errors.email || 'Failed to send reset link. Please try again.', 'Error');
         },
         onFinish: () => {
             isSubmitting.value = false;
@@ -93,8 +77,6 @@ const submit = async () => {
 
 <template>
     <SeoHead title="Forgot Password" />
-
-    <Toast />
 
     <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <!-- Animated Background Elements -->

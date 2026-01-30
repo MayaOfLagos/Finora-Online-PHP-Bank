@@ -5,7 +5,7 @@
  */
 import { ref, computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -64,22 +64,12 @@ const isFormValid = computed(() => {
 // Handle PIN submission
 const handlePinSubmit = () => {
     if (form.pin.length !== 6) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid PIN',
-            detail: 'Please enter your 6-digit transaction PIN',
-            life: 3000
-        });
+        toast.error('Please enter your 6-digit transaction PIN', 'Invalid PIN');
         return;
     }
 
     if (!isFormValid.value) {
-        toast.add({
-            severity: 'error',
-            summary: 'Invalid Transfer',
-            detail: 'Please verify all transfer details',
-            life: 3000
-        });
+        toast.error('Please verify all transfer details', 'Invalid Transfer');
         return;
     }
 
@@ -94,20 +84,10 @@ const handlePinSubmit = () => {
         onSuccess: () => {
             transferComplete.value = true;
             transferResult.value = form.data();
-            toast.add({
-                severity: 'success',
-                summary: 'Transfer Successful',
-                detail: 'Your account transfer has been completed',
-                life: 5000
-            });
+            toast.success('Your account transfer has been completed', 'Transfer Successful');
         },
         onError: (errors) => {
-            toast.add({
-                severity: 'error',
-                summary: 'Transfer Failed',
-                detail: errors.pin || errors.general || 'Transfer could not be completed',
-                life: 5000
-            });
+            toast.error(errors.pin || errors.general || 'Transfer could not be completed', 'Transfer Failed');
         },
         onFinish: () => {
             isProcessing.value = false;

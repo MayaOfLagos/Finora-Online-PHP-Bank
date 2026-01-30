@@ -5,7 +5,7 @@
  */
 import { ref, computed } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import { useConfirm } from 'primevue/useconfirm';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -79,12 +79,7 @@ const filteredBeneficiaries = computed(() => {
 // Verify account number
 const verifyAccount = async () => {
     if (!addForm.account_number || addForm.account_number.length < 10) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Invalid',
-            detail: 'Please enter a valid account number',
-            life: 3000
-        });
+        toast.warn('Please enter a valid account number', 'Invalid');
         return;
     }
 
@@ -112,28 +107,13 @@ const verifyAccount = async () => {
                 account_name: data.recipient.name,
                 account_type: data.recipient.account_type,
             };
-            toast.add({
-                severity: 'success',
-                summary: 'Account Found',
-                detail: `Account holder: ${data.recipient.name}`,
-                life: 3000
-            });
+            toast.success(`Account holder: ${data.recipient.name}`, 'Account Found');
         } else {
-            toast.add({
-                severity: 'error',
-                summary: 'Not Found',
-                detail: data.message || 'No account found with this number',
-                life: 3000
-            });
+            toast.error(data.message || 'No account found with this number', 'Not Found');
         }
     } catch (error) {
         console.error('Verify account error:', error);
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to verify account',
-            life: 3000
-        });
+        toast.error('Failed to verify account', 'Error');
     } finally {
         isVerifying.value = false;
     }
@@ -142,34 +122,19 @@ const verifyAccount = async () => {
 // Submit add beneficiary
 const submitAdd = () => {
     if (!verifiedAccount.value) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Verify Account',
-            detail: 'Please verify the account number first',
-            life: 3000
-        });
+        toast.warn('Please verify the account number first', 'Verify Account');
         return;
     }
 
     addForm.post(route('beneficiaries.store'), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Beneficiary added successfully',
-                life: 3000
-            });
+            toast.success('Beneficiary added successfully', 'Success');
             closeAddModal();
         },
         onError: (errors) => {
             if (errors.pin) {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: errors.pin,
-                    life: 3000
-                });
+                toast.error(errors.pin, 'Error');
             }
         }
     });
@@ -192,12 +157,7 @@ const submitEdit = () => {
     })).patch(route('beneficiaries.update', { beneficiary: selectedBeneficiary.value.uuid }), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Beneficiary updated successfully',
-                life: 3000
-            });
+            toast.success('Beneficiary updated successfully', 'Success');
             closeEditModal();
         },
     });
@@ -208,12 +168,7 @@ const toggleFavorite = (beneficiary) => {
     router.patch(route('beneficiaries.toggle-favorite', { beneficiary: beneficiary.uuid }), {}, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: beneficiary.is_favorite ? 'Removed from favorites' : 'Added to favorites',
-                life: 3000
-            });
+            toast.success(beneficiary.is_favorite ? 'Removed from favorites' : 'Added to favorites', 'Success');
         },
     });
 };
@@ -230,22 +185,12 @@ const submitDelete = () => {
     deleteForm.delete(route('beneficiaries.destroy', { beneficiary: selectedBeneficiary.value.uuid }), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Beneficiary deleted successfully',
-                life: 3000
-            });
+            toast.success('Beneficiary deleted successfully', 'Success');
             closeDeleteModal();
         },
         onError: (errors) => {
             if (errors.pin) {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: errors.pin,
-                    life: 3000
-                });
+                toast.error(errors.pin, 'Error');
             }
         }
     });

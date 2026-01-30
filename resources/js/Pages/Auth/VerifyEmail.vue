@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from '@/Composables/useToast';
 import Button from 'primevue/button';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
@@ -31,20 +30,10 @@ onMounted(() => {
 const submit = () => {
     form.post(route('verification.send'), {
         onSuccess: () => {
-            toast.add({
-                severity: 'success',
-                summary: 'Email Sent',
-                detail: 'Verification link has been sent to your email.',
-                life: 3000,
-            });
+            toast.success('Verification link has been sent to your email.', 'Email Sent');
         },
         onError: () => {
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to send verification email. Please try again.',
-                life: 3000,
-            });
+            toast.error('Failed to send verification email. Please try again.', 'Error');
         },
     });
 };
@@ -56,8 +45,6 @@ const verificationLinkSent = computed(
 
 <template>
     <SeoHead title="Email Verification" />
-    
-    <Toast />
     
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
         <div class="w-full max-w-md">
