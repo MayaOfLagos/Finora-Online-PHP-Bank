@@ -10,16 +10,19 @@ use App\Mail\PushNotificationMail;
 use App\Models\User;
 use App\Notifications\GeneralNotification;
 use App\Services\ActivityLogger;
-use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ForceDeleteBulkAction;
+use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -82,10 +85,10 @@ class UsersTable
                         ->modalHeading('Send Email')
                         ->modalDescription('Send an email to this user')
                         ->form([
-                            \Filament\Forms\Components\TextInput::make('subject')
+                            TextInput::make('subject')
                                 ->label('Subject')
                                 ->required(),
-                            \Filament\Forms\Components\MarkdownEditor::make('message')
+                            MarkdownEditor::make('message')
                                 ->label('Message')
                                 ->required()
                                 ->toolbarButtons([
@@ -143,10 +146,10 @@ class UsersTable
                         ->modalHeading('Send Push Notification')
                         ->modalDescription('Send a push notification to this user')
                         ->form([
-                            \Filament\Forms\Components\TextInput::make('title')
+                            TextInput::make('title')
                                 ->label('Title')
                                 ->required(),
-                            \Filament\Forms\Components\MarkdownEditor::make('message')
+                            MarkdownEditor::make('message')
                                 ->label('Message')
                                 ->required()
                                 ->toolbarButtons([
@@ -204,7 +207,7 @@ class UsersTable
                         ->modalHeading('Send Newsletter')
                         ->modalDescription('Send newsletter to this user')
                         ->form([
-                            \Filament\Forms\Components\Select::make('template')
+                            Select::make('template')
                                 ->label('Newsletter Template')
                                 ->options([
                                     'weekly' => 'Weekly Newsletter',
@@ -212,7 +215,7 @@ class UsersTable
                                     'promo' => 'Promotional Newsletter',
                                 ])
                                 ->required(),
-                            \Filament\Forms\Components\MarkdownEditor::make('custom_message')
+                            MarkdownEditor::make('custom_message')
                                 ->label('Custom Message (Optional)')
                                 ->toolbarButtons([
                                     'bold',
