@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->multiFactorAuthentication([
                 // App authentication (Google Authenticator, Authy, etc.)
                 AppAuthentication::make()
-                    ->brandName(config('app.name', 'Finora Bank'))
+                    ->brandName(app_name())
                     ->recoverable()
                     ->recoveryCodeCount(8),
 

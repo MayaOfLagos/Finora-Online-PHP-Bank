@@ -30,7 +30,7 @@ class VoucherRedeemedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Voucher Redeemed Successfully - ' . config('app.name'),
+            subject: 'Voucher Redeemed Successfully - '.app_name(),
         );
     }
 
@@ -47,7 +47,7 @@ class VoucherRedeemedMail extends Mailable
                 'amount' => number_format($this->voucher->amount / 100, 2),
                 'currency' => $this->voucher->currency ?? 'USD',
                 'accountName' => $this->bankAccount->accountType?->name ?? 'Account',
-                'accountNumber' => '****' . substr($this->bankAccount->account_number, -4),
+                'accountNumber' => '****'.substr($this->bankAccount->account_number, -4),
                 'redeemedAt' => now()->format('F j, Y \a\t g:i A'),
             ],
         );

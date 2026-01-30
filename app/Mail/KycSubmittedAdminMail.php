@@ -20,7 +20,7 @@ class KycSubmittedAdminMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New KYC Verification Submitted - '.config('app.name'),
+            subject: 'New KYC Verification Submitted - '.app_name(),
         );
     }
 

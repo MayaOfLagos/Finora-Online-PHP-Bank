@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voucher Redeemed - {{ config('app.name') }}</title>
+    <title>Voucher Redeemed - {{ app_name() }}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -135,7 +135,7 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <div class="logo">{{ config('app.name') }}</div>
+            <div class="logo">{{ app_name() }}</div>
             <h1>Voucher Redeemed Successfully!</h1>
         </div>
         
@@ -182,18 +182,18 @@
                 <strong>🔒 Security Notice:</strong> If you did not perform this transaction, please contact our support team immediately at {{ config('mail.from.address', 'support@example.com') }} or call our 24/7 helpline.
             </div>
             
-            <p>Thank you for choosing {{ config('app.name') }}!</p>
+            <p>Thank you for choosing {{ app_name() }}!</p>
         </div>
         
         <div class="footer">
-            <p>© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+            <p>© {{ date('Y') }} {{ app_name() }}. All rights reserved.</p>
             <p>
                 <a href="{{ url('/privacy') }}">Privacy Policy</a> · 
                 <a href="{{ url('/terms') }}">Terms of Service</a> · 
                 <a href="{{ url('/support') }}">Contact Support</a>
             </p>
             <p style="margin-top: 15px; font-size: 11px;">
-                This is an automated message from {{ config('app.name') }}. Please do not reply to this email.
+                This is an automated message from {{ app_name() }}. Please do not reply to this email.
             </p>
         </div>
     </div>
