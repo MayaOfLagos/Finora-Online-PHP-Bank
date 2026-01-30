@@ -6,11 +6,11 @@ use App\Models\Setting;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
@@ -555,18 +555,18 @@ class ManageSettings extends Page
                 ->collapsed()
                 ->schema([
                     Grid::make(2)->schema([
-                        Placeholder::make('current_mailer')
+                        TextEntry::make('current_mailer')
                             ->label('Active Mail Driver')
-                            ->content(fn () => config('mail.default', 'Not configured')),
-                        Placeholder::make('current_host')
+                            ->state(fn () => config('mail.default', 'Not configured')),
+                        TextEntry::make('current_host')
                             ->label('SMTP Host')
-                            ->content(fn () => config('mail.mailers.smtp.host') ?: 'Not configured'),
-                        Placeholder::make('current_port')
+                            ->state(fn () => config('mail.mailers.smtp.host') ?: 'Not configured'),
+                        TextEntry::make('current_port')
                             ->label('SMTP Port')
-                            ->content(fn () => config('mail.mailers.smtp.port') ?: 'Not configured'),
-                        Placeholder::make('current_from')
+                            ->state(fn () => config('mail.mailers.smtp.port') ?: 'Not configured'),
+                        TextEntry::make('current_from')
                             ->label('From Address')
-                            ->content(fn () => config('mail.from.address') ?: 'Not configured'),
+                            ->state(fn () => config('mail.from.address') ?: 'Not configured'),
                     ]),
                 ]),
 
@@ -923,9 +923,9 @@ class ManageSettings extends Page
                             ->helperText('Show PIN lockscreen instead of logging out on idle')
                             ->default(true),
                     ]),
-                    Placeholder::make('login_verification_note')
+                    TextEntry::make('login_verification_note')
                         ->label('')
-                        ->content('💡 **Note:** Individual users can be exempted from Email OTP verification in User Management → Edit User → "Skip Email OTP Verification" toggle.')
+                        ->state('💡 **Note:** Individual users can be exempted from Email OTP verification in User Management → Edit User → "Skip Email OTP Verification" toggle.')
                         ->columnSpanFull(),
                 ]),
 
@@ -1031,8 +1031,8 @@ class ManageSettings extends Page
                         ->placeholder('0.5')
                         ->helperText('Minimum score to pass (0.0 = bot, 1.0 = human). Recommended: 0.5')
                         ->visible(fn (Get $get) => $get('recaptcha_enabled') && $get('recaptcha_version') === 'v3'),
-                    Placeholder::make('recaptcha_help')
-                        ->content('Get your reCAPTCHA keys from: https://www.google.com/recaptcha/admin')
+                    TextEntry::make('recaptcha_help')
+                        ->state('Get your reCAPTCHA keys from: https://www.google.com/recaptcha/admin')
                         ->visible(fn (Get $get) => $get('recaptcha_enabled')),
                 ]),
         ];
@@ -1553,9 +1553,9 @@ class ManageSettings extends Page
                         })
                         ->visible(fn (Get $get) => $get('live_chat_enabled') && $get('live_chat_provider') !== 'none'),
 
-                    Placeholder::make('provider_instructions')
+                    TextEntry::make('provider_instructions')
                         ->label('Setup Instructions')
-                        ->content(fn (Get $get) => match ($get('live_chat_provider')) {
+                        ->state(fn (Get $get) => match ($get('live_chat_provider')) {
                             'tawkto' => new \Illuminate\Support\HtmlString('
                                 <div class="text-sm space-y-2">
                                     <p><strong>Tawk.to Setup:</strong></p>
@@ -1654,32 +1654,32 @@ class ManageSettings extends Page
                 ->icon('heroicon-o-trash')
                 ->collapsible()
                 ->schema([
-                    Placeholder::make('cache_info')
-                        ->content('Use the buttons below to clear different types of cache. This can help resolve issues after updates.'),
+                    TextEntry::make('cache_info')
+                        ->state('Use the buttons below to clear different types of cache. This can help resolve issues after updates.'),
                     Grid::make(4)->schema([
-                        Placeholder::make('clear_app_cache')
-                            ->content(fn () => view('filament.components.action-button', [
+                        TextEntry::make('clear_app_cache')
+                            ->state(fn () => view('filament.components.action-button', [
                                 'action' => 'clearAppCache',
                                 'label' => 'Clear App Cache',
                                 'icon' => 'heroicon-o-archive-box-x-mark',
                                 'color' => 'danger',
                             ])),
-                        Placeholder::make('clear_view_cache')
-                            ->content(fn () => view('filament.components.action-button', [
+                        TextEntry::make('clear_view_cache')
+                            ->state(fn () => view('filament.components.action-button', [
                                 'action' => 'clearViewCache',
                                 'label' => 'Clear View Cache',
                                 'icon' => 'heroicon-o-eye-slash',
                                 'color' => 'warning',
                             ])),
-                        Placeholder::make('clear_route_cache')
-                            ->content(fn () => view('filament.components.action-button', [
+                        TextEntry::make('clear_route_cache')
+                            ->state(fn () => view('filament.components.action-button', [
                                 'action' => 'clearRouteCache',
                                 'label' => 'Clear Route Cache',
                                 'icon' => 'heroicon-o-map',
                                 'color' => 'info',
                             ])),
-                        Placeholder::make('clear_config_cache')
-                            ->content(fn () => view('filament.components.action-button', [
+                        TextEntry::make('clear_config_cache')
+                            ->state(fn () => view('filament.components.action-button', [
                                 'action' => 'clearConfigCache',
                                 'label' => 'Clear Config Cache',
                                 'icon' => 'heroicon-o-cog-6-tooth',
@@ -1694,18 +1694,18 @@ class ManageSettings extends Page
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    Placeholder::make('optimization_info')
-                        ->content('These actions will cache routes, config, and views for better performance. Use in production environments.'),
+                    TextEntry::make('optimization_info')
+                        ->state('These actions will cache routes, config, and views for better performance. Use in production environments.'),
                     Grid::make(2)->schema([
-                        Placeholder::make('optimize_app')
-                            ->content(fn () => view('filament.components.action-button', [
+                        TextEntry::make('optimize_app')
+                            ->state(fn () => view('filament.components.action-button', [
                                 'action' => 'optimizeApp',
                                 'label' => 'Optimize Application',
                                 'icon' => 'heroicon-o-rocket-launch',
                                 'color' => 'success',
                             ])),
-                        Placeholder::make('clear_all_cache')
-                            ->content(fn () => view('filament.components.action-button', [
+                        TextEntry::make('clear_all_cache')
+                            ->state(fn () => view('filament.components.action-button', [
                                 'action' => 'clearAllCache',
                                 'label' => 'Clear All Caches',
                                 'icon' => 'heroicon-o-trash',
@@ -1725,26 +1725,26 @@ class ManageSettings extends Page
                 ->collapsible()
                 ->schema([
                     Grid::make(3)->schema([
-                        Placeholder::make('app_name')
+                        TextEntry::make('app_name')
                             ->label('Application Name')
-                            ->content(fn () => config('app.name', 'Finora Bank')),
-                        Placeholder::make('app_env')
+                            ->state(fn () => config('app.name', 'Finora Bank')),
+                        TextEntry::make('app_env')
                             ->label('Environment')
-                            ->content(fn () => ucfirst(config('app.env', 'production'))),
-                        Placeholder::make('app_debug')
+                            ->state(fn () => ucfirst(config('app.env', 'production'))),
+                        TextEntry::make('app_debug')
                             ->label('Debug Mode')
-                            ->content(fn () => config('app.debug') ? '✅ Enabled' : '❌ Disabled'),
+                            ->state(fn () => config('app.debug') ? '✅ Enabled' : '❌ Disabled'),
                     ]),
                     Grid::make(3)->schema([
-                        Placeholder::make('app_url')
+                        TextEntry::make('app_url')
                             ->label('Application URL')
-                            ->content(fn () => config('app.url', 'Not set')),
-                        Placeholder::make('app_timezone')
+                            ->state(fn () => config('app.url', 'Not set')),
+                        TextEntry::make('app_timezone')
                             ->label('Timezone')
-                            ->content(fn () => config('app.timezone', 'UTC')),
-                        Placeholder::make('app_locale')
+                            ->state(fn () => config('app.timezone', 'UTC')),
+                        TextEntry::make('app_locale')
                             ->label('Locale')
-                            ->content(fn () => config('app.locale', 'en')),
+                            ->state(fn () => config('app.locale', 'en')),
                     ]),
                 ]),
 
@@ -1754,26 +1754,26 @@ class ManageSettings extends Page
                 ->collapsible()
                 ->schema([
                     Grid::make(3)->schema([
-                        Placeholder::make('php_version')
+                        TextEntry::make('php_version')
                             ->label('PHP Version')
-                            ->content(fn () => PHP_VERSION),
-                        Placeholder::make('laravel_version')
+                            ->state(fn () => PHP_VERSION),
+                        TextEntry::make('laravel_version')
                             ->label('Laravel Version')
-                            ->content(fn () => app()->version()),
-                        Placeholder::make('filament_version')
+                            ->state(fn () => app()->version()),
+                        TextEntry::make('filament_version')
                             ->label('Filament Version')
-                            ->content(fn () => \Composer\InstalledVersions::getPrettyVersion('filament/filament') ?? 'Unknown'),
+                            ->state(fn () => \Composer\InstalledVersions::getPrettyVersion('filament/filament') ?? 'Unknown'),
                     ]),
                     Grid::make(3)->schema([
-                        Placeholder::make('server_software')
+                        TextEntry::make('server_software')
                             ->label('Server Software')
-                            ->content(fn () => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'),
-                        Placeholder::make('server_os')
+                            ->state(fn () => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'),
+                        TextEntry::make('server_os')
                             ->label('Operating System')
-                            ->content(fn () => PHP_OS_FAMILY.' ('.php_uname('r').')'),
-                        Placeholder::make('server_protocol')
+                            ->state(fn () => PHP_OS_FAMILY.' ('.php_uname('r').')'),
+                        TextEntry::make('server_protocol')
                             ->label('Protocol')
-                            ->content(fn () => $_SERVER['SERVER_PROTOCOL'] ?? 'Unknown'),
+                            ->state(fn () => $_SERVER['SERVER_PROTOCOL'] ?? 'Unknown'),
                     ]),
                 ]),
 
@@ -1783,20 +1783,20 @@ class ManageSettings extends Page
                 ->collapsible()
                 ->schema([
                     Grid::make(3)->schema([
-                        Placeholder::make('db_driver')
+                        TextEntry::make('db_driver')
                             ->label('Database Driver')
-                            ->content(fn () => ucfirst(config('database.default', 'Unknown'))),
-                        Placeholder::make('db_name')
+                            ->state(fn () => ucfirst(config('database.default', 'Unknown'))),
+                        TextEntry::make('db_name')
                             ->label('Database Name')
-                            ->content(fn () => config('database.connections.'.config('database.default').'.database', 'Unknown')),
-                        Placeholder::make('db_host')
+                            ->state(fn () => config('database.connections.'.config('database.default').'.database', 'Unknown')),
+                        TextEntry::make('db_host')
                             ->label('Database Host')
-                            ->content(fn () => config('database.connections.'.config('database.default').'.host', 'N/A')),
+                            ->state(fn () => config('database.connections.'.config('database.default').'.host', 'N/A')),
                     ]),
                     Grid::make(2)->schema([
-                        Placeholder::make('db_version')
+                        TextEntry::make('db_version')
                             ->label('Database Version')
-                            ->content(function () {
+                            ->state(function () {
                                 try {
                                     $pdo = \DB::connection()->getPdo();
 
@@ -1805,9 +1805,9 @@ class ManageSettings extends Page
                                     return 'Unable to retrieve';
                                 }
                             }),
-                        Placeholder::make('db_tables')
+                        TextEntry::make('db_tables')
                             ->label('Total Tables')
-                            ->content(function () {
+                            ->state(function () {
                                 try {
                                     $tables = \DB::select('SELECT name FROM sqlite_master WHERE type="table"');
 
@@ -1832,26 +1832,26 @@ class ManageSettings extends Page
                 ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
-                        Placeholder::make('php_memory_limit')
+                        TextEntry::make('php_memory_limit')
                             ->label('Memory Limit')
-                            ->content(fn () => ini_get('memory_limit')),
-                        Placeholder::make('php_max_execution')
+                            ->state(fn () => ini_get('memory_limit')),
+                        TextEntry::make('php_max_execution')
                             ->label('Max Execution Time')
-                            ->content(fn () => ini_get('max_execution_time').' seconds'),
-                        Placeholder::make('php_upload_max')
+                            ->state(fn () => ini_get('max_execution_time').' seconds'),
+                        TextEntry::make('php_upload_max')
                             ->label('Max Upload Size')
-                            ->content(fn () => ini_get('upload_max_filesize')),
+                            ->state(fn () => ini_get('upload_max_filesize')),
                     ]),
                     Grid::make(3)->schema([
-                        Placeholder::make('php_post_max')
+                        TextEntry::make('php_post_max')
                             ->label('Post Max Size')
-                            ->content(fn () => ini_get('post_max_size')),
-                        Placeholder::make('php_max_input_vars')
+                            ->state(fn () => ini_get('post_max_size')),
+                        TextEntry::make('php_max_input_vars')
                             ->label('Max Input Vars')
-                            ->content(fn () => ini_get('max_input_vars')),
-                        Placeholder::make('php_extensions')
+                            ->state(fn () => ini_get('max_input_vars')),
+                        TextEntry::make('php_extensions')
                             ->label('Loaded Extensions')
-                            ->content(fn () => count(get_loaded_extensions()).' extensions'),
+                            ->state(fn () => count(get_loaded_extensions()).' extensions'),
                     ]),
                 ]),
 
@@ -1862,26 +1862,26 @@ class ManageSettings extends Page
                 ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
-                        Placeholder::make('cache_driver')
+                        TextEntry::make('cache_driver')
                             ->label('Cache Driver')
-                            ->content(fn () => ucfirst(config('cache.default', 'file'))),
-                        Placeholder::make('session_driver')
+                            ->state(fn () => ucfirst(config('cache.default', 'file'))),
+                        TextEntry::make('session_driver')
                             ->label('Session Driver')
-                            ->content(fn () => ucfirst(config('session.driver', 'file'))),
-                        Placeholder::make('queue_driver')
+                            ->state(fn () => ucfirst(config('session.driver', 'file'))),
+                        TextEntry::make('queue_driver')
                             ->label('Queue Driver')
-                            ->content(fn () => ucfirst(config('queue.default', 'sync'))),
+                            ->state(fn () => ucfirst(config('queue.default', 'sync'))),
                     ]),
                     Grid::make(3)->schema([
-                        Placeholder::make('mail_driver')
+                        TextEntry::make('mail_driver')
                             ->label('Mail Driver')
-                            ->content(fn () => ucfirst(config('mail.default', 'smtp'))),
-                        Placeholder::make('filesystem_driver')
+                            ->state(fn () => ucfirst(config('mail.default', 'smtp'))),
+                        TextEntry::make('filesystem_driver')
                             ->label('Filesystem')
-                            ->content(fn () => ucfirst(config('filesystems.default', 'local'))),
-                        Placeholder::make('broadcast_driver')
+                            ->state(fn () => ucfirst(config('filesystems.default', 'local'))),
+                        TextEntry::make('broadcast_driver')
                             ->label('Broadcast Driver')
-                            ->content(fn () => ucfirst(config('broadcasting.default', 'null'))),
+                            ->state(fn () => ucfirst(config('broadcasting.default', 'null'))),
                     ]),
                 ]),
 
@@ -1892,23 +1892,23 @@ class ManageSettings extends Page
                 ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
-                        Placeholder::make('disk_total')
+                        TextEntry::make('disk_total')
                             ->label('Total Disk Space')
-                            ->content(function () {
+                            ->state(function () {
                                 $bytes = disk_total_space(base_path());
 
                                 return $this->formatBytes($bytes);
                             }),
-                        Placeholder::make('disk_free')
+                        TextEntry::make('disk_free')
                             ->label('Free Disk Space')
-                            ->content(function () {
+                            ->state(function () {
                                 $bytes = disk_free_space(base_path());
 
                                 return $this->formatBytes($bytes);
                             }),
-                        Placeholder::make('disk_used')
+                        TextEntry::make('disk_used')
                             ->label('Used Disk Space')
-                            ->content(function () {
+                            ->state(function () {
                                 $total = disk_total_space(base_path());
                                 $free = disk_free_space(base_path());
 
@@ -1916,16 +1916,16 @@ class ManageSettings extends Page
                             }),
                     ]),
                     Grid::make(2)->schema([
-                        Placeholder::make('storage_size')
+                        TextEntry::make('storage_size')
                             ->label('Storage Folder Size')
-                            ->content(function () {
+                            ->state(function () {
                                 $path = storage_path();
 
                                 return $this->formatBytes($this->getFolderSize($path));
                             }),
-                        Placeholder::make('logs_size')
+                        TextEntry::make('logs_size')
                             ->label('Logs Folder Size')
-                            ->content(function () {
+                            ->state(function () {
                                 $path = storage_path('logs');
 
                                 return $this->formatBytes($this->getFolderSize($path));
@@ -1939,24 +1939,24 @@ class ManageSettings extends Page
                 ->collapsible()
                 ->schema([
                     Grid::make(2)->schema([
-                        Placeholder::make('dev_company')
+                        TextEntry::make('dev_company')
                             ->label('Developed By')
-                            ->content('Finora Bank Development Team'),
-                        Placeholder::make('dev_version')
+                            ->state('Finora Bank Development Team'),
+                        TextEntry::make('dev_version')
                             ->label('Application Version')
-                            ->content(fn () => config('app.version', '1.0.0')),
+                            ->state(fn () => config('app.version', '1.0.0')),
                     ]),
                     Grid::make(2)->schema([
-                        Placeholder::make('dev_website')
+                        TextEntry::make('dev_website')
                             ->label('Website')
-                            ->content(fn () => new \Illuminate\Support\HtmlString('<a href="https://finorabank.com" target="_blank" class="text-primary-500 hover:underline">https://finorabank.com</a>')),
-                        Placeholder::make('dev_support')
+                            ->state(fn () => new \Illuminate\Support\HtmlString('<a href="https://finorabank.com" target="_blank" class="text-primary-500 hover:underline">https://finorabank.com</a>')),
+                        TextEntry::make('dev_support')
                             ->label('Support Email')
-                            ->content(fn () => new \Illuminate\Support\HtmlString('<a href="mailto:support@finorabank.com" class="text-primary-500 hover:underline">support@finorabank.com</a>')),
+                            ->state(fn () => new \Illuminate\Support\HtmlString('<a href="mailto:support@finorabank.com" class="text-primary-500 hover:underline">support@finorabank.com</a>')),
                     ]),
-                    Placeholder::make('dev_copyright')
+                    TextEntry::make('dev_copyright')
                         ->label('Copyright')
-                        ->content(fn () => '© '.date('Y').' Finora Bank. All rights reserved.')
+                        ->state(fn () => '© '.date('Y').' Finora Bank. All rights reserved.')
                         ->columnSpanFull(),
                 ]),
         ];
@@ -1992,8 +1992,8 @@ class ManageSettings extends Page
                 ->description('Control which features are visible and accessible to users in their dashboard. Disabling a feature will hide it from the user interface.')
                 ->icon('heroicon-o-eye')
                 ->schema([
-                    Placeholder::make('permissions_info')
-                        ->content('These settings control global feature visibility for all users. Individual user permissions can be managed from the Users section.')
+                    TextEntry::make('permissions_info')
+                        ->state('These settings control global feature visibility for all users. Individual user permissions can be managed from the Users section.')
                         ->columnSpanFull(),
                 ]),
 

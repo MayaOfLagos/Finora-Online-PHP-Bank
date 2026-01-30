@@ -167,9 +167,9 @@ class ViewUser extends ViewRecord
                         })
                         ->helperText('Choose the account to modify'),
 
-                    \Filament\Forms\Components\Placeholder::make('current_balance_display')
+                    \Filament\Infolists\Components\TextEntry::make('current_balance_display')
                         ->label('Current Balance')
-                        ->content(function (callable $get) {
+                        ->state(function (callable $get) {
                             $accountId = $get('account_id');
                             if ($accountId) {
                                 $account = BankAccount::find($accountId);
