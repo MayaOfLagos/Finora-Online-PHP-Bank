@@ -1,11 +1,11 @@
 <script setup>
 /**
  * PagePreloader - Ultra Modern Loading Animation
- * A sleek, professional preloader for banking applications
- * Features: Animated logo, progress indicator, smooth transitions
+ * Based on Seft Bank's preloader design
+ * Features: Orbital rings, floating particles, morphing core, shimmer text
  */
-import { ref, onMounted, computed, watch } from 'vue';
-import { usePage, router } from '@inertiajs/vue3';
+import { ref, onMounted, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     /**
@@ -14,78 +14,52 @@ const props = defineProps({
      */
     minLoadTime: {
         type: Number,
-        default: 1500,
+        default: 800,
     },
     /**
-     * Show loading text below animation
+     * Show subtitle below bank name
      */
-    showText: {
+    showSubtitle: {
         type: Boolean,
         default: true,
     },
     /**
-     * Variant: 'full' for page load, 'overlay' for route changes
+     * Custom subtitle text
      */
-    variant: {
+    subtitle: {
         type: String,
-        default: 'full',
-        validator: (value) => ['full', 'overlay'].includes(value),
+        default: 'Secure Banking Platform',
     },
 });
 
 const emit = defineEmits(['complete']);
 
 const page = usePage();
+const isActive = ref(true);
 const isVisible = ref(true);
-const progress = ref(0);
-const isExiting = ref(false);
 
 // Get branding from settings
-const favicon = computed(() => page.props.settings?.branding?.favicon);
 const siteName = computed(() => page.props.settings?.general?.site_name || 'Finora Bank');
-const siteInitial = computed(() => siteName.value.charAt(0).toUpperCase());
-
-// Progress animation
-let progressInterval = null;
-
-const startProgress = () => {
-    progress.value = 0;
-    progressInterval = setInterval(() => {
-        if (progress.value < 90) {
-            // Slow down as it approaches 90%
-            const increment = Math.random() * (90 - progress.value) / 10;
-            progress.value = Math.min(90, progress.value + increment);
-        }
-    }, 100);
-};
-
-const completeProgress = () => {
-    if (progressInterval) {
-        clearInterval(progressInterval);
-        progressInterval = null;
-    }
-    progress.value = 100;
-};
 
 const hidePreloader = () => {
-    isExiting.value = true;
+    isActive.value = false;
+    
+    // After fade transition, remove from DOM and emit complete
     setTimeout(() => {
         isVisible.value = false;
         emit('complete');
-    }, 500);
+    }, 600);
 };
 
 onMounted(() => {
     const startTime = Date.now();
-    startProgress();
 
     const checkReady = () => {
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, props.minLoadTime - elapsed);
         
         setTimeout(() => {
-            completeProgress();
-            setTimeout(hidePreloader, 300);
+            hidePreloader();
         }, remaining);
     };
 
@@ -94,259 +68,345 @@ onMounted(() => {
     } else {
         window.addEventListener('load', checkReady, { once: true });
     }
-
-    // Cleanup
-    return () => {
-        if (progressInterval) {
-            clearInterval(progressInterval);
-        }
-    };
 });
 </script>
 
 <template>
     <Teleport to="body">
-        <Transition
-            enter-active-class="transition-opacity duration-300"
-            enter-from-class="opacity-0"
-            leave-active-class="transition-all duration-500 ease-out"
-            leave-to-class="opacity-0 scale-105"
-        >
-            <div
-                v-if="isVisible"
-                class="fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-hidden"
-                :class="[
-                    variant === 'full' 
-                        ? 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900' 
-                        : 'bg-slate-900/95 backdrop-blur-sm'
-                ]"
-            >
-                <!-- Animated Background Elements -->
-                <div class="absolute inset-0 overflow-hidden pointer-events-none">
-                    <!-- Gradient Orbs -->
-                    <div class="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-float"></div>
-                    <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-float-delayed"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div v-if="isVisible" class="page-loading" :class="{ active: isActive }">
+            <div class="page-loading-inner">
+                <div class="loading-container">
+                    <!-- Floating particles background -->
+                    <div class="loading-particles">
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                    </div>
                     
-                    <!-- Grid Pattern -->
-                    <div class="absolute inset-0 opacity-[0.02]" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px;"></div>
+                    <!-- Main loading animation -->
+                    <div class="loading-animation">
+                        <!-- Outer orbital rings -->
+                        <div class="orbit-ring"></div>
+                        <div class="orbit-ring"></div>
+                        <div class="orbit-ring"></div>
+                        
+                        <!-- Inner spinning circles -->
+                        <div class="inner-circle"></div>
+                        <div class="inner-circle"></div>
+                        
+                        <!-- Morphing glowing core -->
+                        <div class="core"></div>
+                    </div>
                     
-                    <!-- Particle Effect -->
-                    <div class="particles">
-                        <div v-for="i in 20" :key="i" class="particle" :style="{ '--delay': `${i * 0.2}s`, '--x': `${Math.random() * 100}%`, '--duration': `${3 + Math.random() * 4}s` }"></div>
-                    </div>
-                </div>
-
-                <!-- Main Content -->
-                <div class="relative z-10 flex flex-col items-center">
-                    <!-- Logo Animation Container -->
-                    <div class="relative mb-8">
-                        <!-- Outer Rotating Ring -->
-                        <div class="absolute -inset-8 rounded-full border-2 border-dashed border-indigo-500/30 animate-spin-slow"></div>
-                        
-                        <!-- Middle Pulsing Ring -->
-                        <div class="absolute -inset-4 rounded-full border border-indigo-400/40 animate-ping-slow"></div>
-                        
-                        <!-- Glow Effect -->
-                        <div class="absolute -inset-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-50 blur-xl animate-pulse"></div>
-                        
-                        <!-- Logo Container -->
-                        <div class="relative w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center justify-center overflow-hidden group">
-                            <!-- Inner Shine -->
-                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                            
-                            <!-- Logo/Favicon -->
-                            <img 
-                                v-if="favicon"
-                                :src="favicon"
-                                :alt="siteName"
-                                class="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-2xl animate-float-subtle"
-                            />
-                            <!-- Fallback Initial -->
-                            <div v-else class="flex flex-col items-center justify-center animate-float-subtle">
-                                <span class="text-4xl md:text-5xl font-bold bg-gradient-to-br from-white to-indigo-200 bg-clip-text text-transparent">
-                                    {{ siteInitial }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Site Name -->
-                    <h1 class="text-xl md:text-2xl font-semibold text-white/90 tracking-wide mb-6 animate-fade-in-up" style="animation-delay: 0.2s;">
-                        {{ siteName }}
-                    </h1>
-
-                    <!-- Progress Bar -->
-                    <div class="relative w-56 md:w-72 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-                        <!-- Progress Fill -->
-                        <div 
-                            class="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 rounded-full transition-all duration-300 ease-out"
-                            :style="{ width: `${progress}%` }"
-                        >
-                            <!-- Shimmer Effect -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                        </div>
-                        
-                        <!-- Glowing Dot at Progress End -->
-                        <div 
-                            class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg shadow-indigo-500/50 transition-all duration-300"
-                            :style="{ left: `calc(${progress}% - 6px)` }"
-                        >
-                            <div class="absolute inset-0 rounded-full bg-white animate-ping opacity-75"></div>
-                        </div>
-                    </div>
-
-                    <!-- Loading Text -->
-                    <div v-if="showText" class="mt-6 flex items-center gap-2 text-sm text-white/50 animate-fade-in-up" style="animation-delay: 0.4s;">
-                        <span class="inline-flex gap-1">
-                            <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0s;"></span>
-                            <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.15s;"></span>
-                            <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
-                        </span>
-                        <span>Loading your experience</span>
-                    </div>
-
-                    <!-- Percentage (optional) -->
-                    <p class="mt-2 text-xs text-white/30 font-mono tabular-nums">
-                        {{ Math.round(progress) }}%
-                    </p>
-                </div>
-
-                <!-- Bottom Branding -->
-                <div class="absolute bottom-8 left-0 right-0 text-center">
-                    <p class="text-xs text-white/20">
-                        Secure Banking Platform
-                    </p>
+                    <!-- Enhanced text with effects -->
+                    <div class="text">{{ siteName }}</div>
+                    <div v-if="showSubtitle" class="subtitle">{{ subtitle }}</div>
+                    
+                    <!-- Progress indicator -->
+                    <div class="loading-progress"></div>
                 </div>
             </div>
-        </Transition>
+        </div>
     </Teleport>
 </template>
 
 <style scoped>
-/* Spin Animations */
-@keyframes spin-slow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+.page-loading {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: all .6s cubic-bezier(0.4, 0, 0.2, 1);
+    background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.08) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 1) 100%);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    z-index: 9999;
 }
 
-.animate-spin-slow {
-    animation: spin-slow 15s linear infinite;
+:global(.dark) .page-loading {
+    background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.12) 0%, rgba(17, 24, 39, 0.95) 50%, rgba(17, 24, 39, 1) 100%);
 }
 
-/* Ping Animation */
-@keyframes ping-slow {
-    0% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.1); opacity: 0.3; }
-    100% { transform: scale(1); opacity: 0.5; }
+.page-loading.active {
+    opacity: 1;
+    visibility: visible;
 }
 
-.animate-ping-slow {
-    animation: ping-slow 2s ease-in-out infinite;
-}
-
-/* Float Animations */
-@keyframes float {
-    0%, 100% { transform: translateY(0) translateX(0); }
-    25% { transform: translateY(-20px) translateX(10px); }
-    50% { transform: translateY(0) translateX(20px); }
-    75% { transform: translateY(20px) translateX(10px); }
-}
-
-.animate-float {
-    animation: float 8s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-    animation: float 8s ease-in-out infinite;
-    animation-delay: -4s;
-}
-
-@keyframes float-subtle {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-.animate-float-subtle {
-    animation: float-subtle 3s ease-in-out infinite;
-}
-
-/* Pulse Slow */
-@keyframes pulse-slow {
-    0%, 100% { opacity: 0.1; transform: translate(-50%, -50%) scale(1); }
-    50% { opacity: 0.2; transform: translate(-50%, -50%) scale(1.1); }
-}
-
-.animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
-}
-
-/* Shimmer Effect */
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-.animate-shimmer {
-    animation: shimmer 2s ease-in-out infinite;
-}
-
-/* Fade In Up */
-@keyframes fade-in-up {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in-up {
-    animation: fade-in-up 0.6s ease-out forwards;
+.page-loading-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
 }
 
-/* Particles */
-.particles {
+.page-loading.active > .page-loading-inner {
+    opacity: 1;
+}
+
+.loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Floating particles background */
+.loading-particles {
     position: absolute;
-    inset: 0;
-    overflow: hidden;
+    width: 300px;
+    height: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
 
 .particle {
     position: absolute;
     width: 4px;
     height: 4px;
-    background: rgba(255, 255, 255, 0.3);
+    background: linear-gradient(45deg, #0ea5e9, #4f46e5);
     border-radius: 50%;
-    left: var(--x);
-    bottom: -10px;
-    animation: particle-rise var(--duration) ease-in infinite;
-    animation-delay: var(--delay);
+    opacity: 0.6;
+    animation: floatParticle 4s ease-in-out infinite;
 }
 
-@keyframes particle-rise {
-    0% {
-        transform: translateY(0) scale(1);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
+.particle:nth-child(1) { top: 20%; left: 20%; animation-delay: 0s; }
+.particle:nth-child(2) { top: 80%; left: 80%; animation-delay: 0.5s; }
+.particle:nth-child(3) { top: 60%; left: 20%; animation-delay: 1s; }
+.particle:nth-child(4) { top: 30%; left: 70%; animation-delay: 1.5s; }
+.particle:nth-child(5) { top: 70%; left: 30%; animation-delay: 2s; }
+.particle:nth-child(6) { top: 10%; left: 60%; animation-delay: 2.5s; }
+
+.loading-animation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 2rem;
+    position: relative;
+    filter: drop-shadow(0 0 20px rgba(14, 165, 233, 0.2));
+}
+
+/* Outer orbital rings */
+.loading-animation .orbit-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(14, 165, 233, 0.2);
+    animation: rotateOrbit 8s linear infinite;
+}
+
+.orbit-ring:nth-child(1) {
+    width: 100%;
+    height: 100%;
+    border-top: 2px solid #0ea5e9;
+    border-right: 2px solid rgba(14, 165, 233, 0.3);
+    animation-duration: 2s;
+}
+
+.orbit-ring:nth-child(2) {
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border-bottom: 2px solid #0ea5e9;
+    border-left: 2px solid rgba(14, 165, 233, 0.3);
+    animation-duration: 2.5s;
+    animation-direction: reverse;
+}
+
+.orbit-ring:nth-child(3) {
+    width: 60%;
+    height: 60%;
+    top: 20%;
+    left: 20%;
+    border-top: 2px solid #0ea5e9;
+    border-right: 2px solid rgba(14, 165, 233, 0.3);
+    animation-duration: 3s;
+}
+
+/* Inner spinning circles */
+.loading-animation .inner-circle {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #0ea5e9;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.6);
+    animation: spinInner 2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.inner-circle:nth-child(4) {
+    border-top: 3px solid #0ea5e9;
+    border-right: 3px solid rgba(14, 165, 233, 0.4);
+    animation-delay: 0s;
+}
+
+.inner-circle:nth-child(5) {
+    border-bottom: 3px solid #0ea5e9;
+    border-left: 3px solid rgba(14, 165, 233, 0.4);
+    animation-delay: 0.3s;
+    animation-direction: reverse;
+}
+
+/* Glowing core with morphing effect */
+.loading-animation .core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #0ea5e9, #4f46e5);
+    background-size: 200% 200%;
+    box-shadow: 
+        0 0 20px rgba(14, 165, 233, 0.6),
+        0 0 40px rgba(14, 165, 233, 0.3),
+        inset 0 0 10px rgba(255, 255, 255, 0.3);
+    animation: coreGlow 2s ease-in-out infinite alternate, morphCore 4s ease-in-out infinite;
+}
+
+/* Enhanced text with multiple effects */
+.page-loading .text {
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    position: relative;
+    background: linear-gradient(90deg, #0ea5e9, #0ea5e9, #4f46e5, #0ea5e9, #0ea5e9);
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textShimmer 3s linear infinite;
+}
+
+.page-loading .text::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent, rgba(14, 165, 233, 0.1), transparent);
+    border-radius: 4px;
+    z-index: -1;
+    animation: textGlow 2s ease-in-out infinite alternate;
+}
+
+/* Subtitle with fade effect */
+.page-loading .subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+    animation: subtitleFade 2s ease-in-out infinite;
+}
+
+:global(.dark) .page-loading .subtitle {
+    color: #94a3b8;
+}
+
+/* Progress indicator */
+.loading-progress {
+    width: 200px;
+    height: 2px;
+    background: #f1f5f9;
+    border-radius: 1px;
+    margin-top: 1.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+:global(.dark) .loading-progress {
+    background: #374151;
+}
+
+.loading-progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, #0ea5e9, transparent);
+    animation: progressSlide 2s ease-in-out infinite;
+}
+
+/* Keyframe animations */
+@keyframes floatParticle {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+}
+
+@keyframes rotateOrbit {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes spinInner {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes coreGlow {
+    0% { 
+        transform: translate(-50%, -50%) scale(0.8); 
+        box-shadow: 
+            0 0 20px rgba(14, 165, 233, 0.6),
+            0 0 40px rgba(14, 165, 233, 0.3),
+            inset 0 0 10px rgba(255, 255, 255, 0.3);
     }
     100% {
-        transform: translateY(-100vh) scale(0.5);
-        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.2); 
+        box-shadow: 
+            0 0 30px rgba(14, 165, 233, 0.8),
+            0 0 60px rgba(14, 165, 233, 0.4),
+            inset 0 0 15px rgba(255, 255, 255, 0.5);
     }
 }
 
-/* Bounce for loading dots */
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+@keyframes morphCore {
+    0%, 100% { border-radius: 50%; background-position: 0% 50%; }
+    25% { border-radius: 40%; background-position: 100% 50%; }
+    50% { border-radius: 30%; background-position: 0% 50%; }
+    75% { border-radius: 40%; background-position: 100% 50%; }
+}
+
+@keyframes textShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes textGlow {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
+}
+
+@keyframes subtitleFade {
+    0%, 100% { opacity: 0.5; transform: translateY(0px); }
+    50% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes progressSlide {
+    0% { left: -100%; }
+    50% { left: 0%; }
+    100% { left: 100%; }
 }
 </style>
