@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
+use App\Mail\AdminNotificationMail;
 use App\Models\User;
-use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AdminNotificationService
 {
@@ -24,7 +26,7 @@ class AdminNotificationService
     }
 
     /**
-     * Send a notification to all admins
+     * Send a notification to all admins (database notification + optional email)
      */
     public static function notifyAdmins(
         string $title,
@@ -33,11 +35,14 @@ class AdminNotificationService
         string $color = 'primary',
         ?string $actionUrl = null,
         ?string $actionLabel = null,
+        bool $sendEmail = true,
+        ?User $triggeringUser = null,
     ): void {
         try {
             $admins = self::getAdminUsers();
 
             foreach ($admins as $admin) {
+                // Send database notification
                 $notification = Notification::make()
                     ->title($title)
                     ->body($body)
@@ -54,6 +59,28 @@ class AdminNotificationService
                 }
 
                 $notification->sendToDatabase($admin);
+
+                // Send email notification if enabled
+                if ($sendEmail && $admin->email) {
+                    try {
+                        // Clean the title for email (remove emojis)
+                        $emailSubject = preg_replace('/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]/u', '', $title);
+                        $emailSubject = trim($emailSubject).' - '.config('app.name');
+
+                        Mail::to($admin->email)->queue(new AdminNotificationMail(
+                            user: $triggeringUser ?? new User(['name' => 'System']),
+                            subject: $emailSubject,
+                            message: $body,
+                            actionText: $actionLabel,
+                            actionUrl: $actionUrl,
+                        ));
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to send admin email notification', [
+                            'admin_email' => $admin->email,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
             }
         } catch (\Exception $e) {
             Log::error('Failed to send admin notification', [
@@ -80,6 +107,7 @@ class AdminNotificationService
             color: 'info',
             actionUrl: route('filament.admin.resources.wire-transfers.index'),
             actionLabel: 'View Transfers',
+            triggeringUser: $user,
         );
     }
 
@@ -98,6 +126,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.wire-transfers.index'),
             actionLabel: 'View Transfers',
+            triggeringUser: $user,
         );
     }
 
@@ -116,6 +145,7 @@ class AdminNotificationService
             color: 'info',
             actionUrl: route('filament.admin.resources.domestic-transfers.index'),
             actionLabel: 'View Transfers',
+            triggeringUser: $user,
         );
     }
 
@@ -134,6 +164,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.domestic-transfers.index'),
             actionLabel: 'View Transfers',
+            triggeringUser: $user,
         );
     }
 
@@ -152,6 +183,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.internal-transfers.index'),
             actionLabel: 'View Transfers',
+            triggeringUser: $user,
         );
     }
 
@@ -172,6 +204,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.check-deposits.index'),
             actionLabel: 'Review Deposit',
+            triggeringUser: $user,
         );
     }
 
@@ -190,6 +223,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.crypto-deposits.index'),
             actionLabel: 'Verify Deposit',
+            triggeringUser: $user,
         );
     }
 
@@ -209,6 +243,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.mobile-deposits.index'),
             actionLabel: 'View Deposits',
+            triggeringUser: $user,
         );
     }
 
@@ -228,6 +263,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.mobile-deposits.index'),
             actionLabel: 'Review Deposit',
+            triggeringUser: $user,
         );
     }
 
@@ -248,6 +284,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.loan-applications.index'),
             actionLabel: 'Review Application',
+            triggeringUser: $user,
         );
     }
 
@@ -267,6 +304,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.grant-applications.index'),
             actionLabel: 'Review Application',
+            triggeringUser: $user,
         );
     }
 
@@ -286,6 +324,7 @@ class AdminNotificationService
             color: 'info',
             actionUrl: route('filament.admin.resources.cards.index'),
             actionLabel: 'View Cards',
+            triggeringUser: $user,
         );
     }
 
@@ -301,6 +340,7 @@ class AdminNotificationService
             color: $newStatus === 'frozen' ? 'danger' : 'success',
             actionUrl: route('filament.admin.resources.cards.index'),
             actionLabel: 'View Cards',
+            triggeringUser: $user,
         );
     }
 
@@ -320,6 +360,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.users.index'),
             actionLabel: 'Review KYC',
+            triggeringUser: $user,
         );
     }
 
@@ -339,6 +380,7 @@ class AdminNotificationService
             color: $ticket->priority?->value === 'urgent' ? 'danger' : 'warning',
             actionUrl: route('filament.admin.resources.support-tickets.index'),
             actionLabel: 'View Ticket',
+            triggeringUser: $user,
         );
     }
 
@@ -354,6 +396,7 @@ class AdminNotificationService
             color: 'info',
             actionUrl: route('filament.admin.resources.support-tickets.index'),
             actionLabel: 'View Ticket',
+            triggeringUser: $user,
         );
     }
 
@@ -374,6 +417,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.withdrawals.index'),
             actionLabel: 'Review Withdrawal',
+            triggeringUser: $user,
         );
     }
 
@@ -391,6 +435,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.users.index'),
             actionLabel: 'View User',
+            triggeringUser: $user,
         );
     }
 
@@ -417,6 +462,7 @@ class AdminNotificationService
             color: 'info',
             actionUrl: route('filament.admin.resources.users.index'),
             actionLabel: 'View User',
+            triggeringUser: $user,
         );
     }
 
@@ -432,6 +478,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.users.index'),
             actionLabel: 'View User',
+            triggeringUser: $user,
         );
     }
 
@@ -452,6 +499,7 @@ class AdminNotificationService
             color: 'warning',
             actionUrl: route('filament.admin.resources.tax-refunds.index'),
             actionLabel: 'Review Request',
+            triggeringUser: $user,
         );
     }
 
@@ -472,6 +520,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.exchange-money.index'),
             actionLabel: 'View Exchanges',
+            triggeringUser: $user,
         );
     }
 
@@ -492,6 +541,7 @@ class AdminNotificationService
             color: 'info',
             actionUrl: route('filament.admin.resources.money-requests.index'),
             actionLabel: 'View Requests',
+            triggeringUser: $user,
         );
     }
 
@@ -512,6 +562,7 @@ class AdminNotificationService
             color: 'success',
             actionUrl: route('filament.admin.resources.vouchers.index'),
             actionLabel: 'View Vouchers',
+            triggeringUser: $user,
         );
     }
 }
