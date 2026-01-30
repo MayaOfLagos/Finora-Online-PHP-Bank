@@ -1,6 +1,7 @@
 @props(['url'])
 @php
-    $logoUrl = \App\Models\Setting::getValue('branding', 'site_logo');
+    $logoPath = \App\Models\Setting::getValue('branding', 'site_logo');
+    $logoUrl = $logoPath ? url(\Illuminate\Support\Facades\Storage::url($logoPath)) : null;
     $appName = app_name();
 @endphp
 <tr>
