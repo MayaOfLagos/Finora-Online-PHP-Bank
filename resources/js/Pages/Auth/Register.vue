@@ -51,6 +51,7 @@ const isProcessing = ref(false);
 const showContent = ref(false);
 
 const handlePreloaderComplete = () => {
+    isPageLoading.value = false;
     setTimeout(() => {
         showContent.value = true;
     }, 100);
