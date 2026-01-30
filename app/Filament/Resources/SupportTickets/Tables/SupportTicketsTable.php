@@ -4,15 +4,15 @@ namespace App\Filament\Resources\SupportTickets\Tables;
 
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
-use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -49,7 +49,7 @@ class SupportTicketsTable
                 TextColumn::make('priority')
                     ->label('Priority')
                     ->badge()
-                    ->color(fn (TicketPriority $state): string => match($state->value) {
+                    ->color(fn (TicketPriority $state): string => match ($state->value) {
                         'low' => 'success',
                         'medium' => 'warning',
                         'high' => 'danger',
@@ -59,7 +59,7 @@ class SupportTicketsTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (TicketStatus $state): string => match($state->value) {
+                    ->color(fn (TicketStatus $state): string => match ($state->value) {
                         'open' => 'warning',
                         'in_progress' => 'info',
                         'resolved' => 'success',
@@ -102,15 +102,15 @@ class SupportTicketsTable
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->modalWidth('4xl')
-                        ->modalHeading(fn ($record) => 'Ticket #' . $record->ticket_number)
+                        ->modalHeading(fn ($record) => 'Ticket #'.$record->ticket_number)
                         ->modalDescription(fn ($record) => $record->subject),
-                    
+
                     Action::make('reply')
                         ->label('Reply')
                         ->icon('heroicon-o-chat-bubble-left-right')
                         ->color('success')
                         ->modalWidth('2xl')
-                        ->modalHeading(fn ($record) => 'Reply to Ticket #' . $record->ticket_number)
+                        ->modalHeading(fn ($record) => 'Reply to Ticket #'.$record->ticket_number)
                         ->form([
                             Textarea::make('message')
                                 ->label('Your Reply')
@@ -181,24 +181,24 @@ class SupportTicketsTable
                             // Store old values BEFORE update
                             $oldStatus = $record->status->label();
                             $oldStatusValue = $record->status->value;
-                            
+
                             // Get new status label
                             $newStatus = $data['status']->label();
-                            
+
                             $updates = ['status' => $data['status']];
-                            
-                            if ($data['status']->value === 'resolved' && !$record->resolved_at) {
+
+                            if ($data['status']->value === 'resolved' && ! $record->resolved_at) {
                                 $updates['resolved_at'] = now();
                             }
-                            
-                            if ($data['status']->value === 'closed' && !$record->closed_at) {
+
+                            if ($data['status']->value === 'closed' && ! $record->closed_at) {
                                 $updates['closed_at'] = now();
                             }
 
                             $record->update($updates);
 
                             // Add a message if note provided
-                            if (!empty($data['note'])) {
+                            if (! empty($data['note'])) {
                                 \App\Models\TicketMessage::create([
                                     'support_ticket_id' => $record->id,
                                     'user_id' => auth()->id(),
@@ -227,7 +227,7 @@ class SupportTicketsTable
                                 [
                                     'old_status' => $oldStatusValue,
                                     'new_status' => $data['status'],
-                                    'note' => $data['note'] ?? null
+                                    'note' => $data['note'] ?? null,
                                 ]
                             );
 
@@ -248,7 +248,7 @@ class SupportTicketsTable
                             Select::make('assigned_to')
                                 ->label('Assign To')
                                 ->relationship('assignedAgent', 'first_name')
-                                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' (' . $record->email . ')')
+                                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name.' ('.$record->email.')')
                                 ->searchable(['first_name', 'last_name', 'email'])
                                 ->required()
                                 ->preload()
@@ -257,13 +257,13 @@ class SupportTicketsTable
                         ->action(function ($record, array $data) {
                             // Get old assignee ID from database attribute (not relationship)
                             $oldAssigneeId = $record->getOriginal('assigned_to');
-                            $oldAssignee = $oldAssigneeId 
-                                ? \App\Models\User::find($oldAssigneeId)->name 
+                            $oldAssignee = $oldAssigneeId
+                                ? \App\Models\User::find($oldAssigneeId)->name
                                 : 'Unassigned';
-                            
+
                             // Get new assignee
                             $newAssignee = \App\Models\User::find($data['assigned_to'])->name;
-                            
+
                             $record->update(['assigned_to' => $data['assigned_to']]);
 
                             Notification::make()

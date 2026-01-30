@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Cards\Tables;
 
 use App\Models\CardType;
-use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 
