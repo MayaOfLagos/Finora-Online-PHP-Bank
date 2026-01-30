@@ -10,6 +10,7 @@ import { useToast } from '@/Composables/useToast';
 import Skeleton from 'primevue/skeleton';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 const page = usePage();
 const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
@@ -47,6 +48,13 @@ const toast = useToast();
 // Loading states
 const isPageLoading = ref(true);
 const isProcessing = ref(false);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 // Current step (0-3)
 const currentStep = ref(0);
@@ -69,11 +77,6 @@ const setQuotes = () => {
 watch(siteName, () => setQuotes(), { immediate: true });
 
 onMounted(() => {
-    // Simulate initial load
-    setTimeout(() => {
-        isPageLoading.value = false;
-    }, 300);
-    
     quoteInterval = setInterval(() => {
         quoteVisible.value = false;
         setTimeout(() => {
@@ -367,9 +370,15 @@ const getIconPath = (icon) => {
 
 <template>
     <SeoHead title="Create Account" :description="siteTagline" />
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
     
     <!-- Animated Gradient Background -->
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950">
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+    <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950">
         <div class="flex min-h-screen">
             
             <!-- Left Side - Branding Panel with BG Image (Hidden on mobile) -->
@@ -1266,6 +1275,7 @@ const getIconPath = (icon) => {
             </div>
         </div>
     </div>
+    </Transition>
 
     <!-- Terms Modal -->
     <Teleport to="body">

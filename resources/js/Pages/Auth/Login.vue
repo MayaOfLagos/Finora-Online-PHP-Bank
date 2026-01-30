@@ -12,6 +12,7 @@ import Skeleton from 'primevue/skeleton';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 const props = defineProps({
     canResetPassword: Boolean,
@@ -30,6 +31,7 @@ const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
 // Page loading state
 const isPageLoading = ref(true);
+const showContent = ref(false);
 
 // Dark mode toggle
 const isDarkMode = ref(false);
@@ -41,12 +43,14 @@ onMounted(() => {
         isDarkMode.value = true;
         document.documentElement.classList.add('dark');
     }
-    
-    // Simulate brief loading for skeleton effect
-    setTimeout(() => {
-        isPageLoading.value = false;
-    }, 300);
 });
+
+const handlePreloaderComplete = () => {
+    isPageLoading.value = false;
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 const toggleDarkMode = () => {
     isDarkMode.value = !isDarkMode.value;
@@ -110,24 +114,32 @@ const goToRegister = () => {
 <template>
     <SeoHead :title="'Sign In'" />
     
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
+    <!-- Ultra Modern Preloader -->
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
+    
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+        <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
         
-        <!-- Top Bar with Theme Toggle -->
-        <div class="w-full py-4 px-6">
-            <div class="max-w-md mx-auto flex justify-end">
-                <button 
-                    @click="toggleDarkMode"
-                    class="p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                    :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-                >
-                    <i :class="isDarkMode ? 'pi pi-sun' : 'pi pi-moon'" class="text-lg"></i>
-                </button>
+            <!-- Top Bar with Theme Toggle -->
+            <div class="w-full py-4 px-6">
+                <div class="max-w-md mx-auto flex justify-end">
+                    <button 
+                        @click="toggleDarkMode"
+                        class="p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                        :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+                    >
+                        <i :class="isDarkMode ? 'pi pi-sun' : 'pi pi-moon'" class="text-lg"></i>
+                    </button>
+                </div>
             </div>
-        </div>
         
-        <!-- Main Content -->
-        <div class="flex-1 flex items-center justify-center px-4 pb-8">
-            <div class="w-full max-w-md">
+            <!-- Main Content -->
+            <div class="flex-1 flex items-center justify-center px-4 pb-8">
+                <div class="w-full max-w-md">
                 
                 <!-- Skeleton Loading State -->
                 <div v-if="isPageLoading" class="animate-pulse">
@@ -332,7 +344,8 @@ const goToRegister = () => {
                 </div>
             </div>
         </div>
-    </div>
+        </div>
+    </Transition>
 </template>
 
 <style scoped>

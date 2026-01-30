@@ -8,6 +8,7 @@ import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 const props = defineProps({
     email: String,
@@ -21,6 +22,13 @@ const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
 // Page loading state
 const isPageLoading = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 // Dark mode toggle
 const isDarkMode = ref(false);
@@ -34,11 +42,6 @@ onMounted(() => {
         isDarkMode.value = true;
         document.documentElement.classList.add('dark');
     }
-    
-    // Simulate brief loading for skeleton effect
-    setTimeout(() => {
-        isPageLoading.value = false;
-    }, 300);
     
     // Only auto-send OTP once on initial page load
     if (!hasInitialOtpSent.value) {
@@ -139,8 +142,14 @@ const logout = () => {
 
 <template>
     <SeoHead :title="'Verify Email'" />
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
     
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+    <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
         
         <!-- Top Bar with Theme Toggle -->
         <div class="w-full py-4 px-6">
@@ -309,6 +318,7 @@ const logout = () => {
             </div>
         </div>
     </div>
+    </Transition>
 </template>
 
 <style scoped>

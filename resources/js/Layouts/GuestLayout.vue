@@ -1,8 +1,9 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ProgressSpinner from 'primevue/progressspinner';
 import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 defineProps({
     title: String,
@@ -12,10 +13,29 @@ const page = usePage();
 const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
 const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
 const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
+
+// Preloader state
+const isLoading = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    isLoading.value = false;
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Ultra Modern Preloader -->
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
+    
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+        <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 flex items-center justify-center p-4 relative overflow-hidden">
         <!-- Animated Background -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-indigo-200/20 to-transparent dark:from-indigo-600/10 rounded-full blur-3xl animate-pulse"></div>
@@ -68,7 +88,8 @@ const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
         <!-- Live Chat Widget -->
         <LiveChatWidget context="public" />
-    </div>
+        </div>
+    </Transition>
 </template>
 
 <style scoped>

@@ -7,6 +7,7 @@ import Avatar from 'primevue/avatar';
 import Skeleton from 'primevue/skeleton';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 const props = defineProps({
     user: Object,
@@ -21,6 +22,13 @@ const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
 // Page loading state
 const isPageLoading = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 // Dark mode toggle
 const isDarkMode = ref(false);
@@ -31,11 +39,6 @@ onMounted(() => {
         isDarkMode.value = true;
         document.documentElement.classList.add('dark');
     }
-    
-    // Simulate brief loading for skeleton effect
-    setTimeout(() => {
-        isPageLoading.value = false;
-    }, 300);
 });
 
 const toggleDarkMode = () => {
@@ -116,8 +119,14 @@ const numberPad = [
 
 <template>
     <SeoHead :title="'Locked'" :no-index="true" />
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
     
-    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 flex flex-col transition-colors duration-300">
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+    <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 flex flex-col transition-colors duration-300">
         
         <!-- Top Bar with Theme Toggle -->
         <div class="w-full py-4 px-6">
@@ -307,6 +316,7 @@ const numberPad = [
             </div>
         </div>
     </div>
+    </Transition>
 </template>
 
 <style scoped>

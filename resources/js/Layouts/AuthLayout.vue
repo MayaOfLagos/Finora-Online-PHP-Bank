@@ -3,11 +3,12 @@
  * AuthLayout
  * Layout for authentication pages (Login, Register, etc.)
  */
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 import { useDarkMode } from '@/Composables/useDarkMode';
 
 const props = defineProps({
@@ -28,14 +29,33 @@ const siteInitial = computed(() => siteName.value.charAt(0));
 const copyrightText = computed(() => page.props.settings?.branding?.copyright_text || siteName.value);
 const { initDarkMode } = useDarkMode();
 
+// Preloader state
+const isLoading = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    isLoading.value = false;
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
+
 onMounted(() => {
     initDarkMode();
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-        <SeoHead :title="title" :description="subtitle || siteTagline" />
+    <!-- Ultra Modern Preloader -->
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
+    
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+        <div v-show="showContent" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+            <SeoHead :title="title" :description="subtitle || siteTagline" />
 
         <!-- Background Pattern -->
         <div class="fixed inset-0 -z-10 overflow-hidden">
@@ -142,5 +162,6 @@ onMounted(() => {
 
         <!-- Live Chat Widget -->
         <LiveChatWidget context="auth" />
-    </div>
+        </div>
+    </Transition>
 </template>

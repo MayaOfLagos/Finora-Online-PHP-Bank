@@ -11,6 +11,7 @@ import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 const props = defineProps({
     status: String,
@@ -25,6 +26,13 @@ const recaptchaRef = ref(null);
 
 // Page loading state
 const isPageLoading = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 const form = useForm({
     email: '',
@@ -34,10 +42,7 @@ const form = useForm({
 const isSubmitting = ref(false);
 
 onMounted(() => {
-    // Simulate brief loading for skeleton effect
-    setTimeout(() => {
-        isPageLoading.value = false;
-    }, 300);
+    // Page loading is now handled by PagePreloader
 });
 
 const submit = async () => {
@@ -77,8 +82,14 @@ const submit = async () => {
 
 <template>
     <SeoHead title="Forgot Password" />
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
 
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+    <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <!-- Animated Background Elements -->
         <div class="absolute inset-0 -z-10 overflow-hidden">
             <div class="absolute top-0 right-0 w-96 h-96 bg-primary-100/30 rounded-full blur-3xl"></div>
@@ -196,6 +207,7 @@ const submit = async () => {
             </div>
         </div>
     </div>
+    </Transition>
 </template>
 
 <style scoped>

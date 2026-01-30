@@ -16,6 +16,7 @@ import Button from 'primevue/button';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import ImpersonationBanner from '@/Components/Common/ImpersonationBanner.vue';
 import LiveChatWidget from '@/Components/Common/LiveChatWidget.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 import Sidebar from '@/Components/Navigation/Sidebar.vue';
 import BottomNav from '@/Components/Navigation/BottomNav.vue';
 import UserMenu from '@/Components/Navigation/UserMenu.vue';
@@ -39,6 +40,17 @@ const isImpersonating = computed(() => page.props.auth?.isImpersonating ?? false
 
 // Initialize dark mode
 const { initDarkMode, isDark } = useDarkMode();
+
+// Preloader state - only show on initial page load
+const isInitialLoad = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    isInitialLoad.value = false;
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 // Sidebar state
 const sidebarCollapsed = ref(false);
@@ -176,11 +188,23 @@ const handleMarkAllRead = () => {
 </script>
 
 <template>
-    <div class="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
-        <Head :title="title" />
+    <!-- Ultra Modern Preloader - Only on initial dashboard load -->
+    <PagePreloader 
+        v-if="isInitialLoad" 
+        :min-load-time="1000" 
+        @complete="handlePreloaderComplete" 
+    />
+    
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+        <div v-show="showContent || !isInitialLoad" class="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
+            <Head :title="title" />
 
-        <!-- Impersonation Banner -->
-        <ImpersonationBanner />
+            <!-- Impersonation Banner -->
+            <ImpersonationBanner />
 
         <!-- Vue Toastification renders toasts automatically via plugin -->
         <ConfirmDialog />
@@ -477,7 +501,8 @@ const handleMarkAllRead = () => {
 
         <!-- Live Chat Widget -->
         <LiveChatWidget context="dashboard" />
-    </div>
+        </div>
+    </Transition>
 </template>
 
 <style scoped>

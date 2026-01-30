@@ -7,6 +7,7 @@ import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
+import PagePreloader from '@/Components/Common/PagePreloader.vue';
 
 const props = defineProps({
     status: {
@@ -19,12 +20,16 @@ const form = useForm({});
 
 // Page loading state
 const isPageLoading = ref(true);
+const showContent = ref(false);
+
+const handlePreloaderComplete = () => {
+    setTimeout(() => {
+        showContent.value = true;
+    }, 100);
+};
 
 onMounted(() => {
-    // Simulate brief loading for skeleton effect
-    setTimeout(() => {
-        isPageLoading.value = false;
-    }, 300);
+    // Page loading is now handled by PagePreloader
 });
 
 const submit = () => {
@@ -45,8 +50,14 @@ const verificationLinkSent = computed(
 
 <template>
     <SeoHead title="Email Verification" />
+    <PagePreloader :min-load-time="1200" @complete="handlePreloaderComplete" />
     
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
+    <Transition
+        enter-active-class="transition-all duration-500 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+    >
+    <div v-show="showContent" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
         <div class="w-full max-w-md">
             <!-- Skeleton Loading State -->
             <div v-if="isPageLoading" class="animate-pulse">
@@ -134,6 +145,7 @@ const verificationLinkSent = computed(
             </div>
         </div>
     </div>
+    </Transition>
 </template>
 
 <style scoped>
