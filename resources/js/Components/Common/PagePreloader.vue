@@ -1,8 +1,6 @@
 <script setup>
 /**
  * PagePreloader - Ultra Modern Loading Animation
- * Based on Seft Bank's preloader design
- * Features: Orbital rings, floating particles, morphing core, shimmer text
  */
 import { ref, onMounted, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
@@ -52,22 +50,11 @@ const hidePreloader = () => {
 };
 
 onMounted(() => {
-    const startTime = Date.now();
-
-    const checkReady = () => {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, props.minLoadTime - elapsed);
-        
-        setTimeout(() => {
-            hidePreloader();
-        }, remaining);
-    };
-
-    if (document.readyState === 'complete') {
-        checkReady();
-    } else {
-        window.addEventListener('load', checkReady, { once: true });
-    }
+    // In SPA (Inertia.js), document is already loaded when navigating between pages
+    // So we just use a simple timeout based on minLoadTime
+    setTimeout(() => {
+        hidePreloader();
+    }, props.minLoadTime);
 });
 </script>
 
