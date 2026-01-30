@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\VoucherRedeemedMail;
 use App\Models\Voucher;
 use App\Services\ActivityLogger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -64,12 +65,12 @@ class VoucherController extends Controller
         ]);
 
         $user = $request->user();
-        
+
         // Verify PIN
-        if (!$user->transaction_pin || !Hash::check($validated['pin'], $user->transaction_pin)) {
+        if (! $user->transaction_pin || ! Hash::check($validated['pin'], $user->transaction_pin)) {
             return back()->withErrors(['pin' => 'Invalid transaction PIN. Please try again.']);
         }
-        
+
         // Find voucher - for multi-use, check times_used < usage_limit
         $voucher = Voucher::where('code', strtoupper($validated['voucher_code']))
             ->where('status', 'active')
@@ -79,7 +80,7 @@ class VoucherController extends Controller
             })
             ->first();
 
-        if (!$voucher) {
+        if (! $voucher) {
             return back()->withErrors(['voucher_code' => 'Invalid or already used voucher code.']);
         }
 
@@ -101,7 +102,7 @@ class VoucherController extends Controller
         // Update voucher usage
         $newTimesUsed = $voucher->times_used + 1;
         $isFullyUsed = $newTimesUsed >= $voucher->usage_limit;
-        
+
         $voucher->update([
             'times_used' => $newTimesUsed,
             'is_used' => $isFullyUsed,
@@ -123,10 +124,14 @@ class VoucherController extends Controller
             Mail::to($user->email)->send(new VoucherRedeemedMail($user, $voucher, $bankAccount));
         } catch (\Exception $e) {
             // Log the error but don't fail the redemption
-            Log::error('Failed to send voucher redemption email: ' . $e->getMessage());
+            Log::error('Failed to send voucher redemption email: '.$e->getMessage());
         }
 
+        // Notify admins about voucher redemption
+        AdminNotificationService::voucherRedeemed($voucher, $user);
+
         $amountFormatted = number_format($voucher->amount / 100, 2);
+
         return back()->with('success', "Voucher redeemed! \${$amountFormatted} has been added to your account.");
     }
 }

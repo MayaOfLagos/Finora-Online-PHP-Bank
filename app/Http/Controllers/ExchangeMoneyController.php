@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExchangeMoney;
 use App\Services\ActivityLogger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -140,6 +141,9 @@ class ExchangeMoneyController extends Controller
             'fee' => $fee / 100,
             'rate' => $rate,
         ]);
+
+        // Notify admins about currency exchange
+        AdminNotificationService::currencyExchangeCompleted($exchange, $user);
 
         return back()->with('success', 'Currency exchanged successfully!');
     }

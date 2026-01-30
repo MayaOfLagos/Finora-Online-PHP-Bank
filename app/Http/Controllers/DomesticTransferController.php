@@ -10,6 +10,7 @@ use App\Models\DomesticTransfer;
 use App\Models\Setting;
 use App\Models\TransactionHistory;
 use App\Models\User;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +130,9 @@ class DomesticTransferController extends Controller
             'description' => $validated['description'],
             'status' => TransferStatus::Pending,
         ]);
+
+        // Notify admins about new domestic transfer
+        AdminNotificationService::domesticTransferInitiated($transfer, $user);
 
         return back()->with([
             'success' => 'Transfer initiated. Please complete verification.',
@@ -365,6 +369,9 @@ class DomesticTransferController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Failed to send domestic transfer completed email: '.$e->getMessage());
             }
+
+            // Notify admins about completed domestic transfer
+            AdminNotificationService::domesticTransferCompleted($domesticTransfer, $user);
 
             return back()->with([
                 'success' => 'Domestic transfer submitted successfully. It will be processed within 1-3 business days.',

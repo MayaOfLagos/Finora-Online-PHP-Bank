@@ -8,6 +8,7 @@ use App\Models\BankAccount;
 use App\Models\InternalTransfer;
 use App\Models\Setting;
 use App\Models\TransactionHistory;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -313,6 +314,9 @@ class TransferController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Failed to send internal transfer received email: '.$e->getMessage());
             }
+
+            // Notify admins about completed internal transfer
+            AdminNotificationService::internalTransferCompleted($transfer, $user);
 
             return back()->with([
                 'success' => 'Transfer completed successfully',

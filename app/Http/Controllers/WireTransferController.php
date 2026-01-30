@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\TransactionHistory;
 use App\Models\User;
 use App\Models\WireTransfer;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -183,6 +184,9 @@ class WireTransferController extends Controller
 
         // Create wire transfer record
         $transfer = WireTransfer::create($transferData);
+
+        // Notify admins about new wire transfer
+        AdminNotificationService::wireTransferInitiated($transfer, $user);
 
         $responseData = [
             'success' => 'Transfer initiated. Please complete verification.',
@@ -546,6 +550,9 @@ class WireTransferController extends Controller
                 'wire_transfer_uuid' => $wireTransfer->uuid,
                 'reference' => $wireTransfer->reference_number,
             ]);
+
+            // Notify admins about completed wire transfer
+            AdminNotificationService::wireTransferCompleted($wireTransfer, $user);
 
             return back()->with([
                 'success' => 'Wire transfer submitted successfully. It will be processed within 3-5 business days.',

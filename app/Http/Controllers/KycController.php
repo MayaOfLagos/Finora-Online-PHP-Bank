@@ -7,6 +7,7 @@ use App\Mail\KycSubmittedAdminMail;
 use App\Models\KycDocumentTemplate;
 use App\Models\KycVerification;
 use App\Models\User;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -220,8 +221,8 @@ class KycController extends Controller
         // Send submission email to user
         $verification->sendSubmissionEmail();
 
-        // Send notification to admin
-        $this->notifyAdmin($verification);
+        // Send notification to admin (database notification)
+        AdminNotificationService::kycDocumentSubmitted($verification, $user);
 
         return redirect()
             ->route('kyc.index')

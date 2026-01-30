@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanType;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -159,6 +160,9 @@ class LoanController extends Controller
             'purpose' => $validated['purpose'],
             'status' => 'pending',
         ]);
+
+        // Notify admins about new loan application
+        AdminNotificationService::loanApplicationSubmitted($application, $user);
 
         return redirect()->route('loans.applications')
             ->with('success', 'Loan application submitted successfully. Reference: '.$application->reference_number);

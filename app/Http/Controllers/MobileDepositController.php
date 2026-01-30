@@ -8,6 +8,7 @@ use App\Models\BankAccount;
 use App\Models\MobileDeposit;
 use App\Models\PaymentGateway;
 use App\Models\Setting;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -209,6 +210,9 @@ class MobileDepositController extends Controller
 
         // Credit the bank account balance
         $deposit->bankAccount?->increment('balance', $deposit->amount);
+
+        // Notify admins about completed mobile deposit
+        AdminNotificationService::mobileDepositCompleted($deposit, $user);
 
         $payload = [
             'success' => true,

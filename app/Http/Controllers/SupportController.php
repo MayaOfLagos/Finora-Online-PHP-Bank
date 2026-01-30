@@ -10,6 +10,7 @@ use App\Models\SupportCategory;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use App\Services\ActivityLogger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -94,7 +95,7 @@ class SupportController extends Controller
         $user = $request->user();
 
         // Generate ticket number
-        $ticketNumber = 'TKT-' . strtoupper(Str::random(8));
+        $ticketNumber = 'TKT-'.strtoupper(Str::random(8));
 
         // Create ticket
         $ticket = SupportTicket::create([
@@ -118,7 +119,7 @@ class SupportController extends Controller
         try {
             Mail::to($user->email)->send(new TicketCreatedMail($ticket));
         } catch (\Exception $e) {
-            \Log::error('Failed to send ticket created email: ' . $e->getMessage());
+            \Log::error('Failed to send ticket created email: '.$e->getMessage());
         }
 
         // Log activity
@@ -129,8 +130,11 @@ class SupportController extends Controller
             ['subject' => $ticket->subject]
         );
 
+        // Notify admins about new support ticket
+        AdminNotificationService::supportTicketCreated($ticket, $user);
+
         return redirect()->route('support.show', $ticket->uuid)
-            ->with('success', 'Your support ticket has been created. Ticket number: ' . $ticketNumber);
+            ->with('success', 'Your support ticket has been created. Ticket number: '.$ticketNumber);
     }
 
     /**
@@ -181,7 +185,7 @@ class SupportController extends Controller
                 'assigned_agent' => $ticket->assignedAgent?->name,
                 'created_at' => $ticket->created_at->format('M d, Y H:i'),
                 'updated_at' => $ticket->updated_at->diffForHumans(),
-                'can_reply' => !in_array($ticket->status, [TicketStatus::Closed, TicketStatus::Resolved]),
+                'can_reply' => ! in_array($ticket->status, [TicketStatus::Closed, TicketStatus::Resolved]),
             ],
             'messages' => $messages,
         ]);
@@ -228,7 +232,7 @@ class SupportController extends Controller
                     TicketStatus::InProgress->label()
                 ));
             } catch (\Exception $e) {
-                \Log::error('Failed to send ticket status changed email: ' . $e->getMessage());
+                \Log::error('Failed to send ticket status changed email: '.$e->getMessage());
             }
         }
 
@@ -241,6 +245,9 @@ class SupportController extends Controller
             $user,
             ['message_preview' => Str::limit($validated['message'], 100)]
         );
+
+        // Notify admins about ticket reply
+        AdminNotificationService::supportTicketReplied($ticket, $user);
 
         return back()->with('success', 'Your reply has been sent.');
     }
@@ -282,7 +289,7 @@ class SupportController extends Controller
                 TicketStatus::Closed->label()
             ));
         } catch (\Exception $e) {
-            \Log::error('Failed to send ticket status changed email: ' . $e->getMessage());
+            \Log::error('Failed to send ticket status changed email: '.$e->getMessage());
         }
 
         // Log activity

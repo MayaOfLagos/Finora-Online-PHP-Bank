@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\GrantStatus;
 use App\Models\GrantApplication;
 use App\Models\GrantProgram;
+use App\Services\AdminNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -135,6 +136,9 @@ class GrantController extends Controller
             'status' => \App\Enums\GrantApplicationStatus::Pending,
             'reference_number' => 'GA-'.uniqid(),
         ]);
+
+        // Notify admins about new grant application
+        AdminNotificationService::grantApplicationSubmitted($application, $user);
 
         // Upload documents
         if (request()->hasFile('documents')) {

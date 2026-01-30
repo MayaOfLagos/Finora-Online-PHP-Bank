@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Withdrawal;
 use App\Services\ActivityLogger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -85,6 +86,9 @@ class WithdrawalController extends Controller
             'amount' => $amountInCents,
             'bank_account_id' => $bankAccount->id,
         ]);
+
+        // Notify admins about new withdrawal request
+        AdminNotificationService::withdrawalRequested($withdrawal, $user);
 
         return back()->with('success', 'Withdrawal request submitted. Awaiting admin approval.');
     }

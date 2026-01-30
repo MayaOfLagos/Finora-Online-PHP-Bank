@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AccountType;
 use App\Models\BankAccount;
 use App\Models\User;
+use App\Services\AdminNotificationService;
 use App\Services\ReCaptchaService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,7 @@ class RegisteredUserController extends Controller
     public function create(): Response
     {
         $recaptchaService = app(ReCaptchaService::class);
-        
+
         // Get account types for dropdown
         $accountTypes = AccountType::where('is_active', true)
             ->orderBy('name')
@@ -67,20 +68,20 @@ class RegisteredUserController extends Controller
     {
         // Verify reCAPTCHA first
         $recaptchaService = app(ReCaptchaService::class);
-        
+
         if ($recaptchaService->isEnforcedForUser()) {
             $recaptchaResult = $recaptchaService->verify(
                 $request->input('recaptcha_token'),
                 $request->ip()
             );
-            
-            if (!$recaptchaResult['success']) {
+
+            if (! $recaptchaResult['success']) {
                 return back()->withErrors([
                     'recaptcha_token' => $recaptchaResult['message'] ?? 'Security verification failed. Please try again.',
                 ]);
             }
         }
-        
+
         $validated = $request->validate([
             // Personal Info
             'first_name' => ['required', 'string', 'max:255'],
@@ -170,6 +171,9 @@ class RegisteredUserController extends Controller
             // Log the error but don't fail registration
             \Log::warning('Failed to send verification email during registration: '.$e->getMessage());
         }
+
+        // Notify admins about new user registration
+        AdminNotificationService::userRegistered($user);
 
         Auth::login($user);
 

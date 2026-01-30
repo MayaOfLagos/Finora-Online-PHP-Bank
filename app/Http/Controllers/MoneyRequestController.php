@@ -7,6 +7,7 @@ use App\Models\MoneyRequest;
 use App\Models\TransactionHistory;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -82,6 +83,9 @@ class MoneyRequestController extends Controller
             'responder_email' => $responder->email,
             'amount' => $validated['amount'],
         ]);
+
+        // Notify admins about new money request
+        AdminNotificationService::moneyRequestCreated($moneyRequest, $user);
 
         return back()->with('success', 'Money request sent successfully!');
     }

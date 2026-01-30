@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCardRequest;
 use App\Models\BankAccount;
 use App\Models\Card;
 use App\Models\CardType;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -145,7 +146,7 @@ class CardPageController extends Controller
 
         $expiry = now()->addYears(3);
 
-        Card::create([
+        $card = Card::create([
             'user_id' => $user->id,
             'bank_account_id' => $account->id,
             'card_type_id' => $cardType->id,
@@ -163,6 +164,9 @@ class CardPageController extends Controller
             'expires_at' => $expiry,
         ]);
 
+        // Notify admins about new card request
+        AdminNotificationService::cardRequested($card, $user);
+
         return Redirect::back()->with('success', 'Your card request has been submitted.');
     }
 
@@ -175,6 +179,9 @@ class CardPageController extends Controller
             : CardStatus::Frozen;
 
         $card->save();
+
+        // Notify admins about card status change
+        AdminNotificationService::cardStatusChanged($card, Auth::user(), $card->status->value);
 
         return Redirect::back()->with('success', $card->status === CardStatus::Frozen
             ? 'Card has been frozen.'

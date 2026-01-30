@@ -8,6 +8,7 @@ use App\Models\Cryptocurrency;
 use App\Models\CryptoDeposit;
 use App\Models\CryptoWallet;
 use App\Models\Setting;
+use App\Services\AdminNotificationService;
 use App\Services\CryptoExchangeRateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -223,6 +224,9 @@ class CryptoDepositController extends Controller
                     'deposit_id' => $deposit->id,
                 ]);
             }
+
+            // Notify admins about new crypto deposit
+            AdminNotificationService::cryptoDepositRegistered($deposit, $user);
 
             return back()->with([
                 'success' => 'Crypto deposit registered and awaiting verification',

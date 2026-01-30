@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TaxRefund;
 use App\Services\ActivityLogger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -40,7 +41,7 @@ class TaxRefundController extends Controller
                 'irs_reference_number' => $refund->irs_reference_number,
                 'rejection_reason' => $refund->rejection_reason,
                 'bank_account' => $refund->bankAccount ? [
-                    'account_number' => '****' . substr($refund->bankAccount->account_number, -4),
+                    'account_number' => '****'.substr($refund->bankAccount->account_number, -4),
                     'account_name' => $refund->bankAccount->accountType?->name ?? 'Account',
                 ] : null,
             ]);
@@ -73,7 +74,7 @@ class TaxRefundController extends Controller
             ->get()
             ->map(fn ($account) => [
                 'id' => $account->id,
-                'label' => ($account->accountType?->name ?? 'Account') . ' - ****' . substr($account->account_number, -4),
+                'label' => ($account->accountType?->name ?? 'Account').' - ****'.substr($account->account_number, -4),
                 'currency' => $account->currency,
             ]);
 
@@ -101,7 +102,7 @@ class TaxRefundController extends Controller
     public function processIdMeVerification(Request $request)
     {
         $validated = $request->validate([
-            'tax_year' => 'required|integer|min:2020|max:' . date('Y'),
+            'tax_year' => 'required|integer|min:2020|max:'.date('Y'),
             'ssn_tin' => 'required|string|min:9|max:11',
             'filing_status' => 'required|in:single,married_filing_jointly,married_filing_separately,head_of_household,qualifying_widow',
             'employer_name' => 'required|string|max:255',
@@ -120,7 +121,7 @@ class TaxRefundController extends Controller
         $user = Auth::user();
 
         // Verify transaction PIN
-        if (!Hash::check($validated['pin'], $user->transaction_pin)) {
+        if (! Hash::check($validated['pin'], $user->transaction_pin)) {
             return back()->withErrors(['pin' => 'Invalid transaction PIN']);
         }
 
@@ -132,7 +133,7 @@ class TaxRefundController extends Controller
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
             'bank_account_id' => $bankAccount->id,
-            'reference_number' => 'TAXREF-' . strtoupper(Str::random(10)),
+            'reference_number' => 'TAXREF-'.strtoupper(Str::random(10)),
             'tax_year' => $validated['tax_year'],
             'ssn_tin' => $validated['ssn_tin'],
             'filing_status' => $validated['filing_status'],
@@ -156,7 +157,7 @@ class TaxRefundController extends Controller
         // Log activity
         ActivityLogger::log(
             'tax_refund_idme_submitted',
-            'Tax refund ID.me verification submitted for ' . $refund->reference_number,
+            'Tax refund ID.me verification submitted for '.$refund->reference_number,
             $user,
             $refund,
             [
@@ -166,6 +167,9 @@ class TaxRefundController extends Controller
                 'tax_year' => $validated['tax_year'],
             ]
         );
+
+        // Notify admins about new tax refund request
+        AdminNotificationService::taxRefundRequested($refund, $user);
 
         return redirect()->route('tax-refunds.index')->with('success', 'Your ID.me verification has been submitted successfully! Our team will review and verify your identity within 24-48 hours.');
     }
@@ -183,7 +187,7 @@ class TaxRefundController extends Controller
             ->get()
             ->map(fn ($account) => [
                 'id' => $account->id,
-                'label' => ($account->accountType?->name ?? 'Account') . ' - ****' . substr($account->account_number, -4),
+                'label' => ($account->accountType?->name ?? 'Account').' - ****'.substr($account->account_number, -4),
                 'currency' => $account->currency,
             ]);
 
@@ -211,7 +215,7 @@ class TaxRefundController extends Controller
     public function processUploadDocsVerification(Request $request)
     {
         $validated = $request->validate([
-            'tax_year' => 'required|integer|min:2020|max:' . date('Y'),
+            'tax_year' => 'required|integer|min:2020|max:'.date('Y'),
             'ssn_tin' => 'required|string|min:9|max:11',
             'filing_status' => 'required|in:single,married_filing_jointly,married_filing_separately,head_of_household,qualifying_widow',
             'employer_name' => 'required|string|max:255',
@@ -231,7 +235,7 @@ class TaxRefundController extends Controller
         $user = Auth::user();
 
         // Verify transaction PIN
-        if (!Hash::check($validated['pin'], $user->transaction_pin)) {
+        if (! Hash::check($validated['pin'], $user->transaction_pin)) {
             return back()->withErrors(['pin' => 'Invalid transaction PIN']);
         }
 
@@ -241,7 +245,7 @@ class TaxRefundController extends Controller
         // Store documents (in local storage, not publicly accessible)
         $idDocPath = $request->file('id_document')->store('tax-refunds/documents');
         $taxReturnPath = $request->file('tax_return')->store('tax-refunds/documents');
-        $w2Path = $request->hasFile('w2_document') 
+        $w2Path = $request->hasFile('w2_document')
             ? $request->file('w2_document')->store('tax-refunds/documents')
             : null;
 
@@ -250,7 +254,7 @@ class TaxRefundController extends Controller
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
             'bank_account_id' => $bankAccount->id,
-            'reference_number' => 'TAXREF-' . strtoupper(Str::random(10)),
+            'reference_number' => 'TAXREF-'.strtoupper(Str::random(10)),
             'tax_year' => $validated['tax_year'],
             'ssn_tin' => $validated['ssn_tin'],
             'filing_status' => $validated['filing_status'],
@@ -277,7 +281,7 @@ class TaxRefundController extends Controller
         // Log activity
         ActivityLogger::log(
             'tax_refund_docs_submitted',
-            'Tax refund document verification submitted for ' . $refund->reference_number,
+            'Tax refund document verification submitted for '.$refund->reference_number,
             $user,
             $refund,
             [
