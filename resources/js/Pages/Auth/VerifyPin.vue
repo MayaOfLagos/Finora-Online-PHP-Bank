@@ -4,6 +4,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
+import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
@@ -14,6 +15,9 @@ const siteName = computed(() => page.props.settings?.general?.site_name || page.
 const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
 const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
+// Page loading state
+const isPageLoading = ref(true);
+
 // Dark mode toggle
 const isDarkMode = ref(false);
 
@@ -23,6 +27,11 @@ onMounted(() => {
         isDarkMode.value = true;
         document.documentElement.classList.add('dark');
     }
+    
+    // Simulate brief loading for skeleton effect
+    setTimeout(() => {
+        isPageLoading.value = false;
+    }, 300);
 });
 
 const toggleDarkMode = () => {
@@ -137,8 +146,36 @@ const numberPad = [
         <div class="flex-1 flex items-center justify-center px-4 pb-8">
             <div class="w-full max-w-md">
                 
-                <!-- Logo Section -->
-                <div class="text-center mb-8">
+                <!-- Skeleton Loading State -->
+                <div v-if="isPageLoading" class="animate-pulse">
+                    <!-- Logo Skeleton -->
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center mb-6">
+                            <Skeleton width="3.5rem" height="3.5rem" class="rounded-xl" />
+                        </div>
+                        <Skeleton width="50%" height="2rem" class="mx-auto mb-2" />
+                        <Skeleton width="70%" height="1rem" class="mx-auto" />
+                    </div>
+                    
+                    <!-- Card Skeleton -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 space-y-6">
+                        <!-- PIN display skeleton -->
+                        <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            <Skeleton width="70%" height="3rem" class="mx-auto" />
+                            <Skeleton width="30%" height="0.75rem" class="mx-auto mt-3" />
+                        </div>
+                        <!-- Number pad skeleton -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <Skeleton v-for="i in 12" :key="i" class="aspect-square rounded-xl" />
+                        </div>
+                        <Skeleton height="3rem" class="w-full" />
+                    </div>
+                </div>
+                
+                <!-- Actual Content -->
+                <div v-else class="animate-fade-in">
+                    <!-- Logo Section -->
+                    <div class="text-center mb-8">
                     <div class="inline-flex items-center justify-center mb-6">
                         <!-- Light Mode Logo -->
                         <img 
@@ -280,6 +317,7 @@ const numberPad = [
                         </div>
                     </div>
                 </div>
+                </div>
                 
                 <!-- Footer -->
                 <div class="mt-8 text-center">
@@ -289,3 +327,20 @@ const numberPad = [
         </div>
     </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>

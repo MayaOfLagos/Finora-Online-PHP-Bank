@@ -1,9 +1,10 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
+import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
@@ -16,6 +17,16 @@ const props = defineProps({
 
 const toast = useToast();
 const form = useForm({});
+
+// Page loading state
+const isPageLoading = ref(true);
+
+onMounted(() => {
+    // Simulate brief loading for skeleton effect
+    setTimeout(() => {
+        isPageLoading.value = false;
+    }, 300);
+});
 
 const submit = () => {
     form.post(route('verification.send'), {
@@ -50,11 +61,34 @@ const verificationLinkSent = computed(
     
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-center justify-center p-6">
         <div class="w-full max-w-md">
-            <div class="text-center mb-8">
-                <AppLogo :show-text="false" size="lg" />
+            <!-- Skeleton Loading State -->
+            <div v-if="isPageLoading" class="animate-pulse">
+                <div class="text-center mb-8">
+                    <Skeleton width="4rem" height="4rem" class="mx-auto rounded-xl" />
+                </div>
+                
+                <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl space-y-6">
+                    <div class="text-center">
+                        <Skeleton width="4rem" height="4rem" class="mx-auto mb-4 rounded-full" />
+                        <Skeleton width="60%" height="1.5rem" class="mx-auto mb-2" />
+                        <Skeleton width="80%" height="1rem" class="mx-auto" />
+                        <Skeleton width="70%" height="1rem" class="mx-auto mt-1" />
+                    </div>
+                    <Skeleton height="3rem" class="w-full" />
+                    <div class="flex justify-between">
+                        <Skeleton width="5rem" height="1rem" />
+                        <Skeleton width="4rem" height="1rem" />
+                    </div>
+                </div>
             </div>
             
-            <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+            <!-- Actual Content -->
+            <div v-else class="animate-fade-in">
+                <div class="text-center mb-8">
+                    <AppLogo :show-text="false" size="lg" />
+                </div>
+            
+                <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
                 <div class="text-center mb-6">
                     <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-amber-100 dark:bg-amber-900/30 rounded-full">
                         <i class="pi pi-envelope text-3xl text-amber-600 dark:text-amber-400"></i>
@@ -106,6 +140,7 @@ const verificationLinkSent = computed(
                     </Link>
                 </div>
             </div>
+            </div>
             
             <div class="mt-6 text-center">
                 <CopyrightText />
@@ -113,3 +148,20 @@ const verificationLinkSent = computed(
         </div>
     </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>

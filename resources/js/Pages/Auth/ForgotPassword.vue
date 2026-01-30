@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
@@ -7,6 +7,7 @@ import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Toast from 'primevue/toast';
+import Skeleton from 'primevue/skeleton';
 import AppLogo from '@/Components/Common/AppLogo.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
@@ -23,12 +24,22 @@ const props = defineProps({
 const toast = useToast();
 const recaptchaRef = ref(null);
 
+// Page loading state
+const isPageLoading = ref(true);
+
 const form = useForm({
     email: '',
     recaptcha_token: '',
 });
 
 const isSubmitting = ref(false);
+
+onMounted(() => {
+    // Simulate brief loading for skeleton effect
+    setTimeout(() => {
+        isPageLoading.value = false;
+    }, 300);
+});
 
 const submit = async () => {
     isSubmitting.value = true;
@@ -93,15 +104,42 @@ const submit = async () => {
         </div>
 
         <div class="w-full max-w-md">
-            <!-- Logo Section -->
-            <div class="text-center mb-8">
-                <Link href="/" class="inline-flex items-center justify-center">
-                    <AppLogo :show-text="false" size="lg" />
-                </Link>
+            <!-- Skeleton Loading State -->
+            <div v-if="isPageLoading" class="animate-pulse">
+                <!-- Logo Skeleton -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center">
+                        <Skeleton width="4rem" height="4rem" class="rounded-xl" />
+                    </div>
+                </div>
+                
+                <!-- Card Skeleton -->
+                <div class="bg-white/90 backdrop-blur-xl border border-gray-200/50 rounded-3xl p-8 space-y-6">
+                    <div class="mb-8">
+                        <Skeleton width="60%" height="2rem" class="mb-2" />
+                        <Skeleton width="85%" height="1rem" />
+                        <Skeleton width="65%" height="1rem" class="mt-1" />
+                    </div>
+                    <div>
+                        <Skeleton width="6rem" height="1rem" class="mb-2" />
+                        <Skeleton height="3rem" class="w-full" />
+                    </div>
+                    <Skeleton height="3rem" class="w-full" />
+                    <Skeleton width="60%" height="1rem" class="mx-auto" />
+                </div>
             </div>
+            
+            <!-- Actual Content -->
+            <div v-else class="animate-fade-in">
+                <!-- Logo Section -->
+                <div class="text-center mb-8">
+                    <Link href="/" class="inline-flex items-center justify-center">
+                        <AppLogo :show-text="false" size="lg" />
+                    </Link>
+                </div>
 
-            <!-- Main Card -->
-            <div class="relative bg-white/90 backdrop-blur-xl border border-gray-200/50 rounded-3xl shadow-2xl shadow-primary-100/40 p-8">
+                <!-- Main Card -->
+                <div class="relative bg-white/90 backdrop-blur-xl border border-gray-200/50 rounded-3xl shadow-2xl shadow-primary-100/40 p-8">
                 <div class="mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Reset Your Password</h2>
                     <p class="text-gray-600">
@@ -168,6 +206,7 @@ const submit = async () => {
                     </p>
                 </div>
             </div>
+            </div>
 
             <!-- Footer -->
             <div class="mt-8 text-center">
@@ -176,3 +215,20 @@ const submit = async () => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>

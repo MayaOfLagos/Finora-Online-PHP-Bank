@@ -131,12 +131,12 @@ const recaptchaToken = ref('');
 const showTermsModal = ref(false);
 const showPrivacyModal = ref(false);
 
-// Step configuration
+// Step configuration with PrimeIcons
 const steps = [
-    { label: 'Personal', icon: 'user' },
-    { label: 'Contact', icon: 'map-pin' },
-    { label: 'Account', icon: 'wallet' },
-    { label: 'Security', icon: 'shield' }
+    { label: 'Personal', shortLabel: 'Info', icon: 'pi-user' },
+    { label: 'Contact', shortLabel: 'Contact', icon: 'pi-map-marker' },
+    { label: 'Account', shortLabel: 'Account', icon: 'pi-wallet' },
+    { label: 'Security', shortLabel: 'Security', icon: 'pi-shield' }
 ];
 
 // Currency options (with fallback if prop is empty)
@@ -386,20 +386,12 @@ watch(() => props.errors, (newErrors) => {
     }
 }, { deep: true });
 
-// Icon mapping
+// Icon mapping (for check icon only now that we use PrimeIcons)
 const getIconPath = (icon) => {
     const icons = {
-        'user': 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-        'map-pin': 'M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z',
-        'wallet': 'M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6zm3-1a1 1 0 00-1 1v2h14V6a1 1 0 00-1-1H6zM5 11v7a1 1 0 001 1h12a1 1 0 001-1v-7H5zm10 3a1 1 0 100-2 1 1 0 000 2z',
-        'shield': 'M4 4a2 2 0 012-2h8l4 4v10a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm6 7l-2-2 1-1 1 1 3-3 1 1-4 4z',
-        'money-bill': 'M8 3a1 1 0 012 0v2h2V3a1 1 0 112 0v2a1 1 0 01 2 0v6a1 1 0 01-2 0 1 1 0 01-2 0h-2a1 1 0 01-2 0 1 1 0 01-2 0V5a1 1 0 012 0V3z',
-        'credit-card': 'M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2 0v2h12V5H4zm0 4v6h12v-6H4z',
-        'briefcase': 'M8 2a2 2 0 00-2 2v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2H8zm0 2h4v2H8V4z',
-        'star': 'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z',
         'check': 'M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z',
     };
-    return icons[icon] || icons['wallet'];
+    return icons[icon] || '';
 };
 </script>
 
@@ -566,10 +558,40 @@ const getIconPath = (icon) => {
                                 </p>
                             </div>
                             
-                            <!-- Step Indicators -->
+                            <!-- Step Indicators - Mobile Responsive -->
                             <div class="mb-8">
-                                <div class="flex items-center justify-between">
-                                    <template v-for="(step, index) in steps" :key="index">
+                                <!-- Mobile: Compact step indicator (xs to sm) -->
+                                <div class="flex sm:hidden items-center justify-center gap-2">
+                                    <template v-for="(step, index) in steps" :key="'mobile-'+index">
+                                        <div 
+                                            class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+                                            :class="[
+                                                currentStep > index 
+                                                    ? 'bg-green-500 text-white' 
+                                                    : currentStep === index 
+                                                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 dark:ring-indigo-700 scale-110' 
+                                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                                            ]"
+                                        >
+                                            <i v-if="currentStep > index" class="pi pi-check text-sm"></i>
+                                            <i v-else :class="['pi', step.icon, 'text-sm']"></i>
+                                        </div>
+                                        <!-- Mobile connector -->
+                                        <div 
+                                            v-if="index < steps.length - 1"
+                                            class="w-6 h-1 rounded-full transition-all duration-300"
+                                            :class="[
+                                                currentStep > index 
+                                                    ? 'bg-green-500' 
+                                                    : 'bg-gray-200 dark:bg-gray-700'
+                                            ]"
+                                        ></div>
+                                    </template>
+                                </div>
+                                
+                                <!-- Tablet and Desktop: Full step indicator -->
+                                <div class="hidden sm:flex items-center justify-between">
+                                    <template v-for="(step, index) in steps" :key="'desktop-'+index">
                                         <!-- Step Item -->
                                         <div class="flex flex-col items-center">
                                             <div 
@@ -582,22 +604,19 @@ const getIconPath = (icon) => {
                                                             : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                                                 ]"
                                             >
-                                                <svg v-if="currentStep > index" class="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path :d="getIconPath('check')" />
-                                                </svg>
-                                                <svg v-else class="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path :d="getIconPath(step.icon)" />
-                                                </svg>
+                                                <i v-if="currentStep > index" class="pi pi-check text-lg md:text-xl"></i>
+                                                <i v-else :class="['pi', step.icon, 'text-lg md:text-xl']"></i>
                                             </div>
                                             <span 
-                                                class="mt-2 text-xs md:text-sm font-medium transition-colors duration-300"
+                                                class="mt-2 text-xs md:text-sm font-medium transition-colors duration-300 whitespace-nowrap"
                                                 :class="[
                                                     currentStep >= index 
                                                         ? 'text-gray-900 dark:text-white' 
                                                         : 'text-gray-500 dark:text-gray-400'
                                                 ]"
                                             >
-                                                {{ step.label }}
+                                                <span class="hidden md:inline">{{ step.label }}</span>
+                                                <span class="md:hidden">{{ step.shortLabel }}</span>
                                             </span>
                                         </div>
                                         

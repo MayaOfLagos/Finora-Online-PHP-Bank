@@ -9,6 +9,7 @@ import Checkbox from 'primevue/checkbox';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Toast from 'primevue/toast';
+import Skeleton from 'primevue/skeleton';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
@@ -28,6 +29,9 @@ const siteName = computed(() => page.props.settings?.general?.site_name || page.
 const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
 const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
+// Page loading state
+const isPageLoading = ref(true);
+
 // Dark mode toggle
 const isDarkMode = ref(false);
 
@@ -38,6 +42,11 @@ onMounted(() => {
         isDarkMode.value = true;
         document.documentElement.classList.add('dark');
     }
+    
+    // Simulate brief loading for skeleton effect
+    setTimeout(() => {
+        isPageLoading.value = false;
+    }, 300);
 });
 
 const toggleDarkMode = () => {
@@ -133,8 +142,47 @@ const goToRegister = () => {
         <div class="flex-1 flex items-center justify-center px-4 pb-8">
             <div class="w-full max-w-md">
                 
-                <!-- Logo Section -->
-                <div class="text-center mb-8">
+                <!-- Skeleton Loading State -->
+                <div v-if="isPageLoading" class="animate-pulse">
+                    <!-- Logo Skeleton -->
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center mb-6">
+                            <Skeleton width="3.5rem" height="3.5rem" class="rounded-xl" />
+                        </div>
+                        <Skeleton width="70%" height="2rem" class="mx-auto mb-2" />
+                        <Skeleton width="80%" height="1.25rem" class="mx-auto" />
+                    </div>
+                    
+                    <!-- Card Skeleton -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 space-y-5">
+                        <!-- Email field skeleton -->
+                        <div>
+                            <Skeleton width="6rem" height="1rem" class="mb-2" />
+                            <Skeleton height="3rem" class="w-full" />
+                        </div>
+                        <!-- Password field skeleton -->
+                        <div>
+                            <Skeleton width="5rem" height="1rem" class="mb-2" />
+                            <Skeleton height="3rem" class="w-full" />
+                        </div>
+                        <!-- Remember + Forgot skeleton -->
+                        <div class="flex justify-between">
+                            <Skeleton width="6rem" height="1rem" />
+                            <Skeleton width="7rem" height="1rem" />
+                        </div>
+                        <!-- Button skeleton -->
+                        <Skeleton height="3rem" class="w-full" />
+                        <!-- Register link skeleton -->
+                        <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                            <Skeleton width="60%" height="1rem" class="mx-auto" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actual Content -->
+                <div v-else class="animate-fade-in">
+                    <!-- Logo Section -->
+                    <div class="text-center mb-8">
                     <div class="inline-flex items-center justify-center mb-6">
                         <!-- Light Mode Logo -->
                         <img 
@@ -289,6 +337,7 @@ const goToRegister = () => {
                         </p>
                     </div>
                 </div>
+                </div>
                 
                 <!-- Footer -->
                 <div class="mt-8 text-center">
@@ -300,6 +349,21 @@ const goToRegister = () => {
 </template>
 
 <style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 :deep(.p-password) {
     width: 100%;
 }

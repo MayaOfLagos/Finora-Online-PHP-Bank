@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import Avatar from 'primevue/avatar';
+import Skeleton from 'primevue/skeleton';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import CopyrightText from '@/Components/Common/CopyrightText.vue';
 
@@ -19,6 +20,9 @@ const siteName = computed(() => page.props.settings?.general?.site_name || page.
 const siteLogo = computed(() => page.props.settings?.branding?.logo_light);
 const siteLogoDark = computed(() => page.props.settings?.branding?.logo_dark);
 
+// Page loading state
+const isPageLoading = ref(true);
+
 // Dark mode toggle
 const isDarkMode = ref(false);
 
@@ -28,6 +32,11 @@ onMounted(() => {
         isDarkMode.value = true;
         document.documentElement.classList.add('dark');
     }
+    
+    // Simulate brief loading for skeleton effect
+    setTimeout(() => {
+        isPageLoading.value = false;
+    }, 300);
 });
 
 const toggleDarkMode = () => {
@@ -149,8 +158,41 @@ const numberPad = [
         <div class="flex-1 flex items-center justify-center px-4 pb-8">
             <div class="w-full max-w-md">
                 
-                <!-- User Info Section -->
-                <div class="text-center mb-8">
+                <!-- Skeleton Loading State -->
+                <div v-if="isPageLoading" class="animate-pulse">
+                    <!-- User Info Skeleton -->
+                    <div class="text-center mb-8">
+                        <div class="mb-6 relative inline-block">
+                            <Skeleton width="6rem" height="6rem" class="rounded-full" />
+                        </div>
+                        <Skeleton width="60%" height="2rem" class="mx-auto mb-1" />
+                        <Skeleton width="50%" height="1rem" class="mx-auto mb-2" />
+                        <Skeleton width="40%" height="0.75rem" class="mx-auto" />
+                    </div>
+                    
+                    <!-- Card Skeleton -->
+                    <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 space-y-6">
+                        <div class="text-center">
+                            <Skeleton width="60%" height="1.25rem" class="mx-auto mb-1" />
+                            <Skeleton width="80%" height="1rem" class="mx-auto" />
+                        </div>
+                        <!-- PIN display skeleton -->
+                        <div class="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
+                            <Skeleton width="70%" height="3rem" class="mx-auto" />
+                            <Skeleton width="30%" height="0.75rem" class="mx-auto mt-3" />
+                        </div>
+                        <!-- Number pad skeleton -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <Skeleton v-for="i in 12" :key="i" class="aspect-square rounded-xl" />
+                        </div>
+                        <Skeleton height="3rem" class="w-full" />
+                    </div>
+                </div>
+                
+                <!-- Actual Content -->
+                <div v-else class="animate-fade-in">
+                    <!-- User Info Section -->
+                    <div class="text-center mb-8">
                     <!-- Lock Icon Animation -->
                     <div class="mb-6 relative inline-block">
                         <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/30 ring-4 ring-primary-500/20">
@@ -274,6 +316,7 @@ const numberPad = [
                         </div>
                     </form>
                 </div>
+                </div>
                 
                 <!-- Footer -->
                 <div class="mt-8 text-center">
@@ -285,6 +328,21 @@ const numberPad = [
 </template>
 
 <style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Subtle animation for lock icon */
 @keyframes pulse-glow {
     0%, 100% {
