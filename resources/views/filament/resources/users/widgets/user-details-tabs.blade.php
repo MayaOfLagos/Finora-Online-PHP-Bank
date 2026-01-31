@@ -558,103 +558,292 @@
 
         {{-- Security Tab Content --}}
         <div x-show="activeTab === 'security'" x-cloak>
-            <x-filament::section>
-                <x-slot name="heading">Security controls</x-slot>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-filament::section>
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Reset password</p>
-                                <p class="text-sm text-gray-600">Force a password reset for this user.</p>
-                            </div>
-                            <x-filament::button color="danger" icon="heroicon-o-key" x-on:click="$dispatch('open-modal', { id: 'reset-password' })">
-                                Reset
-                            </x-filament::button>
+            <div class="space-y-6">
+                {{-- Password Section --}}
+                <x-filament::section>
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-key class="w-5 h-5 text-primary-500" />
+                            Password
                         </div>
-                    </x-filament::section>
+                    </x-slot>
+                    <x-slot name="description">Manage the user's account password</x-slot>
 
-                    <x-filament::section>
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Force logout</p>
-                                <p class="text-sm text-gray-600">Invalidate all active sessions for this user.</p>
-                            </div>
-                            <x-filament::button color="warning" icon="heroicon-o-arrow-left-on-rectangle" x-on:click="$dispatch('open-modal', { id: 'force-logout' })">
-                                Logout
-                            </x-filament::button>
-                        </div>
-                    </x-filament::section>
-
-                    <x-filament::section>
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">{{ $this->record->is_active ? 'Lock account' : 'Unlock account' }}</p>
-                                <p class="text-sm text-gray-600">
-                                    @if($this->record->is_active)
-                                        Temporarily disable sign-in for this user.
-                                    @else
-                                        <span class="text-danger-600 dark:text-danger-400 font-medium">Account is currently locked.</span> Click to unlock.
-                                    @endif
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Force a password reset for this user. They will be required to set a new password.
+                            </p>
+                            @if($this->record->password_changed_at)
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    Last changed: {{ $this->record->password_changed_at->diffForHumans() }}
                                 </p>
-                            </div>
+                            @endif
+                        </div>
+                        <x-filament::button 
+                            color="danger" 
+                            icon="heroicon-o-key" 
+                            x-on:click="$dispatch('open-modal', { id: 'reset-password' })"
+                        >
+                            Reset Password
+                        </x-filament::button>
+                    </div>
+                </x-filament::section>
+
+                {{-- Transaction PIN Section --}}
+                <x-filament::section>
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-finger-print class="w-5 h-5 text-primary-500" />
+                            Transaction PIN
+                        </div>
+                    </x-slot>
+                    <x-slot name="description">Manage the user's 6-digit transaction PIN for secure operations</x-slot>
+
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-2">
+                            @if($this->record->transaction_pin)
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700">
+                                        <x-heroicon-s-check-circle class="w-4 h-4 text-success-600 dark:text-success-400" />
+                                        <span class="text-success-700 dark:text-success-300 text-sm font-medium">PIN is set</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    The user has a transaction PIN configured for secure operations.
+                                </p>
+                            @else
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning-50 dark:bg-warning-900/30 border border-warning-200 dark:border-warning-700">
+                                        <x-heroicon-s-exclamation-circle class="w-4 h-4 text-warning-600 dark:text-warning-400" />
+                                        <span class="text-warning-700 dark:text-warning-300 text-sm font-medium">No PIN set</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    The user has not set up a transaction PIN yet.
+                                </p>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if($this->record->transaction_pin)
+                                <x-filament::button 
+                                    color="gray" 
+                                    icon="heroicon-o-trash" 
+                                    x-on:click="$dispatch('open-modal', { id: 'clear-pin' })"
+                                    size="sm"
+                                >
+                                    Clear
+                                </x-filament::button>
+                            @endif
                             <x-filament::button 
-                                color="{{ $this->record->is_active ? 'gray' : 'success' }}" 
-                                icon="{{ $this->record->is_active ? 'heroicon-o-lock-closed' : 'heroicon-o-lock-open' }}" 
-                                x-on:click="$dispatch('open-modal', { id: 'lock-account' })"
+                                color="primary" 
+                                icon="heroicon-o-finger-print" 
+                                x-on:click="$dispatch('open-modal', { id: 'manage-pin' })"
                             >
-                                {{ $this->record->is_active ? 'Lock' : 'Unlock' }}
+                                {{ $this->record->transaction_pin ? 'Change PIN' : 'Set PIN' }}
                             </x-filament::button>
                         </div>
-                    </x-filament::section>
+                    </div>
+                </x-filament::section>
 
-                    <x-filament::section>
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Two-factor authentication</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    @if($this->record->two_factor_secret)
-                                        <span class="inline-flex items-center gap-1 text-success-600 dark:text-success-400">
-                                            <x-heroicon-o-check-circle class="w-4 h-4" />
-                                            2FA is enabled
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                                            <x-heroicon-o-x-circle class="w-4 h-4" />
-                                            2FA is not enabled
-                                        </span>
+                {{-- Two-Factor Authentication Section --}}
+                <x-filament::section>
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-shield-check class="w-5 h-5 text-primary-500" />
+                            Two-Factor Authentication
+                        </div>
+                    </x-slot>
+                    <x-slot name="description">Manage two-factor authentication settings for enhanced security</x-slot>
+
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-2">
+                            @if($this->record->two_factor_secret)
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700">
+                                        <x-heroicon-s-shield-check class="w-4 h-4 text-success-600 dark:text-success-400" />
+                                        <span class="text-success-700 dark:text-success-300 text-sm font-medium">2FA Enabled</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    Two-factor authentication is active. 
+                                    @if($this->record->two_factor_confirmed_at)
+                                        Confirmed {{ $this->record->two_factor_confirmed_at->diffForHumans() }}.
                                     @endif
                                 </p>
-                            </div>
-                            <x-filament::button color="primary" icon="heroicon-o-shield-check" x-on:click="$dispatch('open-modal', { id: 'two-factor' })">
-                                Manage
-                            </x-filament::button>
+                            @else
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                        <x-heroicon-o-shield-exclamation class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                        <span class="text-gray-600 dark:text-gray-400 text-sm font-medium">2FA Disabled</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    Two-factor authentication is not enabled for this account.
+                                </p>
+                            @endif
                         </div>
-                    </x-filament::section>
+                        <x-filament::button 
+                            color="{{ $this->record->two_factor_secret ? 'danger' : 'gray' }}" 
+                            icon="heroicon-o-shield-check" 
+                            x-on:click="$dispatch('open-modal', { id: 'two-factor' })"
+                            :disabled="!$this->record->two_factor_secret"
+                        >
+                            {{ $this->record->two_factor_secret ? 'Reset 2FA' : 'Not Enabled' }}
+                        </x-filament::button>
+                    </div>
+                </x-filament::section>
 
-                    <x-filament::section>
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Transaction PIN</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    @if($this->record->transaction_pin)
-                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success-50 dark:bg-success-900/30">
-                                            <x-heroicon-o-check-circle class="w-4 h-4 text-success-600 dark:text-success-400" />
-                                            <span class="text-success-700 dark:text-success-300 text-sm font-medium">PIN is set</span>
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-warning-50 dark:bg-warning-900/30">
-                                            <x-heroicon-o-exclamation-circle class="w-4 h-4 text-warning-600 dark:text-warning-400" />
-                                            <span class="text-warning-700 dark:text-warning-300 text-sm font-medium">No PIN set</span>
-                                        </span>
+                {{-- Account Status Section --}}
+                <x-filament::section>
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-lock-closed class="w-5 h-5 text-primary-500" />
+                            Account Status
+                        </div>
+                    </x-slot>
+                    <x-slot name="description">Control user account access and lock status</x-slot>
+
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-2">
+                            @if($this->record->is_active)
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700">
+                                        <x-heroicon-s-check-circle class="w-4 h-4 text-success-600 dark:text-success-400" />
+                                        <span class="text-success-700 dark:text-success-300 text-sm font-medium">Account Active</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    The user can sign in and access their account normally.
+                                </p>
+                            @else
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-danger-50 dark:bg-danger-900/30 border border-danger-200 dark:border-danger-700">
+                                        <x-heroicon-s-lock-closed class="w-4 h-4 text-danger-600 dark:text-danger-400" />
+                                        <span class="text-danger-700 dark:text-danger-300 text-sm font-medium">Account Locked</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-danger-600 dark:text-danger-400">
+                                    This account is locked. The user cannot sign in until unlocked.
+                                </p>
+                            @endif
+                        </div>
+                        <x-filament::button 
+                            color="{{ $this->record->is_active ? 'warning' : 'success' }}" 
+                            icon="{{ $this->record->is_active ? 'heroicon-o-lock-closed' : 'heroicon-o-lock-open' }}" 
+                            x-on:click="$dispatch('open-modal', { id: 'lock-account' })"
+                        >
+                            {{ $this->record->is_active ? 'Lock Account' : 'Unlock Account' }}
+                        </x-filament::button>
+                    </div>
+                </x-filament::section>
+
+                {{-- Session Management Section --}}
+                <x-filament::section>
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-computer-desktop class="w-5 h-5 text-primary-500" />
+                            Session Management
+                        </div>
+                    </x-slot>
+                    <x-slot name="description">Manage user sessions and force logout from all devices</x-slot>
+
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Invalidate all active sessions for this user across all devices and browsers.
+                            </p>
+                            @if($this->record->last_login_at)
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    Last login: {{ $this->record->last_login_at->diffForHumans() }}
+                                    @if($this->record->last_login_ip)
+                                        from {{ $this->record->last_login_ip }}
                                     @endif
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Use the "Manage PIN" button in the header to create or change the PIN</p>
-                            </div>
+                            @endif
                         </div>
-                    </x-filament::section>
-                </div>
-            </x-filament::section>
+                        <x-filament::button 
+                            color="warning" 
+                            icon="heroicon-o-arrow-right-start-on-rectangle" 
+                            x-on:click="$dispatch('open-modal', { id: 'force-logout' })"
+                        >
+                            Force Logout
+                        </x-filament::button>
+                    </div>
+                </x-filament::section>
+
+                {{-- Security Overview --}}
+                <x-filament::section>
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-clipboard-document-check class="w-5 h-5 text-primary-500" />
+                            Security Overview
+                        </div>
+                    </x-slot>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {{-- Email Verification --}}
+                        <div class="p-4 rounded-lg border {{ $this->record->email_verified_at ? 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-700' : 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-700' }}">
+                            <div class="flex items-center gap-2 mb-2">
+                                @if($this->record->email_verified_at)
+                                    <x-heroicon-s-check-circle class="w-5 h-5 text-success-600 dark:text-success-400" />
+                                @else
+                                    <x-heroicon-s-exclamation-circle class="w-5 h-5 text-warning-600 dark:text-warning-400" />
+                                @endif
+                                <span class="text-sm font-medium {{ $this->record->email_verified_at ? 'text-success-700 dark:text-success-300' : 'text-warning-700 dark:text-warning-300' }}">Email</span>
+                            </div>
+                            <p class="text-xs {{ $this->record->email_verified_at ? 'text-success-600 dark:text-success-400' : 'text-warning-600 dark:text-warning-400' }}">
+                                {{ $this->record->email_verified_at ? 'Verified' : 'Not Verified' }}
+                            </p>
+                        </div>
+
+                        {{-- Transaction PIN --}}
+                        <div class="p-4 rounded-lg border {{ $this->record->transaction_pin ? 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-700' : 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-700' }}">
+                            <div class="flex items-center gap-2 mb-2">
+                                @if($this->record->transaction_pin)
+                                    <x-heroicon-s-check-circle class="w-5 h-5 text-success-600 dark:text-success-400" />
+                                @else
+                                    <x-heroicon-s-exclamation-circle class="w-5 h-5 text-warning-600 dark:text-warning-400" />
+                                @endif
+                                <span class="text-sm font-medium {{ $this->record->transaction_pin ? 'text-success-700 dark:text-success-300' : 'text-warning-700 dark:text-warning-300' }}">PIN</span>
+                            </div>
+                            <p class="text-xs {{ $this->record->transaction_pin ? 'text-success-600 dark:text-success-400' : 'text-warning-600 dark:text-warning-400' }}">
+                                {{ $this->record->transaction_pin ? 'Set' : 'Not Set' }}
+                            </p>
+                        </div>
+
+                        {{-- 2FA --}}
+                        <div class="p-4 rounded-lg border {{ $this->record->two_factor_secret ? 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-700' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' }}">
+                            <div class="flex items-center gap-2 mb-2">
+                                @if($this->record->two_factor_secret)
+                                    <x-heroicon-s-check-circle class="w-5 h-5 text-success-600 dark:text-success-400" />
+                                @else
+                                    <x-heroicon-o-minus-circle class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                                @endif
+                                <span class="text-sm font-medium {{ $this->record->two_factor_secret ? 'text-success-700 dark:text-success-300' : 'text-gray-600 dark:text-gray-400' }}">2FA</span>
+                            </div>
+                            <p class="text-xs {{ $this->record->two_factor_secret ? 'text-success-600 dark:text-success-400' : 'text-gray-500 dark:text-gray-500' }}">
+                                {{ $this->record->two_factor_secret ? 'Enabled' : 'Disabled' }}
+                            </p>
+                        </div>
+
+                        {{-- Account Status --}}
+                        <div class="p-4 rounded-lg border {{ $this->record->is_active ? 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-700' : 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-700' }}">
+                            <div class="flex items-center gap-2 mb-2">
+                                @if($this->record->is_active)
+                                    <x-heroicon-s-check-circle class="w-5 h-5 text-success-600 dark:text-success-400" />
+                                @else
+                                    <x-heroicon-s-x-circle class="w-5 h-5 text-danger-600 dark:text-danger-400" />
+                                @endif
+                                <span class="text-sm font-medium {{ $this->record->is_active ? 'text-success-700 dark:text-success-300' : 'text-danger-700 dark:text-danger-300' }}">Status</span>
+                            </div>
+                            <p class="text-xs {{ $this->record->is_active ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400' }}">
+                                {{ $this->record->is_active ? 'Active' : 'Locked' }}
+                            </p>
+                        </div>
+                    </div>
+                </x-filament::section>
+            </div>
         </div>
 
         {{-- Edit user info modal --}}
@@ -942,6 +1131,91 @@
                     @if($this->record->two_factor_secret)
                         <x-filament::button color="danger" wire:click="resetTwoFactor">Reset 2FA</x-filament::button>
                     @endif
+                </div>
+            </div>
+        </x-filament::modal>
+
+        {{-- Manage PIN modal --}}
+        <x-filament::modal id="manage-pin" width="md">
+            <x-slot name="heading">
+                {{ $this->record->transaction_pin ? 'Change Transaction PIN' : 'Set Transaction PIN' }}
+            </x-slot>
+            <x-slot name="description">
+                Enter a 6-digit PIN that will be used to authorize transactions.
+            </x-slot>
+
+            <form class="space-y-4" wire:submit.prevent="setTransactionPin($refs.newPin.value, $refs.confirmPin.value)">
+                <div>
+                    <label for="new-pin" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                        {{ $this->record->transaction_pin ? 'New PIN' : 'Transaction PIN' }}
+                    </label>
+                    <x-filament::input.wrapper>
+                        <x-filament::input 
+                            x-ref="newPin" 
+                            id="new-pin" 
+                            name="pin" 
+                            type="password" 
+                            inputmode="numeric" 
+                            pattern="[0-9]{6}" 
+                            maxlength="6"
+                            required 
+                            placeholder="••••••"
+                        />
+                    </x-filament::input.wrapper>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be exactly 6 digits</p>
+                </div>
+
+                <div>
+                    <label for="confirm-pin" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Confirm PIN</label>
+                    <x-filament::input.wrapper>
+                        <x-filament::input 
+                            x-ref="confirmPin" 
+                            id="confirm-pin" 
+                            name="pin_confirmation" 
+                            type="password" 
+                            inputmode="numeric" 
+                            pattern="[0-9]{6}" 
+                            maxlength="6"
+                            required 
+                            placeholder="••••••"
+                        />
+                    </x-filament::input.wrapper>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <x-filament::button color="gray" type="button" x-on:click="$dispatch('close-modal', { id: 'manage-pin' })">
+                        Cancel
+                    </x-filament::button>
+                    <x-filament::button color="primary" type="submit" icon="heroicon-o-finger-print">
+                        {{ $this->record->transaction_pin ? 'Update PIN' : 'Set PIN' }}
+                    </x-filament::button>
+                </div>
+            </form>
+        </x-filament::modal>
+
+        {{-- Clear PIN confirmation modal --}}
+        <x-filament::modal id="clear-pin" width="md">
+            <x-slot name="heading">Clear Transaction PIN</x-slot>
+
+            <div class="space-y-4">
+                <div class="flex items-start gap-3 p-4 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-700">
+                    <x-heroicon-o-exclamation-triangle class="w-6 h-6 text-danger-600 dark:text-danger-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p class="font-semibold text-danger-700 dark:text-danger-300">Warning</p>
+                        <p class="text-sm text-danger-600 dark:text-danger-400 mt-1">
+                            This will remove the transaction PIN for <strong>{{ $this->record->email }}</strong>. 
+                            They will not be able to perform secure operations until a new PIN is set.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <x-filament::button color="gray" type="button" x-on:click="$dispatch('close-modal', { id: 'clear-pin' })">
+                        Cancel
+                    </x-filament::button>
+                    <x-filament::button color="danger" wire:click="clearTransactionPin" icon="heroicon-o-trash">
+                        Clear PIN
+                    </x-filament::button>
                 </div>
             </div>
         </x-filament::modal>

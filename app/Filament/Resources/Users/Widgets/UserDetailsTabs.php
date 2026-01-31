@@ -7,6 +7,7 @@ use App\Services\ActivityLogger;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\WithPagination;
@@ -718,6 +719,100 @@ class UserDetailsTabs extends Widget
             ->send();
 
         $this->dispatch('close-modal', id: 'two-factor');
+        $this->dispatch('refresh');
+    }
+
+    /**
+     * Set or update transaction PIN
+     */
+    public function setTransactionPin(string $pin, string $pin_confirmation): void
+    {
+        if ($pin !== $pin_confirmation) {
+            Notification::make()
+                ->title('PIN Mismatch')
+                ->body('The PIN confirmation does not match.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        if (strlen($pin) !== 6 || ! ctype_digit($pin)) {
+            Notification::make()
+                ->title('Invalid PIN')
+                ->body('PIN must be exactly 6 digits.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $hadPin = ! empty($this->record->transaction_pin);
+
+        $this->record->update([
+            'transaction_pin' => Hash::make($pin),
+        ]);
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            $hadPin ? 'user_pin_changed' : 'user_pin_set',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+                'changed_by' => auth()->user()->email,
+            ]
+        );
+
+        Notification::make()
+            ->title($hadPin ? 'PIN Updated' : 'PIN Set')
+            ->body('Transaction PIN has been '.($hadPin ? 'updated' : 'set')." for {$this->record->email}")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'manage-pin');
+        $this->dispatch('refresh');
+    }
+
+    /**
+     * Clear/remove transaction PIN
+     */
+    public function clearTransactionPin(): void
+    {
+        if (empty($this->record->transaction_pin)) {
+            Notification::make()
+                ->title('No PIN Set')
+                ->body('This user does not have a transaction PIN set.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $this->record->update([
+            'transaction_pin' => null,
+        ]);
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            'user_pin_cleared',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+                'cleared_by' => auth()->user()->email,
+            ]
+        );
+
+        Notification::make()
+            ->title('PIN Cleared')
+            ->body("Transaction PIN has been removed for {$this->record->email}")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'clear-pin');
         $this->dispatch('refresh');
     }
 

@@ -21,7 +21,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 class ViewUser extends ViewRecord
@@ -623,59 +622,6 @@ class ViewUser extends ViewRecord
                     Notification::make()
                         ->title('Transfer Codes Updated')
                         ->body('Wire transfer verification codes have been updated successfully.')
-                        ->success()
-                        ->send();
-
-                    $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
-                }),
-
-            Action::make('manage_pin')
-                ->label('Manage PIN')
-                ->icon('heroicon-o-key')
-                ->color('primary')
-                ->modalWidth(Width::Medium)
-                ->schema([
-                    TextInput::make('new_pin')
-                        ->label('Transaction PIN')
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->minLength(6)
-                        ->maxLength(6)
-                        ->numeric()
-                        ->helperText('Enter a 6-digit PIN'),
-
-                    TextInput::make('confirm_pin')
-                        ->label('Confirm PIN')
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->minLength(6)
-                        ->maxLength(6)
-                        ->numeric()
-                        ->same('new_pin')
-                        ->helperText('Must match the PIN above'),
-                ])
-                ->action(function (array $data) {
-                    $this->record->update([
-                        'transaction_pin' => Hash::make($data['new_pin']),
-                    ]);
-
-                    // Log the activity
-                    ActivityLogger::logAdmin(
-                        'user_pin_changed',
-                        $this->record,
-                        auth()->user(),
-                        [
-                            'changed_by' => auth()->user()->email,
-                            'target_user_id' => $this->record->id,
-                            'target_user_email' => $this->record->email,
-                        ]
-                    );
-
-                    Notification::make()
-                        ->title('PIN Updated')
-                        ->body("Transaction PIN has been successfully updated for {$this->record->email}")
                         ->success()
                         ->send();
 
