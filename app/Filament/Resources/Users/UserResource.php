@@ -54,8 +54,10 @@ class UserResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('role', 'user')
-            ->orWhereNull('role');
+            ->where(function (Builder $query) {
+                $query->where('role', 'user')
+                    ->orWhereNull('role');
+            });
     }
 
     public static function getRecordRouteBindingEloquentQuery(): Builder

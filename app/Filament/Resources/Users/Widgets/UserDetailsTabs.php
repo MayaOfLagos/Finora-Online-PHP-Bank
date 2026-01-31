@@ -6,15 +6,82 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
+use Livewire\WithPagination;
 
 class UserDetailsTabs extends Widget
 {
+    use WithPagination;
+
     protected string $view = 'filament.resources.users.widgets.user-details-tabs';
 
-    public User $record;
+    #[Locked]
+    public ?string $recordId = null;
 
     protected int|string|array $columnSpan = 'full';
+
+    public int $transactionsPerPage = 15;
+
+    public int $transactionsPage = 1;
+
+    public function mount(Model|int|string|null $record = null): void
+    {
+        if ($record instanceof User) {
+            $this->recordId = $record->uuid;
+        } elseif (is_string($record)) {
+            $this->recordId = $record;
+        }
+    }
+
+    /**
+     * Go to a specific transactions page.
+     */
+    public function goToTransactionsPage(int $page): void
+    {
+        $this->transactionsPage = max(1, $page);
+    }
+
+    /**
+     * Go to previous transactions page.
+     */
+    public function previousTransactionsPage(): void
+    {
+        $this->transactionsPage = max(1, $this->transactionsPage - 1);
+    }
+
+    /**
+     * Go to next transactions page.
+     */
+    public function nextTransactionsPage(): void
+    {
+        $this->transactionsPage++;
+    }
+
+    public function getRecord(): ?User
+    {
+        if (! $this->recordId) {
+            return null;
+        }
+
+        return User::where('uuid', $this->recordId)->first();
+    }
+
+    #[Computed]
+    public function record(): ?User
+    {
+        return $this->getRecord();
+    }
+
+    public function __get($name)
+    {
+        if ($name === 'record') {
+            return $this->getRecord();
+        }
+
+        return parent::__get($name);
+    }
 
     #[Computed]
     public function recentTransactions()
@@ -68,6 +135,149 @@ class UserDetailsTabs extends Widget
         ])
             ->sortByDesc('created_at')
             ->take(20);
+    }
+
+    /**
+     * Get all transactions for the user with pagination support.
+     * Returns a collection with metadata for manual pagination.
+     */
+    public function getPaginatedTransactions(int $page = 1): array
+    {
+        $perPage = $this->transactionsPerPage;
+
+        // Collect all transactions with type metadata
+        $allTransactions = collect();
+
+        // Transaction Histories
+        $this->record->transactionHistories()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Transaction History';
+            $t->_category = 'admin';
+            $allTransactions->push($t);
+        });
+
+        // Wire Transfers
+        $this->record->wireTransfers()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Wire Transfer';
+            $t->_category = 'transfer_out';
+            $allTransactions->push($t);
+        });
+
+        // Sent Internal Transfers
+        $this->record->sentInternalTransfers()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Internal Transfer (Sent)';
+            $t->_category = 'transfer_out';
+            $allTransactions->push($t);
+        });
+
+        // Domestic Transfers
+        $this->record->domesticTransfers()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Domestic Transfer';
+            $t->_category = 'transfer_out';
+            $allTransactions->push($t);
+        });
+
+        // Account Transfers
+        $this->record->accountTransfers()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Account Transfer';
+            $t->_category = 'transfer_out';
+            $allTransactions->push($t);
+        });
+
+        // Received Internal Transfers
+        $this->record->receivedInternalTransfers()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Internal Transfer (Received)';
+            $t->_category = 'transfer_in';
+            $allTransactions->push($t);
+        });
+
+        // Check Deposits
+        $this->record->checkDeposits()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Check Deposit';
+            $t->_category = 'deposit';
+            $allTransactions->push($t);
+        });
+
+        // Mobile Deposits
+        $this->record->mobileDeposits()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Mobile Deposit';
+            $t->_category = 'deposit';
+            $allTransactions->push($t);
+        });
+
+        // Crypto Deposits
+        $this->record->cryptoDeposits()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Crypto Deposit';
+            $t->_category = 'deposit';
+            $allTransactions->push($t);
+        });
+
+        // Withdrawals
+        $this->record->withdrawals()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Withdrawal';
+            $t->_category = 'withdrawal';
+            $allTransactions->push($t);
+        });
+
+        // Money Requests Sent
+        $this->record->moneyRequestsSent()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Money Request (Sent)';
+            $t->_category = 'request';
+            $allTransactions->push($t);
+        });
+
+        // Money Requests Received
+        $this->record->moneyRequestsReceived()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Money Request (Received)';
+            $t->_category = 'request';
+            $allTransactions->push($t);
+        });
+
+        // Exchange Money
+        $this->record->exchangeMoney()->get()->each(function ($t) use ($allTransactions) {
+            $t->_type = 'Currency Exchange';
+            $t->_category = 'exchange';
+            $allTransactions->push($t);
+        });
+
+        // Sort by created_at descending
+        $sorted = $allTransactions->sortByDesc('created_at')->values();
+
+        // Calculate pagination
+        $total = $sorted->count();
+        $lastPage = (int) ceil($total / $perPage);
+        $page = max(1, min($page, $lastPage ?: 1));
+        $offset = ($page - 1) * $perPage;
+
+        return [
+            'data' => $sorted->slice($offset, $perPage)->values(),
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'last_page' => $lastPage ?: 1,
+            'from' => $total > 0 ? $offset + 1 : 0,
+            'to' => min($offset + $perPage, $total),
+        ];
+    }
+
+    /**
+     * Get transaction counts for summary cards.
+     */
+    public function getTransactionCounts(): array
+    {
+        return [
+            'wire' => $this->record->wireTransfers()->count(),
+            'internal_sent' => $this->record->sentInternalTransfers()->count(),
+            'internal_received' => $this->record->receivedInternalTransfers()->count(),
+            'domestic' => $this->record->domesticTransfers()->count(),
+            'account' => $this->record->accountTransfers()->count(),
+            'check_deposit' => $this->record->checkDeposits()->count(),
+            'mobile_deposit' => $this->record->mobileDeposits()->count(),
+            'crypto_deposit' => $this->record->cryptoDeposits()->count(),
+            'withdrawal' => $this->record->withdrawals()->count(),
+            'money_request' => $this->record->moneyRequestsSent()->count() + $this->record->moneyRequestsReceived()->count(),
+            'exchange' => $this->record->exchangeMoney()->count(),
+            'history' => $this->record->transactionHistories()->count(),
+        ];
     }
 
     #[Computed]
@@ -288,21 +498,49 @@ class UserDetailsTabs extends Widget
 
     public function updateUserInformation($data): void
     {
+        // Handle date_of_birth - ensure it's a string or null
+        $dateOfBirth = $data['date_of_birth'] ?? null;
+        if (is_array($dateOfBirth)) {
+            $dateOfBirth = $dateOfBirth['value'] ?? ($dateOfBirth[0] ?? null);
+        }
+        $dateOfBirth = ! empty($dateOfBirth) ? $dateOfBirth : null;
+
+        // Handle boolean values that come as true/false from Alpine.js
+        $isActive = $data['is_active'] ?? $this->record->is_active;
+        $emailVerified = $data['email_verified'] ?? ($this->record->email_verified_at ? true : false);
+
+        // Convert to boolean if they're strings or other types
+        if (is_string($isActive)) {
+            $isActive = filter_var($isActive, FILTER_VALIDATE_BOOLEAN);
+        }
+        if (is_string($emailVerified)) {
+            $emailVerified = filter_var($emailVerified, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        // Handle email_verified_at based on toggle
+        $emailVerifiedAt = $emailVerified
+            ? ($this->record->email_verified_at ?? now())
+            : null;
+
+        // Handle kyc_level
+        $kycLevel = isset($data['kyc_level']) ? (int) $data['kyc_level'] : $this->record->kyc_level;
+
         $this->record->update([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'phone_number' => $data['phone_number'],
-            'date_of_birth' => $data['date_of_birth'] ?? null,
+            'first_name' => $data['first_name'] ?? $this->record->first_name,
+            'last_name' => $data['last_name'] ?? $this->record->last_name,
+            'email' => $data['email'] ?? $this->record->email,
+            'phone_number' => $data['phone_number'] ?? null,
+            'date_of_birth' => $dateOfBirth,
             'address_line_1' => $data['address_line_1'] ?? null,
             'address_line_2' => $data['address_line_2'] ?? null,
             'city' => $data['city'] ?? null,
             'state' => $data['state'] ?? null,
             'postal_code' => $data['postal_code'] ?? null,
             'country' => $data['country'] ?? null,
-            'is_active' => $data['is_active'] ?? $this->record->is_active,
-            'is_verified' => $data['is_verified'] ?? $this->record->is_verified,
-            'kyc_level' => $data['kyc_level'] ?? $this->record->kyc_level,
+            'is_active' => $isActive,
+            'is_verified' => $emailVerified,
+            'email_verified_at' => $emailVerifiedAt,
+            'kyc_level' => $kycLevel,
         ]);
 
         // Log the activity
@@ -480,6 +718,34 @@ class UserDetailsTabs extends Widget
             ->send();
 
         $this->dispatch('close-modal', id: 'two-factor');
+        $this->dispatch('refresh');
+    }
+
+    /**
+     * Generate referral code for user
+     */
+    public function generateReferralCode(): void
+    {
+        $code = $this->record->generateReferralCode();
+
+        // Log the activity
+        ActivityLogger::logAdmin(
+            'user_referral_code_generated',
+            $this->record,
+            auth()->user(),
+            [
+                'target_user_id' => $this->record->id,
+                'target_user_email' => $this->record->email,
+                'referral_code' => $code,
+            ]
+        );
+
+        Notification::make()
+            ->title('Referral Code Generated')
+            ->body("Referral code '{$code}' has been generated for {$this->record->full_name}")
+            ->success()
+            ->send();
+
         $this->dispatch('refresh');
     }
 

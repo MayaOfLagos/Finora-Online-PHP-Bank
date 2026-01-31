@@ -15,6 +15,7 @@ use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -115,6 +116,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         // Lockscreen settings
         'lockscreen_enabled',
         'lockscreen_timeout',
+        // Referral fields
+        'referral_code',
+        'referred_by',
+        'referred_at',
+        'total_referral_earnings',
     ];
 
     protected $hidden = [
@@ -173,6 +179,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'notify_sms_security' => 'boolean',
             'lockscreen_enabled' => 'boolean',
             'lockscreen_timeout' => 'integer',
+            'referred_at' => 'datetime',
+            'total_referral_earnings' => 'integer',
         ];
     }
 
@@ -195,8 +203,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function canAccessPanel(Panel $panel): bool
     {
         // Only staff, admin, and super_admin can access the admin panel
-        return $this->is_active 
-            && $this->hasVerifiedEmail() 
+        return $this->is_active
+            && $this->hasVerifiedEmail()
             && $this->role?->canAccessAdmin();
     }
 
@@ -277,8 +285,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         $firstInitial = $this->first_name ? mb_strtoupper(mb_substr($this->first_name, 0, 1)) : '';
         $lastInitial = $this->last_name ? mb_strtoupper(mb_substr($this->last_name, 0, 1)) : '';
-        
-        return $firstInitial . $lastInitial ?: 'U';
+
+        return $firstInitial.$lastInitial ?: 'U';
     }
 
     /**
@@ -314,7 +322,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         $background = '6366f1'; // Indigo-500 to match app theme
         $color = 'ffffff'; // White text
         $size = 128; // Good size for retina displays
-        
+
         return "https://ui-avatars.com/api/?name={$name}&background={$background}&color={$color}&size={$size}&bold=true&format=svg";
     }
 
@@ -478,6 +486,40 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return $this->hasMany(ExchangeMoney::class);
     }
 
+    // ==================== REFERRAL RELATIONSHIPS ====================
+
+    /**
+     * Get the user who referred this user.
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    /**
+     * Get users that this user has referred (direct relationship).
+     */
+    public function referredUsers(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    /**
+     * Get referral records where this user is the referrer.
+     */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+
+    /**
+     * Get the referral record where this user was referred.
+     */
+    public function referralRecord(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referred_id');
+    }
+
     // ==================== HELPER METHODS ====================
 
     /**
@@ -519,6 +561,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function getPrimaryCurrency(): string
     {
         $primaryAccount = $this->getPrimaryBankAccount();
+
         return $primaryAccount?->currency ?? 'USD';
     }
 
@@ -541,6 +584,68 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         }
 
         return $codes;
+    }
+
+    // ==================== REFERRAL METHODS ====================
+
+    /**
+     * Generate a unique referral code for the user.
+     */
+    public function generateReferralCode(): string
+    {
+        if ($this->referral_code) {
+            return $this->referral_code;
+        }
+
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (self::where('referral_code', $code)->exists());
+
+        $this->update(['referral_code' => $code]);
+
+        return $code;
+    }
+
+    /**
+     * Get the user's referral URL.
+     */
+    public function getReferralUrlAttribute(): string
+    {
+        $code = $this->referral_code ?? $this->generateReferralCode();
+
+        return url('/register?ref='.$code);
+    }
+
+    /**
+     * Get total number of successful referrals.
+     */
+    public function getTotalReferralsAttribute(): int
+    {
+        return $this->referredUsers()->count();
+    }
+
+    /**
+     * Get number of pending referrals.
+     */
+    public function getPendingReferralsAttribute(): int
+    {
+        return $this->referrals()->where('status', 'pending')->count();
+    }
+
+    /**
+     * Get number of completed referrals.
+     */
+    public function getCompletedReferralsAttribute(): int
+    {
+        return $this->referrals()->whereIn('status', ['completed', 'rewarded'])->count();
+    }
+
+    /**
+     * Get formatted total referral earnings.
+     */
+    public function getFormattedReferralEarningsAttribute(): string
+    {
+        return number_format(($this->total_referral_earnings ?? 0) / 100, 2);
     }
 
     // ==================== AUTH & NOTIFICATIONS ====================

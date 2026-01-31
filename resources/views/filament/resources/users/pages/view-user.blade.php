@@ -354,7 +354,7 @@
 
         {{-- Right Content Area: Tabs --}}
         <div class="lg:col-span-8">
-            @livewire(\App\Filament\Resources\Users\Widgets\UserDetailsTabs::class, ['record' => $record])
+            @livewire(\App\Filament\Resources\Users\Widgets\UserDetailsTabs::class, ['record' => $record], key($record->uuid))
         </div>
 
     </div>

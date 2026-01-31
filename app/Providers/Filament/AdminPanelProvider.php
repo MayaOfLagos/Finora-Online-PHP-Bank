@@ -81,6 +81,25 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications() // Enable real-time notifications
             ->databaseNotificationsPolling('30s') // Poll every 30 seconds
             ->globalSearch(false) // Can enable later if needed
+            ->registerErrorNotification(
+                title: 'An error occurred',
+                body: 'Something went wrong. Please try again later or contact support.',
+            )
+            ->registerErrorNotification(
+                title: 'Page Not Found',
+                body: 'The page you are looking for does not exist or has been moved.',
+                statusCode: 404,
+            )
+            ->registerErrorNotification(
+                title: 'Access Denied',
+                body: 'You do not have permission to access this resource.',
+                statusCode: 403,
+            )
+            ->registerErrorNotification(
+                title: 'Server Error',
+                body: 'An internal server error occurred. Please try again later.',
+                statusCode: 500,
+            )
             ->navigationGroups([
                 'User Management',
                 'Transfers',

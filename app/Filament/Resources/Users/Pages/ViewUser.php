@@ -10,7 +10,6 @@ use App\Mail\PushNotificationMail;
 use App\Models\AccountType;
 use App\Models\BankAccount;
 use App\Models\TransactionHistory;
-use App\Models\User;
 use App\Services\ActivityLogger;
 use Filament\Actions;
 use Filament\Actions\Action;
@@ -73,7 +72,7 @@ class ViewUser extends ViewRecord
                 ->icon('heroicon-o-envelope')
                 ->color('info')
                 ->modalWidth(Width::Large)
-                ->form([
+                ->schema([
                     Select::make('type')
                         ->label('Notification Type')
                         ->options([
@@ -145,7 +144,7 @@ class ViewUser extends ViewRecord
                 ->color('warning')
                 ->modalWidth(Width::Large)
                 ->modalHeading('Modify User Balance')
-                ->form([
+                ->schema([
                     Select::make('account_id')
                         ->label('Select Bank Account')
                         ->options(function () {
@@ -409,7 +408,7 @@ class ViewUser extends ViewRecord
                 ->icon('heroicon-o-plus-circle')
                 ->color('primary')
                 ->modalWidth(Width::Large)
-                ->form([
+                ->schema([
                     Select::make('account_type_id')
                         ->label('Account Type')
                         ->options(fn () => AccountType::pluck('name', 'id'))
@@ -581,7 +580,7 @@ class ViewUser extends ViewRecord
                     'tax_code' => $this->record->tax_code,
                     'cot_code' => $this->record->cot_code,
                 ])
-                ->form([
+                ->schema([
                     TextInput::make('imf_code')
                         ->label('IMF Code')
                         ->helperText('International Monetary Fund verification code')
@@ -635,7 +634,7 @@ class ViewUser extends ViewRecord
                 ->icon('heroicon-o-key')
                 ->color('primary')
                 ->modalWidth(Width::Medium)
-                ->form([
+                ->schema([
                     TextInput::make('new_pin')
                         ->label('Transaction PIN')
                         ->password()
