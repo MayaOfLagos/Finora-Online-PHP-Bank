@@ -1254,7 +1254,11 @@
                                         x-data
                                         x-on:click="
                                             navigator.clipboard.writeText('{{ $this->record->referral_code }}');
-                                            $dispatch('notify', {message: 'Referral code copied!', type: 'success'});
+                                            $tooltip('Copied!', { timeout: 1500 });
+                                            new FilamentNotification()
+                                                .title('Referral code copied!')
+                                                .success()
+                                                .send();
                                         "
                                         class="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                         title="Copy Referral Code"
@@ -1287,7 +1291,11 @@
                                         x-data
                                         x-on:click="
                                             navigator.clipboard.writeText('{{ url('/register?ref=' . $this->record->referral_code) }}');
-                                            $dispatch('notify', {message: 'Referral URL copied!', type: 'success'});
+                                            $tooltip('Copied!', { timeout: 1500 });
+                                            new FilamentNotification()
+                                                .title('Referral URL copied!')
+                                                .success()
+                                                .send();
                                         "
                                         class="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                                         title="Copy Referral URL"
