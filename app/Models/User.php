@@ -629,24 +629,6 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     // ==================== REFERRAL METHODS ====================
 
     /**
-     * Generate a unique referral code for the user.
-     */
-    public function generateReferralCode(): string
-    {
-        if ($this->referral_code) {
-            return $this->referral_code;
-        }
-
-        do {
-            $code = strtoupper(Str::random(8));
-        } while (self::where('referral_code', $code)->exists());
-
-        $this->update(['referral_code' => $code]);
-
-        return $code;
-    }
-
-    /**
      * Get the user's referral URL.
      */
     public function getReferralUrlAttribute(): string

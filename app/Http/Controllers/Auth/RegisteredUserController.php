@@ -178,13 +178,10 @@ class RegisteredUserController extends Controller
             'transaction_pin' => Hash::make($validated['transaction_pin']),
             'is_active' => true,
             'kyc_level' => 0,
-            'referral_code' => $user->generateReferralCode ?? strtoupper(Str::random(8)),
         ]);
 
         // Generate referral code for new user
-        if (! $user->referral_code) {
-            $user->update(['referral_code' => $user->generateReferralCode()]);
-        }
+        $user->generateReferralCode();
 
         // Get the selected account type
         $accountType = AccountType::where('code', $validated['account_type'])->first();
