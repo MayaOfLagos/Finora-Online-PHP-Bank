@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -205,7 +206,7 @@ class RegisteredUserController extends Controller
                 $this->referralService->processReferral($user, $validated['referral_code']);
             } catch (\Exception $e) {
                 // Log the error but don't fail registration
-                \Log::warning('Failed to process referral during registration: '.$e->getMessage(), [
+                Log::warning('Failed to process referral during registration: '.$e->getMessage(), [
                     'user_id' => $user->id,
                     'referral_code' => $validated['referral_code'],
                 ]);
@@ -218,7 +219,7 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
         } catch (\Exception $e) {
             // Log the error but don't fail registration
-            \Log::warning('Failed to send verification email during registration: '.$e->getMessage());
+            Log::warning('Failed to send verification email during registration: '.$e->getMessage());
         }
 
         // Notify admins about new user registration
