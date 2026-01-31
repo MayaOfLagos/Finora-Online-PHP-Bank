@@ -520,6 +520,46 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return $this->hasMany(Referral::class, 'referred_id');
     }
 
+    /**
+     * Get the user's current referral level based on completed referrals.
+     */
+    public function currentReferralLevel(): ?ReferralLevel
+    {
+        $completedReferrals = $this->referrals()
+            ->where('status', \App\Enums\ReferralStatus::Completed)
+            ->count();
+
+        return ReferralLevel::getLevelForReferralCount($completedReferrals);
+    }
+
+    /**
+     * Get completed referrals count.
+     */
+    public function getCompletedReferralsCountAttribute(): int
+    {
+        return $this->referrals()
+            ->where('status', \App\Enums\ReferralStatus::Completed)
+            ->count();
+    }
+
+    /**
+     * Generate a unique referral code for the user.
+     */
+    public function generateReferralCode(): string
+    {
+        if ($this->referral_code) {
+            return $this->referral_code;
+        }
+
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (static::where('referral_code', $code)->exists());
+
+        $this->update(['referral_code' => $code]);
+
+        return $code;
+    }
+
     // ==================== HELPER METHODS ====================
 
     /**
