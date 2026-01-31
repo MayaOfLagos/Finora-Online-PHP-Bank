@@ -17,7 +17,6 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\Width;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -49,14 +48,16 @@ class PaymentGatewaysTable
                     ->badge()
                     ->color('gray'),
 
-                BadgeColumn::make('type')
+                TextColumn::make('type')
                     ->label('Type')
+                    ->badge()
                     ->formatStateUsing(fn (PaymentGatewayType $state): string => $state->getLabel())
-                    ->colors([
-                        'primary' => PaymentGatewayType::AUTOMATIC->value,
-                        'warning' => PaymentGatewayType::MANUAL->value,
-                        'success' => PaymentGatewayType::CRYPTO->value,
-                    ]),
+                    ->color(fn (PaymentGatewayType $state): string => match ($state) {
+                        PaymentGatewayType::AUTOMATIC => 'primary',
+                        PaymentGatewayType::MANUAL => 'warning',
+                        PaymentGatewayType::CRYPTO => 'success',
+                        default => 'gray',
+                    }),
 
                 IconColumn::make('is_active')
                     ->label('Status')

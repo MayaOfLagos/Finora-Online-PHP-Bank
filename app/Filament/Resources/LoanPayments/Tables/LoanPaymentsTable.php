@@ -11,7 +11,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -61,13 +60,15 @@ class LoanPaymentsTable
                     ->limit(20)
                     ->tooltip(fn ($state) => $state),
 
-                BadgeColumn::make('status')
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'completed',
-                        'danger' => 'rejected',
-                        'gray' => 'failed',
-                    ])
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'completed' => 'success',
+                        'rejected' => 'danger',
+                        'failed' => 'gray',
+                        default => 'gray',
+                    })
                     ->sortable(),
 
                 TextColumn::make('payment_date')
