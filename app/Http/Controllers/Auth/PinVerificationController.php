@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -31,7 +32,7 @@ class PinVerificationController extends Controller
         $user = $request->user();
 
         // Rate limiting
-        $key = 'verify-pin:' . $user->id;
+        $key = 'verify-pin:'.$user->id;
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
@@ -40,15 +41,21 @@ class PinVerificationController extends Controller
         }
 
         // Check if user has a transaction PIN set
-        if (!$user->transaction_pin) {
+        if (! $user->transaction_pin) {
             throw ValidationException::withMessages([
                 'pin' => 'Transaction PIN not set. Please contact support.',
             ]);
         }
 
         // Verify PIN
-        if (!Hash::check($request->pin, $user->transaction_pin)) {
+        if (! Hash::check($request->pin, $user->transaction_pin)) {
             RateLimiter::hit($key, 60);
+
+            // Log failed PIN attempt
+            ActivityLogger::logSecurity('invalid_pin', $user, [
+                'ip_address' => $request->ip(),
+            ]);
+
             throw ValidationException::withMessages([
                 'pin' => 'Invalid PIN code.',
             ]);
@@ -56,6 +63,11 @@ class PinVerificationController extends Controller
 
         // Mark as verified
         session(['pin_verified_at' => now()]);
+
+        // Log successful PIN verification
+        ActivityLogger::logSecurity('pin_verified', $user, [
+            'ip_address' => $request->ip(),
+        ]);
 
         // Update user's last login
         $user->update([

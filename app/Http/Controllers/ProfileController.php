@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,7 @@ class ProfileController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Get active tab from query param (default: personal)
         $activeTab = $request->query('tab', 'personal');
 
@@ -56,7 +57,7 @@ class ProfileController extends Controller
                 'kyc_level' => $user->kyc_level,
                 'is_verified' => $user->is_verified,
                 'two_factor_enabled' => $user->two_factor_enabled,
-                'has_transaction_pin' => !empty($user->transaction_pin),
+                'has_transaction_pin' => ! empty($user->transaction_pin),
                 'email_verified_at' => $user->email_verified_at?->format('M d, Y'),
                 'created_at' => $user->created_at?->format('M d, Y'),
                 'last_login_at' => $user->last_login_at?->format('M d, Y g:i A'),
@@ -127,6 +128,11 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
+        // Log profile update
+        ActivityLogger::logAccount('profile_updated', $user, $user, [
+            'updated_fields' => array_keys($validated),
+        ]);
+
         return back()->with('success', 'Profile updated successfully.');
     }
 
@@ -150,6 +156,9 @@ class ProfileController extends Controller
         $path = $request->file('avatar')->store('avatars', 'public');
         $user->update(['profile_photo_path' => $path]);
 
+        // Log avatar update
+        ActivityLogger::logAccount('avatar_updated', $user, $user);
+
         return back()->with('success', 'Profile photo updated successfully.');
     }
 
@@ -165,6 +174,9 @@ class ProfileController extends Controller
         }
 
         $user->update(['profile_photo_path' => null]);
+
+        // Log avatar removal
+        ActivityLogger::logAccount('avatar_removed', $user, $user);
 
         return back()->with('success', 'Profile photo removed successfully.');
     }
@@ -184,6 +196,11 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Log password change
+        ActivityLogger::logAuth('password_change', $user, [
+            'ip_address' => $request->ip(),
+        ]);
+
         return back()->with('success', 'Password updated successfully.');
     }
 
@@ -200,12 +217,17 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         // Verify current PIN
-        if (!Hash::check($validated['current_pin'], $user->transaction_pin)) {
+        if (! Hash::check($validated['current_pin'], $user->transaction_pin)) {
             return back()->withErrors(['current_pin' => 'Current PIN is incorrect.']);
         }
 
         $user->update([
             'transaction_pin' => Hash::make($validated['pin']),
+        ]);
+
+        // Log PIN change
+        ActivityLogger::logSecurity('pin_changed', $user, [
+            'ip_address' => $request->ip(),
         ]);
 
         return back()->with('success', 'Transaction PIN updated successfully.');
@@ -222,12 +244,17 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        if (!empty($user->transaction_pin)) {
+        if (! empty($user->transaction_pin)) {
             return back()->withErrors(['pin' => 'You already have a PIN set. Please use the change PIN feature.']);
         }
 
         $user->update([
             'transaction_pin' => Hash::make($validated['pin']),
+        ]);
+
+        // Log PIN set
+        ActivityLogger::logSecurity('pin_set', $user, [
+            'ip_address' => $request->ip(),
         ]);
 
         return back()->with('success', 'Transaction PIN set successfully.');
@@ -239,7 +266,7 @@ class ProfileController extends Controller
     private function getDeviceInfo(Request $request): string
     {
         $userAgent = $request->userAgent();
-        
+
         // Simple browser detection
         if (str_contains($userAgent, 'Chrome')) {
             $browser = 'Chrome';

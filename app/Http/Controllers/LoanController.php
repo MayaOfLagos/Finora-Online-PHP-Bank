@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanType;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -163,6 +164,13 @@ class LoanController extends Controller
 
         // Notify admins about new loan application
         AdminNotificationService::loanApplicationSubmitted($application, $user);
+
+        // Log loan application
+        ActivityLogger::logLoan('loan_applied', $application, $user, [
+            'loan_type' => $loanType->name,
+            'amount' => $validated['amount'],
+            'term_months' => $validated['term_months'],
+        ]);
 
         return redirect()->route('loans.applications')
             ->with('success', 'Loan application submitted successfully. Reference: '.$application->reference_number);

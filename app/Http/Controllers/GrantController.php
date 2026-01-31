@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\GrantStatus;
 use App\Models\GrantApplication;
 use App\Models\GrantProgram;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -139,6 +140,12 @@ class GrantController extends Controller
 
         // Notify admins about new grant application
         AdminNotificationService::grantApplicationSubmitted($application, $user);
+
+        // Log grant application
+        ActivityLogger::logGrant('grant_applied', $application, $user, [
+            'program_name' => $program->name,
+            'reference_number' => $application->reference_number,
+        ]);
 
         // Upload documents
         if (request()->hasFile('documents')) {

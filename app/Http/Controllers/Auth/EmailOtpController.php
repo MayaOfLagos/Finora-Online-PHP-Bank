@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\EmailOtpMail;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -30,7 +31,7 @@ class EmailOtpController extends Controller
         $user = $request->user();
 
         // Rate limiting
-        $key = 'send-email-otp:' . $user->id;
+        $key = 'send-email-otp:'.$user->id;
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
@@ -50,6 +51,12 @@ class EmailOtpController extends Controller
         // Send OTP via email
         Mail::to($user->email)->send(new EmailOtpMail($otp, $user));
 
+        // Log OTP request
+        ActivityLogger::logSecurity('otp_requested', $user, [
+            'type' => 'email',
+            'ip_address' => $request->ip(),
+        ]);
+
         RateLimiter::hit($key, 60);
 
         return back()->with('success', 'OTP has been sent to your email.');
@@ -67,7 +74,7 @@ class EmailOtpController extends Controller
         $user = $request->user();
 
         // Rate limiting
-        $key = 'verify-email-otp:' . $user->id;
+        $key = 'verify-email-otp:'.$user->id;
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
@@ -79,7 +86,7 @@ class EmailOtpController extends Controller
         $expiresAt = session('email_otp_expires_at');
 
         // Check if OTP exists
-        if (!$storedOtp) {
+        if (! $storedOtp) {
             throw ValidationException::withMessages([
                 'otp' => 'OTP not found. Please request a new one.',
             ]);
@@ -96,6 +103,13 @@ class EmailOtpController extends Controller
         // Verify OTP
         if ($request->otp != $storedOtp) {
             RateLimiter::hit($key, 60);
+
+            // Log failed OTP verification
+            ActivityLogger::logSecurity('otp_failed', $user, [
+                'type' => 'email',
+                'ip_address' => $request->ip(),
+            ]);
+
             throw ValidationException::withMessages([
                 'otp' => 'Invalid OTP code.',
             ]);
@@ -107,6 +121,12 @@ class EmailOtpController extends Controller
         // Mark as verified
         session(['email_otp_verified_at' => now()]);
 
+        // Log successful OTP verification
+        ActivityLogger::logSecurity('otp_verified', $user, [
+            'type' => 'email',
+            'ip_address' => $request->ip(),
+        ]);
+
         // Update user's last login
         $user->update([
             'email_otp_verified_at' => now(),
@@ -117,7 +137,7 @@ class EmailOtpController extends Controller
         // Check if PIN verification is required
         $loginRequirePin = setting('security', 'login_require_pin', true);
 
-        if ($loginRequirePin && !session('pin_verified_at')) {
+        if ($loginRequirePin && ! session('pin_verified_at')) {
             return redirect()->route('verify-pin.show');
         }
 

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCardRequest;
 use App\Models\BankAccount;
 use App\Models\Card;
 use App\Models\CardType;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -167,6 +168,12 @@ class CardPageController extends Controller
         // Notify admins about new card request
         AdminNotificationService::cardRequested($card, $user);
 
+        // Log card request
+        ActivityLogger::logCard('card_requested', $card, $user, [
+            'card_type' => $cardType->name,
+            'is_virtual' => $cardType->is_virtual,
+        ]);
+
         return Redirect::back()->with('success', 'Your card request has been submitted.');
     }
 
@@ -182,6 +189,12 @@ class CardPageController extends Controller
 
         // Notify admins about card status change
         AdminNotificationService::cardStatusChanged($card, Auth::user(), $card->status->value);
+
+        // Log card freeze/unfreeze
+        $logType = $card->status === CardStatus::Frozen ? 'card_blocked' : 'card_unblocked';
+        ActivityLogger::logCard($logType, $card, Auth::user(), [
+            'new_status' => $card->status->value,
+        ]);
 
         return Redirect::back()->with('success', $card->status === CardStatus::Frozen
             ? 'Card has been frozen.'

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BankAccount;
 use App\Models\Beneficiary;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -107,12 +108,18 @@ class BeneficiaryController extends Controller
         }
 
         // Create beneficiary
-        Beneficiary::create([
+        $beneficiary = Beneficiary::create([
             'user_id' => $user->id,
             'beneficiary_user_id' => $beneficiaryAccount->user_id,
             'beneficiary_account_id' => $beneficiaryAccount->id,
             'nickname' => $validated['nickname'] ?? $beneficiaryAccount->account_name,
             'is_verified' => true,
+        ]);
+
+        // Log beneficiary added
+        ActivityLogger::logAccount('beneficiary_added', $beneficiary, $user, [
+            'account_number' => $beneficiaryAccount->account_number,
+            'nickname' => $beneficiary->nickname,
         ]);
 
         return back()->with('success', 'Beneficiary added successfully.');
@@ -132,6 +139,11 @@ class BeneficiaryController extends Controller
         ]);
 
         $beneficiary->update($validated);
+
+        // Log beneficiary updated
+        ActivityLogger::logAccount('beneficiary_updated', $beneficiary, $request->user(), [
+            'updated_fields' => array_keys($validated),
+        ]);
 
         return back()->with('success', 'Beneficiary updated successfully.');
     }
@@ -171,6 +183,11 @@ class BeneficiaryController extends Controller
         if (! Hash::check($validated['pin'], $user->transaction_pin)) {
             return back()->withErrors(['pin' => 'Invalid transaction PIN.']);
         }
+
+        // Log beneficiary removal before deleting
+        ActivityLogger::logAccount('beneficiary_removed', $beneficiary, $user, [
+            'nickname' => $beneficiary->nickname,
+        ]);
 
         $beneficiary->delete();
 

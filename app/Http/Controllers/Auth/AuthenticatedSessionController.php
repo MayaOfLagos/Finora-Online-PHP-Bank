@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\LoginHistory;
+use App\Services\ActivityLogger;
 use App\Services\ReCaptchaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class AuthenticatedSessionController extends Controller
     public function create(): Response
     {
         $recaptchaService = app(ReCaptchaService::class);
-        
+
         return Inertia::render('Auth/Login', [
             'canResetPassword' => true,
             'status' => session('status'),
@@ -34,20 +35,20 @@ class AuthenticatedSessionController extends Controller
     {
         // Verify reCAPTCHA first
         $recaptchaService = app(ReCaptchaService::class);
-        
+
         if ($recaptchaService->isEnforcedForUser()) {
             $recaptchaResult = $recaptchaService->verify(
                 $request->input('recaptcha_token'),
                 $request->ip()
             );
-            
-            if (!$recaptchaResult['success']) {
+
+            if (! $recaptchaResult['success']) {
                 return back()->withErrors([
                     'recaptcha_token' => $recaptchaResult['message'] ?? 'Security verification failed. Please try again.',
                 ]);
             }
         }
-        
+
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
@@ -78,23 +79,29 @@ class AuthenticatedSessionController extends Controller
                 'status' => 'success',
             ]);
 
+            // Log successful login
+            ActivityLogger::logAuth('login', $user, [
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
             // Check if Email OTP verification is required
             $loginRequireEmailOtp = setting('security', 'login_require_email_otp', true);
-            
-            if ($loginRequireEmailOtp && !$user->skip_email_otp) {
+
+            if ($loginRequireEmailOtp && ! $user->skip_email_otp) {
                 // Clear previous verification sessions
                 session()->forget(['email_otp_verified_at', 'pin_verified_at']);
-                
+
                 return redirect()->route('verify-email-otp.show');
             }
 
             // Check if PIN verification is required
             $loginRequirePin = setting('security', 'login_require_pin', true);
-            
+
             if ($loginRequirePin) {
                 // Clear previous PIN verification
                 session()->forget('pin_verified_at');
-                
+
                 return redirect()->route('verify-pin.show');
             }
 
@@ -117,6 +124,13 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+
+        // Log logout before destroying session
+        if ($user) {
+            ActivityLogger::logAuth('logout', $user);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

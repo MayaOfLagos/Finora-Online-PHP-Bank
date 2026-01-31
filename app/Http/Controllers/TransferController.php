@@ -8,6 +8,7 @@ use App\Models\BankAccount;
 use App\Models\InternalTransfer;
 use App\Models\Setting;
 use App\Models\TransactionHistory;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -317,6 +318,13 @@ class TransferController extends Controller
 
             // Notify admins about completed internal transfer
             AdminNotificationService::internalTransferCompleted($transfer, $user);
+
+            // Log internal transfer
+            ActivityLogger::logTransaction('internal_transfer_created', $transfer, $user, [
+                'amount' => $validated['amount'],
+                'reference' => $reference,
+                'recipient' => $toAccount->user->name,
+            ]);
 
             return back()->with([
                 'success' => 'Transfer completed successfully',

@@ -10,13 +10,8 @@ class ActivityLogger
 {
     /**
      * Log user activity
-     * 
-     * @param string $action
-     * @param string $description
-     * @param User|null $user
-     * @param mixed $subject
-     * @param array|null $metadata
-     * @return ActivityLog
+     *
+     * @param  mixed  $subject
      */
     public static function log(
         string $action,
@@ -53,6 +48,8 @@ class ActivityLogger
             'two_factor_enabled' => 'Two-factor authentication enabled',
             'two_factor_disabled' => 'Two-factor authentication disabled',
             'two_factor_failed' => 'Failed two-factor authentication attempt',
+            'registered' => 'User account registered',
+            'lockscreen_unlocked' => 'Lockscreen unlocked',
         ];
 
         return self::log(
@@ -107,6 +104,9 @@ class ActivityLogger
             'account_unlocked' => 'Account unlocked by administrator',
             'session_expired' => 'User session expired',
             'forced_logout' => 'User force logged out by administrator',
+            'pin_verified' => 'Transaction PIN verified successfully',
+            'pin_set' => 'Transaction PIN set',
+            'pin_changed' => 'Transaction PIN changed',
         ];
 
         return self::log(
@@ -126,12 +126,20 @@ class ActivityLogger
         $descriptions = [
             'registered' => 'User account created',
             'profile_updated' => 'Profile information updated',
+            'avatar_updated' => 'Profile photo updated',
+            'avatar_removed' => 'Profile photo removed',
+            'preferences_updated' => 'Preferences updated',
+            'notifications_updated' => 'Notification settings updated',
             'kyc_submitted' => 'KYC documents submitted',
             'kyc_approved' => 'KYC verification approved',
             'kyc_rejected' => 'KYC verification rejected',
             'bank_account_created' => 'New bank account created',
+            'bank_account_frozen' => 'Bank account frozen',
+            'bank_account_unfrozen' => 'Bank account unfrozen',
+            'bank_account_primary_changed' => 'Primary bank account changed',
             'bank_account_closed' => 'Bank account closed',
             'beneficiary_added' => 'New beneficiary added',
+            'beneficiary_updated' => 'Beneficiary updated',
             'beneficiary_removed' => 'Beneficiary removed',
         ];
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\ReCaptchaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ class PasswordResetLinkController extends Controller
     public function create(): Response
     {
         $recaptchaService = app(ReCaptchaService::class);
-        
+
         return Inertia::render('Auth/ForgotPassword', [
             'status' => session('status'),
             'recaptcha' => $recaptchaService->getConfig(forAdmin: false),
@@ -32,20 +34,20 @@ class PasswordResetLinkController extends Controller
     {
         // Verify reCAPTCHA first
         $recaptchaService = app(ReCaptchaService::class);
-        
+
         if ($recaptchaService->isEnforcedForUser()) {
             $recaptchaResult = $recaptchaService->verify(
                 $request->input('recaptcha_token'),
                 $request->ip()
             );
-            
-            if (!$recaptchaResult['success']) {
+
+            if (! $recaptchaResult['success']) {
                 return back()->withErrors([
                     'recaptcha_token' => $recaptchaResult['message'] ?? 'Security verification failed. Please try again.',
                 ]);
             }
         }
-        
+
         $request->validate([
             'email' => 'required|email',
         ]);
@@ -56,6 +58,16 @@ class PasswordResetLinkController extends Controller
         $status = Password::sendResetLink(
             $request->only('email')
         );
+
+        // Log password reset request
+        if ($status == Password::RESET_LINK_SENT) {
+            $user = User::where('email', $request->email)->first();
+            if ($user) {
+                ActivityLogger::logAuth('password_reset_requested', $user, [
+                    'ip_address' => $request->ip(),
+                ]);
+            }
+        }
 
         return $status == Password::RESET_LINK_SENT
             ? back()->with('status', __($status))

@@ -6,6 +6,7 @@ use App\Mail\AccountStatementMail;
 use App\Models\AccountType;
 use App\Models\BankAccount;
 use App\Models\Setting;
+use App\Services\ActivityLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -101,6 +102,12 @@ class AccountController extends Controller
             'is_primary' => $request->user()->bankAccounts()->count() === 0, // First account is primary
         ]);
 
+        // Log account creation
+        ActivityLogger::logAccount('bank_account_created', $account, $request->user(), [
+            'account_number' => $accountNumber,
+            'currency' => $validated['currency'],
+        ]);
+
         return back()->with('success', 'Account created successfully');
     }
 
@@ -152,6 +159,11 @@ class AccountController extends Controller
 
         $account->update(['status' => 'frozen']);
 
+        // Log account freeze
+        ActivityLogger::logAccount('bank_account_frozen', $account, $request->user(), [
+            'account_number' => $account->account_number,
+        ]);
+
         return back()->with('success', 'Account frozen successfully');
     }
 
@@ -173,6 +185,11 @@ class AccountController extends Controller
 
         $account->update(['status' => 'active']);
 
+        // Log account unfreeze
+        ActivityLogger::logAccount('bank_account_unfrozen', $account, $request->user(), [
+            'account_number' => $account->account_number,
+        ]);
+
         return back()->with('success', 'Account unfrozen successfully');
     }
 
@@ -188,6 +205,11 @@ class AccountController extends Controller
 
         // Set this as primary
         $account->update(['is_primary' => true]);
+
+        // Log primary account change
+        ActivityLogger::logAccount('bank_account_primary_changed', $account, $request->user(), [
+            'account_number' => $account->account_number,
+        ]);
 
         return back()->with('success', 'Primary account updated successfully');
     }

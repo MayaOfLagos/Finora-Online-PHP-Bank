@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
+use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
@@ -17,14 +19,17 @@ class GuidelineAssist
     /** @var array<string, string> */
     protected array $modelPaths = [];
 
+    /** @var array<string, string> */
     protected array $controllerPaths = [];
 
+    /** @var array<string, string> */
     protected array $enumPaths = [];
 
     protected static array $classes = [];
 
-    public function __construct(public Roster $roster, public GuidelineConfig $config)
+    public function __construct(public Roster $roster, public GuidelineConfig $config, public ?Collection $skills = null)
     {
+        $this->skills ??= collect();
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
@@ -117,18 +122,22 @@ class GuidelineAssist
         }
 
         $code = file_get_contents($path);
+
         if ($code === false) {
             return $cache[$path] = false;
         }
 
-        if (stripos($code, 'class') === false
-            && stripos($code, 'interface') === false
-            && stripos($code, 'trait') === false
-            && stripos($code, 'enum') === false) {
+        $containsClassKeyword = stripos($code, 'class') !== false
+            || stripos($code, 'interface') !== false
+            || stripos($code, 'trait') !== false
+            || stripos($code, 'enum') !== false;
+
+        if (! $containsClassKeyword) {
             return $cache[$path] = false;
         }
 
         $tokens = token_get_all($code);
+
         foreach ($tokens as $token) {
             if (is_array($token) && in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
                 return $cache[$path] = true;
@@ -162,6 +171,13 @@ class GuidelineAssist
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
+    }
+
+    public function hasPackage(Packages $package): bool
+    {
+        return $this->roster->packages()->contains(
+            fn ($pkg): bool => $pkg->package() === $package
+        );
     }
 
     public function nodePackageManager(): string
@@ -210,5 +226,13 @@ class GuidelineAssist
     public function sailBinaryPath(): string
     {
         return Sail::BINARY_PATH;
+    }
+
+    /**
+     * @return Collection<string, Skill>
+     */
+    public function skills(): Collection
+    {
+        return $this->skills;
     }
 }

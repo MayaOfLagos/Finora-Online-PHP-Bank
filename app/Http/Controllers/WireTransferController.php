@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\TransactionHistory;
 use App\Models\User;
 use App\Models\WireTransfer;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -553,6 +554,13 @@ class WireTransferController extends Controller
 
             // Notify admins about completed wire transfer
             AdminNotificationService::wireTransferCompleted($wireTransfer, $user);
+
+            // Log wire transfer
+            ActivityLogger::logTransaction('wire_transfer_created', $wireTransfer, $user, [
+                'amount' => $wireTransfer->amount / 100,
+                'reference' => $wireTransfer->reference_number,
+                'beneficiary' => $wireTransfer->beneficiary_name,
+            ]);
 
             return back()->with([
                 'success' => 'Wire transfer submitted successfully. It will be processed within 3-5 business days.',

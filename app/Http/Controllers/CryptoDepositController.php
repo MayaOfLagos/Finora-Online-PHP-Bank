@@ -8,6 +8,7 @@ use App\Models\Cryptocurrency;
 use App\Models\CryptoDeposit;
 use App\Models\CryptoWallet;
 use App\Models\Setting;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use App\Services\CryptoExchangeRateService;
 use Illuminate\Http\Request;
@@ -227,6 +228,14 @@ class CryptoDepositController extends Controller
 
             // Notify admins about new crypto deposit
             AdminNotificationService::cryptoDepositRegistered($deposit, $user);
+
+            // Log crypto deposit registration
+            ActivityLogger::logTransaction('crypto_deposit_created', $deposit, $user, [
+                'cryptocurrency' => $cryptocurrency->symbol,
+                'crypto_amount' => $validated['crypto_amount'],
+                'usd_amount' => $validated['usd_amount'],
+                'transaction_hash' => $validated['transaction_hash'],
+            ]);
 
             return back()->with([
                 'success' => 'Crypto deposit registered and awaiting verification',

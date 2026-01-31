@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Loan;
 use App\Models\LoanPayment;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 
 class LoanRepaymentController extends Controller
@@ -51,6 +52,13 @@ class LoanRepaymentController extends Controller
             'metadata' => [
                 'submitted_by' => $user->id,
             ],
+        ]);
+
+        // Log loan repayment
+        ActivityLogger::logLoan('loan_repayment', $loan, $user, [
+            'amount' => $validated['amount'],
+            'payment_method' => $validated['payment_method'],
+            'reference_number' => $payment->reference_number,
         ]);
 
         return back()->with('success', 'Repayment submitted for review. Reference: '.$payment->reference_number);

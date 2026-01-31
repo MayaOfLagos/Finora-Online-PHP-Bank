@@ -48,6 +48,7 @@ class BoostServiceProvider extends ServiceProvider
             $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
             $cached = cache()->get($cacheKey);
+
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
                 return $cached['roster'];
             }
@@ -105,6 +106,7 @@ class BoostServiceProvider extends ServiceProvider
                 Console\InstallCommand::class,
                 Console\UpdateCommand::class,
                 Console\ExecuteToolCommand::class,
+                Console\AddSkillCommand::class,
             ]);
         }
     }
@@ -113,6 +115,7 @@ class BoostServiceProvider extends ServiceProvider
     {
         Route::post('/_boost/browser-logs', function (Request $request) {
             $logs = $request->input('logs', []);
+
             /** @var Logger $logger */
             $logger = Log::channel('browser');
 
@@ -174,7 +177,7 @@ class BoostServiceProvider extends ServiceProvider
         config([
             'logging.channels.browser' => [
                 'driver' => 'single',
-                'path' => storage_path('logs/browser.log'),
+                'path' => storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log'),
                 'level' => env('LOG_LEVEL', 'debug'),
                 'days' => 14,
             ],

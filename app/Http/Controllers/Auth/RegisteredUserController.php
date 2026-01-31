@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AccountType;
 use App\Models\BankAccount;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use App\Services\ReCaptchaService;
 use Illuminate\Auth\Events\Registered;
@@ -174,6 +175,13 @@ class RegisteredUserController extends Controller
 
         // Notify admins about new user registration
         AdminNotificationService::userRegistered($user);
+
+        // Log user registration
+        ActivityLogger::logAuth('registered', $user, [
+            'ip_address' => $request->ip(),
+            'account_type' => $validated['account_type'],
+            'currency' => $validated['currency'],
+        ]);
 
         Auth::login($user);
 

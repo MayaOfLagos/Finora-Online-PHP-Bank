@@ -6,6 +6,7 @@ use App\Enums\DepositStatus;
 use App\Models\BankAccount;
 use App\Models\CheckDeposit;
 use App\Models\Setting;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -135,6 +136,13 @@ class CheckDepositController extends Controller
 
             // Notify admins about new check deposit
             AdminNotificationService::checkDepositSubmitted($deposit, $user);
+
+            // Log check deposit submission
+            ActivityLogger::logTransaction('check_deposit_created', $deposit, $user, [
+                'amount' => $validated['amount'],
+                'check_number' => $validated['check_number'],
+                'reference_number' => $deposit->reference_number,
+            ]);
 
             return back()->with([
                 'success' => 'Check deposit submitted for approval',

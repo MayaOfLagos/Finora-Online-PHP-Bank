@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\TransferCompletedMail;
 use App\Models\BankAccount;
 use App\Models\TransactionHistory;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -142,6 +143,14 @@ class AccountTransferController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Failed to send account transfer completed email: '.$e->getMessage());
             }
+
+            // Log account transfer
+            ActivityLogger::logTransaction('account_transfer_created', null, $user, [
+                'amount' => $amountInCents / 100,
+                'reference' => $reference,
+                'from_account' => $fromAccount->account_number,
+                'to_account' => $toAccount->account_number,
+            ]);
 
             return back()->with([
                 'success' => 'Transfer completed successfully',

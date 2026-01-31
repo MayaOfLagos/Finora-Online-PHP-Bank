@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,11 @@ class VerifyEmailController extends Controller
 
         if ($request->user()->markEmailAsVerified()) {
             event(new Verified($request->user()));
+
+            // Log email verification
+            ActivityLogger::logAuth('email_verified', $request->user(), [
+                'ip_address' => $request->ip(),
+            ]);
         }
 
         return redirect()->intended(route('dashboard', absolute: false).'?verified=1');

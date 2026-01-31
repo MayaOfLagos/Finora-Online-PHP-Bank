@@ -7,6 +7,7 @@ use App\Mail\KycSubmittedAdminMail;
 use App\Models\KycDocumentTemplate;
 use App\Models\KycVerification;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -223,6 +224,11 @@ class KycController extends Controller
 
         // Send notification to admin (database notification)
         AdminNotificationService::kycDocumentSubmitted($verification, $user);
+
+        // Log KYC submission
+        ActivityLogger::logAccount('kyc_submitted', $verification, $user, [
+            'document_type' => $template->name,
+        ]);
 
         return redirect()
             ->route('kyc.index')

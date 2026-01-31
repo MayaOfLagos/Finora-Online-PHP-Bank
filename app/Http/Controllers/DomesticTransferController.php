@@ -10,6 +10,7 @@ use App\Models\DomesticTransfer;
 use App\Models\Setting;
 use App\Models\TransactionHistory;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -372,6 +373,13 @@ class DomesticTransferController extends Controller
 
             // Notify admins about completed domestic transfer
             AdminNotificationService::domesticTransferCompleted($domesticTransfer, $user);
+
+            // Log domestic transfer
+            ActivityLogger::logTransaction('domestic_transfer_created', $domesticTransfer, $user, [
+                'amount' => $domesticTransfer->amount / 100,
+                'reference' => $domesticTransfer->reference_number,
+                'beneficiary' => $domesticTransfer->beneficiary_name,
+            ]);
 
             return back()->with([
                 'success' => 'Domestic transfer submitted successfully. It will be processed within 1-3 business days.',
