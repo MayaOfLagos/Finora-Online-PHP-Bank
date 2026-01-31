@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive multi-level referral system where users can invite others and both parties earn rewards. The system includes admin management, level-based earnings, and integration with the existing Rewards system.
+A comprehensive multi-level referral system where users can invite others. Inviters always earn rewards based on their level. New user rewards are optional (admin toggle). The system integrates with the existing Rewards system.
 
 ---
 
@@ -17,28 +17,72 @@ A comprehensive multi-level referral system where users can invite others and bo
 - Admin defines X levels (e.g., 5 or 10)
 - Each level has:
   - Level number (1, 2, 3...)
-  - Inviter earning percentage/amount
-  - New user earning percentage/amount
-  - Minimum requirements (optional)
-- Quick setup: Admin enters number of levels → auto-generates with default percentages
+  - Inviter earning (fixed amount OR percentage of base)
+  - Minimum referrals to reach this level
+- Quick setup: Admin enters number of levels → auto-generates with default values
 
-### 3. Registration Flow Enhancement
+### 3. Global Settings
+- **Referral Program Enabled** - Master toggle
+- **New User Bonus Enabled** - Toggle whether new signups earn rewards
+- **New User Bonus Amount** - Fixed amount for new users (when enabled)
+- **Base Reward Amount** - Base amount for percentage calculations
+- **Reward Delay** - Optional delay before rewards are claimable
+
+### 4. Registration Flow Enhancement
 - **Referral Link Detection** (`?ref=CODE`)
   - Show welcome modal with confetti
   - Display inviter name/avatar
-  - Show potential earnings
+  - Show potential earnings (if new user bonus enabled)
   - Save referral to session
 - **Referral Input** (Coupon-style toggle)
   - "I have a referral code" expandable section
   - Auto-filled if from referral link
   - Validation against existing codes
 
-### 4. Reward Distribution
+### 5. Reward Distribution
 - On successful registration:
-  - **Inviter** receives reward based on their level
-  - **New User** receives welcome bonus (if configured)
+  - **Inviter** ALWAYS receives reward based on their level
+  - **New User** receives welcome bonus ONLY if enabled in settings
 - Rewards added to existing Rewards system
 - Users can redeem rewards as account credit
+
+---
+
+## Recommended Earning Structure for Banking
+
+### Option A: Fixed Amount per Level (Recommended for Banking ✓)
+Simple, predictable, easy to budget. Best for financial institutions.
+
+| Level | Name | Inviter Earns | Min Referrals |
+|-------|------|---------------|---------------|
+| 1 | Starter | $5.00 | 0 |
+| 2 | Bronze | $7.50 | 5 |
+| 3 | Silver | $10.00 | 15 |
+| 4 | Gold | $15.00 | 30 |
+| 5 | Platinum | $25.00 | 50 |
+
+**New User Bonus** (when enabled): $5.00 flat
+
+### Option B: Percentage of Base Amount
+More flexible, scales with business decisions.
+
+| Level | Name | Inviter % | Min Referrals |
+|-------|------|-----------|---------------|
+| 1 | Starter | 10% | 0 |
+| 2 | Bronze | 15% | 5 |
+| 3 | Silver | 20% | 15 |
+| 4 | Gold | 30% | 30 |
+| 5 | Platinum | 50% | 50 |
+
+Base Amount: $50.00 (configurable)
+**New User Bonus**: 10% of base = $5.00
+
+### Why Fixed Amount is Better for Banking:
+1. **Predictable costs** - Easy to forecast referral expenses
+2. **Regulatory compliance** - Clear, documented reward structure
+3. **User transparency** - Users know exactly what they'll earn
+4. **No complex calculations** - Reduces errors and disputes
+5. **Easier auditing** - Simple transaction trail
 
 ---
 
@@ -49,13 +93,11 @@ A comprehensive multi-level referral system where users can invite others and bo
 id                      - bigint, primary key
 level                   - integer (1, 2, 3...), unique
 name                    - string (e.g., "Bronze", "Silver", "Gold")
-inviter_reward_type     - enum('fixed', 'percentage')
-inviter_reward_amount   - decimal (amount or percentage)
-invitee_reward_type     - enum('fixed', 'percentage')
-invitee_reward_amount   - decimal (amount for new user)
+reward_type             - enum('fixed', 'percentage')
+reward_amount           - decimal (amount or percentage for inviter)
 min_referrals_required  - integer (referrals needed to reach this level)
-color                   - string (for UI display)
-icon                    - string (optional)
+color                   - string (for UI display, e.g., "#CD7F32")
+icon                    - string (optional heroicon name)
 is_active               - boolean
 created_at              - timestamp
 updated_at              - timestamp
@@ -71,8 +113,8 @@ referral_code_used      - string (the code used)
 referrer_level_id       - foreignId (level at time of referral)
 referrer_reward_id      - foreignId (nullable, reward given to inviter)
 referred_reward_id      - foreignId (nullable, reward given to new user)
-referrer_earned         - decimal (amount earned by inviter)
-referred_earned         - decimal (amount earned by new user)
+referrer_earned         - integer (amount in cents earned by inviter)
+referred_earned         - integer (amount in cents earned by new user, 0 if disabled)
 status                  - enum('pending', 'completed', 'cancelled')
 completed_at            - timestamp (nullable)
 created_at              - timestamp
@@ -89,11 +131,12 @@ updated_at              - timestamp
 ```
 
 **Settings Keys:**
-- `referral_enabled` - boolean
-- `welcome_bonus_enabled` - boolean
-- `welcome_bonus_amount` - decimal
-- `min_deposit_for_reward` - decimal (optional requirement)
-- `reward_delay_hours` - integer (delay before reward is claimable)
+- `referral_enabled` - boolean (master toggle)
+- `new_user_bonus_enabled` - boolean (toggle for new user rewards)
+- `new_user_bonus_amount` - integer (cents, fixed amount for new users)
+- `base_reward_amount` - integer (cents, for percentage calculations)
+- `reward_delay_hours` - integer (delay before reward is claimable, 0 = instant)
+- `min_deposit_for_reward` - integer (cents, optional requirement before claiming)
 
 ---
 
@@ -126,16 +169,18 @@ updated_at              - timestamp
 
 ### Phase 4: Admin Panel - Settings
 - [ ] Create Referral Settings page
-  - Enable/disable referral program
-  - Configure welcome bonus
-  - Set reward distribution rules
-  - Configure minimum requirements
+  - Enable/disable referral program (master toggle)
+  - Enable/disable new user bonus (global toggle)
+  - Configure new user bonus amount
+  - Set base reward amount for percentage calculations
+  - Configure reward delay (hours)
+  - Optional: minimum deposit before reward claim
 
 ### Phase 5: Frontend - Registration Enhancement
 - [ ] Create referral welcome modal component
   - Confetti animation (use canvas-confetti)
   - Inviter info display
-  - Earning preview
+  - Earning preview (conditionally shown based on new_user_bonus_enabled)
   - "Continue" button
 - [ ] Add referral code input to registration
   - Coupon-style toggle ("I have a referral code")
@@ -148,7 +193,8 @@ updated_at              - timestamp
 - [ ] Handle referral on user registration
   - Validate referral code
   - Determine inviter's level
-  - Calculate rewards for both parties
+  - Calculate inviter reward (ALWAYS)
+  - Calculate new user reward (ONLY if new_user_bonus_enabled)
   - Create reward records
   - Update referral status
 - [ ] Create scheduled job for delayed rewards (if configured)
@@ -167,13 +213,15 @@ updated_at              - timestamp
 
 When admin enters "5 levels", auto-generate:
 
-| Level | Name     | Inviter Reward | New User Reward | Min Referrals |
-|-------|----------|----------------|-----------------|---------------|
-| 1     | Starter  | $5 (fixed)     | $2              | 0             |
-| 2     | Bronze   | $7 (fixed)     | $3              | 5             |
-| 3     | Silver   | $10 (fixed)    | $5              | 15            |
-| 4     | Gold     | $15 (fixed)    | $7              | 30            |
-| 5     | Platinum | $25 (fixed)    | $10             | 50            |
+| Level | Name     | Inviter Reward | Min Referrals |
+|-------|----------|----------------|---------------|
+| 1     | Starter  | $5.00 (fixed)  | 0             |
+| 2     | Bronze   | $7.50 (fixed)  | 5             |
+| 3     | Silver   | $10.00 (fixed) | 15            |
+| 4     | Gold     | $15.00 (fixed) | 30            |
+| 5     | Platinum | $25.00 (fixed) | 50            |
+
+**Note:** New user bonus is controlled separately via global settings.
 
 Admin can customize after generation.
 
@@ -201,7 +249,7 @@ User clicks referral link (?ref=CODE)
 │  Show Welcome Modal             │
 │  - Confetti animation 🎉        │
 │  - "You were invited by [Name]" │
-│  - "Sign up & earn $X!"         │
+│  - "Sign up & earn $X!"         │  ← Only if new_user_bonus_enabled
 │  - [Continue] button            │
 └─────────────────────────────────┘
          │
@@ -217,8 +265,9 @@ User clicks referral link (?ref=CODE)
 │  Process Referral               │
 │  1. Get inviter's level         │
 │  2. Calculate inviter reward    │
-│  3. Calculate new user reward   │
-│  4. Create Reward records       │
+│  3. Create Reward for inviter   │
+│  4. IF new_user_bonus_enabled:  │
+│     - Create Reward for user    │
 │  5. Update referral status      │
 │  6. Check level progression     │
 └─────────────────────────────────┘
@@ -229,8 +278,34 @@ User clicks referral link (?ref=CODE)
 ## Reward Integration
 
 ### Reward Types for Referrals:
-- `referral_inviter` - Reward for inviting someone
-- `referral_signup` - Reward for signing up via referral
+- `referral_inviter` - Reward for inviting someone (always given)
+- `referral_signup` - Reward for signing up via referral (only if enabled)
+
+### Reward Distribution Logic:
+```php
+// In ReferralService::processReferral()
+
+// 1. ALWAYS reward the inviter based on their level
+$inviterLevel = $inviter->currentReferralLevel();
+$inviterReward = $this->createReward(
+    user: $inviter,
+    type: 'referral_inviter',
+    amount: $inviterLevel->calculateReward(),
+    description: "Earned for inviting {$newUser->name}",
+);
+
+// 2. ONLY reward new user if globally enabled
+$newUserReward = null;
+if (ReferralSetting::get('new_user_bonus_enabled', false)) {
+    $bonusAmount = ReferralSetting::get('new_user_bonus_amount', 500); // cents
+    $newUserReward = $this->createReward(
+        user: $newUser,
+        type: 'referral_signup',
+        amount: $bonusAmount,
+        description: "Welcome bonus for joining via referral",
+    );
+}
+```
 
 ### Reward Record Structure:
 ```php
@@ -347,6 +422,47 @@ resources/
 - Consider fraud prevention (same IP, email patterns)
 - Level progression is automatic based on referral count
 - Admin can manually adjust user levels if needed
+- **Inviters ALWAYS earn** based on their level
+- **New users ONLY earn** when `new_user_bonus_enabled` is ON
+- Fixed amounts recommended for banking (predictable, auditable)
+
+---
+
+## Admin Settings UI Preview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  REFERRAL SETTINGS                                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Referral Program                               [ON] │   │  ← Master toggle
+│  │ Enable or disable the entire referral program       │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ New User Welcome Bonus                        [OFF] │   │  ← New user toggle
+│  │ When enabled, new users who sign up via referral    │   │
+│  │ will receive a welcome bonus.                       │   │
+│  │                                                     │   │
+│  │ Bonus Amount: [$5.00      ]                         │   │  ← Only shown when ON
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Base Reward Amount                                  │   │
+│  │ Used for percentage calculations                    │   │
+│  │ Amount: [$50.00     ]                               │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Reward Delay (Optional)                             │   │
+│  │ Hours before rewards become claimable               │   │
+│  │ Delay: [0] hours (0 = instant)                      │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│                                              [Save Settings]│
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
