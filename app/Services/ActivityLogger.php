@@ -107,6 +107,7 @@ class ActivityLogger
             'pin_verified' => 'Transaction PIN verified successfully',
             'pin_set' => 'Transaction PIN set',
             'pin_changed' => 'Transaction PIN changed',
+            'pin_cleared' => 'Transaction PIN removed by administrator',
         ];
 
         return self::log(

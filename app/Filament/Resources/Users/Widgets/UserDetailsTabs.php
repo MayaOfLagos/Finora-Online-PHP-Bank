@@ -595,7 +595,7 @@ class UserDetailsTabs extends Widget
             'password' => bcrypt($password),
         ]);
 
-        // Log the activity
+        // Log the activity for the admin
         ActivityLogger::logAdmin(
             'user_password_reset',
             $this->record,
@@ -603,6 +603,16 @@ class UserDetailsTabs extends Widget
             [
                 'target_user_id' => $this->record->id,
                 'target_user_email' => $this->record->email,
+            ]
+        );
+
+        // Log the activity for the TARGET USER
+        ActivityLogger::logAuth(
+            'password_reset_completed',
+            $this->record,
+            [
+                'reset_by' => auth()->user()->email,
+                'method' => 'admin_reset',
             ]
         );
 
@@ -625,7 +635,7 @@ class UserDetailsTabs extends Widget
             ->where('user_id', $this->record->id)
             ->delete();
 
-        // Log the activity
+        // Log the activity for the admin
         ActivityLogger::logAdmin(
             'user_force_logout',
             $this->record,
@@ -633,6 +643,15 @@ class UserDetailsTabs extends Widget
             [
                 'target_user_id' => $this->record->id,
                 'target_user_email' => $this->record->email,
+            ]
+        );
+
+        // Log the activity for the TARGET USER
+        ActivityLogger::logSecurity(
+            'forced_logout',
+            $this->record,
+            [
+                'action_by' => auth()->user()->email,
             ]
         );
 
@@ -663,7 +682,7 @@ class UserDetailsTabs extends Widget
                 ->delete();
         }
 
-        // Log the activity
+        // Log the activity for the admin
         ActivityLogger::logAdmin(
             $newStatus ? 'user_account_unlocked' : 'user_account_locked',
             $this->record,
@@ -671,6 +690,16 @@ class UserDetailsTabs extends Widget
             [
                 'target_user_id' => $this->record->id,
                 'target_user_email' => $this->record->email,
+                'new_status' => $newStatus ? 'active' : 'locked',
+            ]
+        );
+
+        // Log the activity for the TARGET USER (so it shows in their activity log)
+        ActivityLogger::logSecurity(
+            $newStatus ? 'account_unlocked' : 'account_locked',
+            $this->record,
+            [
+                'action_by' => auth()->user()->email,
                 'new_status' => $newStatus ? 'active' : 'locked',
             ]
         );
@@ -700,7 +729,7 @@ class UserDetailsTabs extends Widget
             'two_factor_confirmed_at' => null,
         ]);
 
-        // Log the activity
+        // Log the activity for the admin
         ActivityLogger::logAdmin(
             'user_2fa_reset',
             $this->record,
@@ -709,6 +738,16 @@ class UserDetailsTabs extends Widget
                 'target_user_id' => $this->record->id,
                 'target_user_email' => $this->record->email,
                 'had_2fa_enabled' => $hadTwoFactor,
+            ]
+        );
+
+        // Log the activity for the TARGET USER
+        ActivityLogger::logAuth(
+            'two_factor_disabled',
+            $this->record,
+            [
+                'disabled_by' => auth()->user()->email,
+                'method' => 'admin_reset',
             ]
         );
 
@@ -753,7 +792,7 @@ class UserDetailsTabs extends Widget
             'transaction_pin' => Hash::make($pin),
         ]);
 
-        // Log the activity
+        // Log the activity for the admin
         ActivityLogger::logAdmin(
             $hadPin ? 'user_pin_changed' : 'user_pin_set',
             $this->record,
@@ -762,6 +801,16 @@ class UserDetailsTabs extends Widget
                 'target_user_id' => $this->record->id,
                 'target_user_email' => $this->record->email,
                 'changed_by' => auth()->user()->email,
+            ]
+        );
+
+        // Log the activity for the TARGET USER
+        ActivityLogger::logSecurity(
+            $hadPin ? 'pin_changed' : 'pin_set',
+            $this->record,
+            [
+                'changed_by' => auth()->user()->email,
+                'method' => 'admin_action',
             ]
         );
 
@@ -794,7 +843,7 @@ class UserDetailsTabs extends Widget
             'transaction_pin' => null,
         ]);
 
-        // Log the activity
+        // Log the activity for the admin
         ActivityLogger::logAdmin(
             'user_pin_cleared',
             $this->record,
@@ -803,6 +852,16 @@ class UserDetailsTabs extends Widget
                 'target_user_id' => $this->record->id,
                 'target_user_email' => $this->record->email,
                 'cleared_by' => auth()->user()->email,
+            ]
+        );
+
+        // Log the activity for the TARGET USER
+        ActivityLogger::logSecurity(
+            'pin_cleared',
+            $this->record,
+            [
+                'cleared_by' => auth()->user()->email,
+                'method' => 'admin_action',
             ]
         );
 
