@@ -11,7 +11,6 @@ use App\Models\AccountType;
 use App\Models\BankAccount;
 use App\Models\TransactionHistory;
 use App\Services\ActivityLogger;
-use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MarkdownEditor;
@@ -626,24 +625,6 @@ class ViewUser extends ViewRecord
                         ->send();
 
                     $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
-                }),
-
-            Actions\DeleteAction::make()
-                ->modalWidth(Width::ExtraLarge)
-                ->modalDescription('Are you sure you want to delete this user? This action cannot be undone and will permanently delete all associated data including bank accounts, transactions, and documents.')
-                ->successNotificationTitle('User Deleted')
-                ->before(function () {
-                    // Log the deletion
-                    ActivityLogger::logAdmin(
-                        'user_deleted',
-                        $this->record,
-                        auth()->user(),
-                        [
-                            'deleted_user_id' => $this->record->id,
-                            'deleted_user_email' => $this->record->email,
-                            'deleted_user_name' => $this->record->name,
-                        ]
-                    );
                 }),
         ];
     }

@@ -876,6 +876,42 @@ class UserDetailsTabs extends Widget
     }
 
     /**
+     * Delete user account permanently
+     */
+    public function deleteUser(): void
+    {
+        $userEmail = $this->record->email;
+        $userName = $this->record->full_name;
+        $userId = $this->record->id;
+
+        // Log the activity before deletion
+        ActivityLogger::logAdmin(
+            'user_deleted',
+            $this->record,
+            auth()->user(),
+            [
+                'deleted_user_id' => $userId,
+                'deleted_user_email' => $userEmail,
+                'deleted_user_name' => $userName,
+            ]
+        );
+
+        // Delete the user (cascade will handle related records)
+        $this->record->delete();
+
+        Notification::make()
+            ->title('User Deleted')
+            ->body("User account for {$userEmail} has been permanently deleted.")
+            ->success()
+            ->send();
+
+        $this->dispatch('close-modal', id: 'delete-user');
+
+        // Redirect to users list
+        $this->redirect(\App\Filament\Resources\Users\UserResource::getUrl('index'));
+    }
+
+    /**
      * Generate referral code for user
      */
     public function generateReferralCode(): void

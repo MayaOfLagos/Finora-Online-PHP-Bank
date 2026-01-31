@@ -843,6 +843,37 @@
                         </div>
                     </div>
                 </x-filament::section>
+
+                {{-- Danger Zone --}}
+                <x-filament::section class="!border-danger-300 dark:!border-danger-700">
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2 text-danger-600 dark:text-danger-400">
+                            <x-heroicon-o-exclamation-triangle class="w-5 h-5" />
+                            Danger Zone
+                        </div>
+                    </x-slot>
+                    <x-slot name="description">
+                        <span class="text-danger-600 dark:text-danger-400">Irreversible and destructive actions</span>
+                    </x-slot>
+
+                    <div class="p-4 rounded-lg border-2 border-danger-200 dark:border-danger-800 bg-danger-50 dark:bg-danger-900/20">
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-1">
+                                <p class="text-sm font-semibold text-danger-700 dark:text-danger-300">Delete this user account</p>
+                                <p class="text-sm text-danger-600 dark:text-danger-400">
+                                    Once you delete a user, there is no going back. This will permanently delete all associated data including bank accounts, transactions, cards, and documents.
+                                </p>
+                            </div>
+                            <x-filament::button 
+                                color="danger" 
+                                icon="heroicon-o-trash" 
+                                x-on:click="$dispatch('open-modal', { id: 'delete-user' })"
+                            >
+                                Delete User
+                            </x-filament::button>
+                        </div>
+                    </div>
+                </x-filament::section>
             </div>
         </div>
 
@@ -1215,6 +1246,78 @@
                     </x-filament::button>
                     <x-filament::button color="danger" wire:click="clearTransactionPin" icon="heroicon-o-trash">
                         Clear PIN
+                    </x-filament::button>
+                </div>
+            </div>
+        </x-filament::modal>
+
+        {{-- Delete User confirmation modal --}}
+        <x-filament::modal id="delete-user" width="lg">
+            <x-slot name="heading">
+                <span class="text-danger-600 dark:text-danger-400">Delete User Account</span>
+            </x-slot>
+
+            <div 
+                x-data="{ 
+                    confirmText: '',
+                    get isConfirmed() {
+                        return this.confirmText === 'DELETE';
+                    }
+                }"
+                class="space-y-4"
+            >
+                <div class="flex items-start gap-3 p-4 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-700">
+                    <x-heroicon-o-exclamation-triangle class="w-8 h-8 text-danger-600 dark:text-danger-400 flex-shrink-0" />
+                    <div class="space-y-2">
+                        <p class="font-semibold text-danger-700 dark:text-danger-300">This action cannot be undone!</p>
+                        <p class="text-sm text-danger-600 dark:text-danger-400">
+                            You are about to permanently delete the account for <strong class="font-semibold">{{ $this->record->email }}</strong>.
+                        </p>
+                        <p class="text-sm text-danger-600 dark:text-danger-400">
+                            This will permanently delete:
+                        </p>
+                        <ul class="text-sm text-danger-600 dark:text-danger-400 list-disc list-inside space-y-1">
+                            <li>All bank accounts and balances</li>
+                            <li>All transaction history</li>
+                            <li>All cards (virtual and physical)</li>
+                            <li>All loan applications and records</li>
+                            <li>All documents and KYC data</li>
+                            <li>All beneficiaries and settings</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="delete-confirmation" class="text-sm font-medium text-gray-700 dark:text-gray-300 block">
+                        To confirm, type <span class="font-mono font-bold text-danger-600 dark:text-danger-400 bg-danger-100 dark:bg-danger-900/50 px-2 py-0.5 rounded">DELETE</span> in the box below:
+                    </label>
+                    <x-filament::input.wrapper>
+                        <x-filament::input 
+                            id="delete-confirmation"
+                            x-model="confirmText"
+                            type="text" 
+                            placeholder="Type DELETE to confirm"
+                            autocomplete="off"
+                        />
+                    </x-filament::input.wrapper>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <x-filament::button 
+                        color="gray" 
+                        type="button" 
+                        x-on:click="confirmText = ''; $dispatch('close-modal', { id: 'delete-user' })"
+                    >
+                        Cancel
+                    </x-filament::button>
+                    <x-filament::button 
+                        color="danger" 
+                        icon="heroicon-o-trash"
+                        x-bind:disabled="!isConfirmed"
+                        x-bind:class="{ 'opacity-50 cursor-not-allowed': !isConfirmed }"
+                        x-on:click="if(isConfirmed) { $wire.deleteUser(); confirmText = ''; }"
+                    >
+                        Delete User Permanently
                     </x-filament::button>
                 </div>
             </div>
