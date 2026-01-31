@@ -11,6 +11,8 @@ import Skeleton from 'primevue/skeleton';
 import ReCaptcha from '@/Components/Common/ReCaptcha.vue';
 import SeoHead from '@/Components/Common/SeoHead.vue';
 import PagePreloader from '@/Components/Common/PagePreloader.vue';
+import ReferralCodeInput from '@/Components/Forms/ReferralCodeInput.vue';
+import ReferralWelcomeModal from '@/Components/Modals/ReferralWelcomeModal.vue';
 
 const page = usePage();
 const siteName = computed(() => page.props.settings?.general?.site_name || page.props.settings?.general?.app_name || 'Finora Bank');
@@ -40,6 +42,16 @@ const props = defineProps({
     recaptcha: {
         type: Object,
         default: () => ({ enabled: false, siteKey: '', version: 'v2' }),
+    },
+    // Referral props
+    referralCode: {
+        type: String,
+        default: '',
+    },
+    referralInfo: {
+        type: Object,
+        default: null,
+        // { enabled: boolean, bonus_enabled: boolean, bonus_amount: number, inviter?: {...} }
     },
 });
 
@@ -122,6 +134,9 @@ const formData = ref({
     transaction_pin_confirmation: '',
     agree_terms: false,
     agree_privacy: false,
+    
+    // Referral
+    referral_code: '',
 });
 
 // Password visibility toggles
@@ -134,6 +149,64 @@ const recaptchaToken = ref('');
 // Modal dialogs state
 const showTermsModal = ref(false);
 const showPrivacyModal = ref(false);
+
+// Referral state
+const showReferralWelcomeModal = ref(false);
+const referralCodeValue = ref('');
+const referralValidationData = ref(null);
+
+// Check for referral code from URL or props
+onMounted(() => {
+    // Check URL params for ?ref=CODE
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref') || props.referralCode;
+    
+    if (refCode) {
+        referralCodeValue.value = refCode.toUpperCase();
+        formData.value.referral_code = refCode.toUpperCase();
+        
+        // Show welcome modal if we have inviter info from server
+        if (props.referralInfo?.inviter) {
+            referralValidationData.value = props.referralInfo;
+            showReferralWelcomeModal.value = true;
+        } else {
+            // Validate the code via API
+            validateReferralFromUrl(refCode);
+        }
+    }
+});
+
+// Validate referral code from URL
+const validateReferralFromUrl = async (code) => {
+    try {
+        const response = await fetch(`/api/referral/validate/${code}`);
+        const data = await response.json();
+        
+        if (data.valid) {
+            referralValidationData.value = data;
+            showReferralWelcomeModal.value = true;
+        }
+    } catch (error) {
+        console.error('Failed to validate referral code:', error);
+    }
+};
+
+// Handle referral code validation from input
+const handleReferralValidated = (data) => {
+    referralValidationData.value = data;
+    formData.value.referral_code = referralCodeValue.value;
+};
+
+// Handle referral code cleared
+const handleReferralCleared = () => {
+    referralValidationData.value = null;
+    formData.value.referral_code = '';
+};
+
+// Handle welcome modal continue
+const handleWelcomeModalContinue = () => {
+    showReferralWelcomeModal.value = false;
+};
 
 // Step configuration with PrimeIcons
 const steps = [
@@ -1151,6 +1224,18 @@ const getIconPath = (icon) => {
                                         
                                         <div class="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
                                         
+                                        <!-- Referral Code Input -->
+                                        <div>
+                                            <ReferralCodeInput
+                                                v-model="referralCodeValue"
+                                                :disabled="isProcessing"
+                                                @validated="handleReferralValidated"
+                                                @cleared="handleReferralCleared"
+                                            />
+                                        </div>
+                                        
+                                        <div class="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+                                        
                                         <!-- Terms & Privacy -->
                                         <div class="space-y-4">
                                             <div class="flex items-start gap-3">
@@ -1378,6 +1463,16 @@ const getIconPath = (icon) => {
             </div>
         </div>
     </Teleport>
+    
+    <!-- Referral Welcome Modal -->
+    <ReferralWelcomeModal
+        v-model:visible="showReferralWelcomeModal"
+        :inviter="referralValidationData?.inviter"
+        :bonus-amount="referralValidationData?.bonus_amount || 0"
+        :bonus-enabled="referralValidationData?.bonus_enabled || false"
+        :currency="formData.currency"
+        @continue="handleWelcomeModalContinue"
+    />
 </template>
 
 <style scoped>

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\AdminNotificationService;
 use App\Services\ReCaptchaService;
+use App\Services\ReferralService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,10 +24,14 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(
+        protected ReferralService $referralService
+    ) {}
+
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $recaptchaService = app(ReCaptchaService::class);
 
@@ -53,12 +58,36 @@ class RegisteredUserController extends Controller
         // Get currencies for dropdown
         $currencies = Currencies::forDropdown();
 
+        // Check for referral code in URL
+        $referralCode = $request->query('ref', '');
+        $referralInfo = null;
+
+        if ($referralCode && $this->referralService->isEnabled()) {
+            $inviterInfo = $this->referralService->getReferrerInfo($referralCode);
+            if ($inviterInfo) {
+                $referralInfo = [
+                    'enabled' => true,
+                    'bonus_enabled' => $this->referralService->isNewUserBonusEnabled(),
+                    'bonus_amount' => $this->referralService->isNewUserBonusEnabled()
+                        ? $this->referralService->getNewUserBonusAmount()
+                        : 0,
+                    'inviter' => [
+                        'name' => $inviterInfo['name'],
+                        'avatar' => $inviterInfo['avatar'] ?? null,
+                        'level' => $inviterInfo['level'] ?? null,
+                    ],
+                ];
+            }
+        }
+
         return Inertia::render('Auth/Register', [
             'status' => session('status'),
             'countries' => $countries,
             'currencies' => $currencies,
             'accountTypes' => $accountTypes,
             'recaptcha' => $recaptchaService->getConfig(forAdmin: false),
+            'referralCode' => $referralCode,
+            'referralInfo' => $referralInfo,
         ]);
     }
 
@@ -110,6 +139,9 @@ class RegisteredUserController extends Controller
             // Agreements
             'agree_terms' => ['required', 'accepted'],
             'agree_privacy' => ['required', 'accepted'],
+
+            // Referral (optional)
+            'referral_code' => ['nullable', 'string', 'max:20'],
         ], [
             'username.regex' => 'Username can only contain letters, numbers, and underscores.',
             'transaction_pin.size' => 'Transaction PIN must be exactly 6 digits.',
@@ -146,7 +178,13 @@ class RegisteredUserController extends Controller
             'transaction_pin' => Hash::make($validated['transaction_pin']),
             'is_active' => true,
             'kyc_level' => 0,
+            'referral_code' => $user->generateReferralCode ?? strtoupper(Str::random(8)),
         ]);
+
+        // Generate referral code for new user
+        if (! $user->referral_code) {
+            $user->update(['referral_code' => $user->generateReferralCode()]);
+        }
 
         // Get the selected account type
         $accountType = AccountType::where('code', $validated['account_type'])->first();
@@ -162,6 +200,19 @@ class RegisteredUserController extends Controller
                 'is_active' => true,
                 'opened_at' => now(),
             ]);
+        }
+
+        // Process referral if a code was provided
+        if (! empty($validated['referral_code'])) {
+            try {
+                $this->referralService->processReferral($user, $validated['referral_code']);
+            } catch (\Exception $e) {
+                // Log the error but don't fail registration
+                \Log::warning('Failed to process referral during registration: '.$e->getMessage(), [
+                    'user_id' => $user->id,
+                    'referral_code' => $validated['referral_code'],
+                ]);
+            }
         }
 
         // Fire the Registered event (sends verification email)

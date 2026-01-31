@@ -39,16 +39,46 @@ class ReferralService
 
     /**
      * Validate a referral code.
+     *
+     * @return array{valid: bool, message: string|null, user: User|null}
      */
-    public function validateReferralCode(string $code): ?User
+    public function validateReferralCode(string $code): array
     {
         if (! $this->isEnabled()) {
-            return null;
+            return [
+                'valid' => false,
+                'message' => 'Referral program is not active.',
+                'user' => null,
+            ];
         }
 
-        return User::where('referral_code', strtoupper(trim($code)))
+        $user = User::where('referral_code', strtoupper(trim($code)))
             ->where('is_active', true)
             ->first();
+
+        if (! $user) {
+            return [
+                'valid' => false,
+                'message' => 'Invalid or expired referral code.',
+                'user' => null,
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'message' => null,
+            'user' => $user,
+        ];
+    }
+
+    /**
+     * Get user by referral code (legacy method).
+     */
+    public function getUserByReferralCode(string $code): ?User
+    {
+        $result = $this->validateReferralCode($code);
+
+        return $result['user'];
     }
 
     /**
@@ -56,12 +86,13 @@ class ReferralService
      */
     public function getReferrerInfo(string $code): ?array
     {
-        $referrer = $this->validateReferralCode($code);
+        $validation = $this->validateReferralCode($code);
 
-        if (! $referrer) {
+        if (! $validation['valid'] || ! $validation['user']) {
             return null;
         }
 
+        $referrer = $validation['user'];
         $level = $referrer->currentReferralLevel() ?? ReferralLevel::getStartingLevel();
         $showBonus = $this->isNewUserBonusEnabled();
         $bonusAmount = $showBonus ? $this->getNewUserBonusAmount() : 0;
@@ -69,7 +100,8 @@ class ReferralService
         return [
             'name' => $referrer->first_name,
             'full_name' => $referrer->full_name,
-            'avatar_url' => $referrer->avatar_url,
+            'avatar' => $referrer->avatar_url,
+            'level' => $level?->name ?? 'Starter',
             'show_bonus' => $showBonus,
             'bonus_amount' => $bonusAmount,
             'bonus_formatted' => '$'.number_format($bonusAmount / 100, 2),
@@ -87,9 +119,9 @@ class ReferralService
             return null;
         }
 
-        $referrer = $this->validateReferralCode($referralCode);
+        $validation = $this->validateReferralCode($referralCode);
 
-        if (! $referrer) {
+        if (! $validation['valid'] || ! $validation['user']) {
             Log::warning('Invalid referral code during registration', [
                 'user_id' => $newUser->id,
                 'code' => $referralCode,
@@ -97,6 +129,8 @@ class ReferralService
 
             return null;
         }
+
+        $referrer = $validation['user'];
 
         // Prevent self-referral
         if ($referrer->id === $newUser->id) {
@@ -183,19 +217,19 @@ class ReferralService
 
             // Log the activity
             ActivityLogger::logAccount(
-                $newUser,
                 'referral_completed',
-                "Joined via referral from {$referrer->full_name}",
-                ['referral_id' => $referral->id, 'referrer_id' => $referrer->id]
+                $referral,
+                $newUser,
+                ['referrer_id' => $referrer->id, 'referrer_name' => $referrer->full_name]
             );
 
             ActivityLogger::logAccount(
-                $referrer,
                 'referral_earned',
-                "Earned referral bonus for inviting {$newUser->full_name}",
+                $referral,
+                $referrer,
                 [
-                    'referral_id' => $referral->id,
                     'referred_user_id' => $newUser->id,
+                    'referred_name' => $newUser->full_name,
                     'amount' => $referrerEarned,
                 ]
             );

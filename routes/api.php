@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BeneficiaryController;
@@ -26,6 +27,12 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group.
 |
 */
+
+// Public Referral Routes (no auth required)
+Route::prefix('referral')->group(function () {
+    Route::get('/validate/{code}', [ReferralController::class, 'validateCode'])->name('api.referral.validate');
+    Route::get('/info', [ReferralController::class, 'info'])->name('api.referral.info');
+});
 
 // API Version 1
 Route::prefix('v1')->group(function () {
